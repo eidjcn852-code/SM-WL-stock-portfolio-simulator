@@ -291,6 +291,8 @@ button {
 
 .sr-only {
   position: absolute !important;
+  top: 0 !important;
+  left: 0 !important;
   width: 1px !important;
   height: 1px !important;
   padding: 0 !important;
@@ -360,6 +362,41 @@ svg {
       padding: 0 0 12px;
     }
     #complete-brokerage-simulator .cps-command-status { min-width: 0; }
+    #complete-brokerage-simulator .cps-cloud-settings {
+      padding: 12px 0 14px;
+      border-bottom: 1px solid var(--border);
+    }
+    #complete-brokerage-simulator .cps-cloud-settings > summary,
+    #complete-brokerage-simulator .cps-local-backup > summary {
+      display: flex;
+      align-items: center;
+      gap: 7px;
+      width: fit-content;
+      font-weight: 500;
+    }
+    #complete-brokerage-simulator .cps-cloud-config {
+      display: grid;
+      grid-template-columns: minmax(260px, 1fr) auto;
+      gap: 12px;
+      align-items: end;
+    }
+    #complete-brokerage-simulator .cps-cloud-config-actions,
+    #complete-brokerage-simulator .cps-cloud-meta {
+      display: flex;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 8px 12px;
+    }
+    #complete-brokerage-simulator .cps-cloud-meta {
+      justify-content: space-between;
+      color: var(--muted-foreground);
+    }
+    #complete-brokerage-simulator .cps-cloud-meta code {
+      overflow-wrap: anywhere;
+    }
+    #complete-brokerage-simulator .cps-local-backup {
+      padding-top: 2px;
+    }
     #complete-brokerage-simulator .cps-main-grid {
       display: grid;
       grid-template-columns: minmax(0, 2fr) minmax(250px, 0.72fr);
@@ -584,6 +621,7 @@ svg {
       #complete-brokerage-simulator .cps-commandbar { position: static; }
       #complete-brokerage-simulator .cps-asset-editor { grid-template-columns: repeat(2, minmax(0, 1fr)); }
       #complete-brokerage-simulator .cps-asset-legend { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      #complete-brokerage-simulator .cps-cloud-config { grid-template-columns: minmax(0, 1fr); }
     }
     @media (max-width: 590px) {
       #complete-brokerage-simulator .cps-control-grid { grid-template-columns: minmax(0, 1fr); }

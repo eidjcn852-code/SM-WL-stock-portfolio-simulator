@@ -8,15 +8,17 @@
   <title>股票資產模擬器</title>
   <link rel="stylesheet" href="styles.css">
   <script defer src="https://cdn.jsdelivr.net/npm/lucide@0.468.0/dist/umd/lucide.min.js"></script>
+  <script defer src="https://accounts.google.com/gsi/client"></script>
   <script defer src="js/calculations.js"></script>
   <script defer src="js/storage.js"></script>
+  <script defer src="js/google-drive.js"></script>
   <script defer src="js/app.js"></script>
 </head>
 <body>
   <main class="app-shell">
     <header class="app-titlebar">
       <h1>股票資產模擬器</h1>
-      <span class="viz-badge">瀏覽器儲存</span>
+      <span class="viz-badge" id="cps-storage-mode">本機自動儲存</span>
     </header>
     <div id="complete-brokerage-simulator">
 <div class="cps-commandbar" aria-label="模擬播放與資料控制">
@@ -25,14 +27,40 @@
       <span class="text-small text-muted" id="cps-save-status">自動儲存已啟用</span>
     </div>
     <div class="cps-actions">
-      <button class="btn btn-ghost" id="cps-export-data" type="button" title="可選擇 Google Drive 同步資料夾"><i data-lucide="save" aria-hidden="true"></i>另存備份</button>
-      <button class="btn btn-ghost" id="cps-import-data" type="button"><i data-lucide="folder-open" aria-hidden="true"></i>匯入備份</button>
-      <input class="sr-only" id="cps-import-file" type="file" accept="application/json,.json">
+      <button class="btn btn-ghost" id="cps-drive-connect" type="button"><i data-lucide="cloud" aria-hidden="true"></i><span>連接 Drive</span></button>
+      <button class="btn btn-ghost" id="cps-drive-save" type="button" disabled><i data-lucide="cloud-upload" aria-hidden="true"></i>儲存雲端</button>
+      <button class="btn btn-ghost" id="cps-drive-load" type="button" disabled><i data-lucide="cloud-download" aria-hidden="true"></i>載入雲端</button>
       <button class="btn btn-primary" id="cps-apply-day" type="button"><i data-lucide="skip-forward" aria-hidden="true"></i>下一交易日</button>
       <button class="btn" id="cps-auto" type="button" aria-pressed="false"><i data-lucide="play" aria-hidden="true"></i><span>自動播放</span></button>
       <button class="btn btn-ghost" id="cps-reset-simulation" type="button"><i data-lucide="rotate-ccw" aria-hidden="true"></i>重設</button>
     </div>
   </div>
+
+  <details class="cps-details cps-cloud-settings" id="cps-drive-settings">
+    <summary><i data-lucide="settings" aria-hidden="true"></i>Google Drive 設定</summary>
+    <div class="cps-cloud-config">
+      <label class="form-label cps-field" for="cps-drive-client-id">
+        <span>Google OAuth Client ID</span>
+        <input class="form-control" id="cps-drive-client-id" type="text" autocomplete="off" spellcheck="false" placeholder="123456789.apps.googleusercontent.com">
+      </label>
+      <div class="cps-cloud-config-actions">
+        <button class="btn btn-primary" id="cps-drive-apply-client" type="button"><i data-lucide="link" aria-hidden="true"></i>儲存並連接</button>
+        <button class="btn" id="cps-drive-clear-client" type="button"><i data-lucide="unlink" aria-hidden="true"></i>清除連接</button>
+      </div>
+    </div>
+    <div class="cps-cloud-meta text-small">
+      <span>授權網站來源：<code>https://eidjcn852-code.github.io</code></span>
+      <span id="cps-drive-status" aria-live="polite">尚未設定 Google Drive</span>
+    </div>
+    <details class="cps-details cps-local-backup">
+      <summary>本機 JSON 備份</summary>
+      <div class="cps-actions">
+        <button class="btn" id="cps-export-data" type="button"><i data-lucide="download" aria-hidden="true"></i>匯出檔案</button>
+        <button class="btn" id="cps-import-data" type="button"><i data-lucide="upload" aria-hidden="true"></i>匯入檔案</button>
+        <input class="sr-only" id="cps-import-file" type="file" accept="application/json,.json">
+      </div>
+    </details>
+  </details>
 
 <div class="viz-grid" aria-label="投資組合摘要">
     <div class="card viz-stat">

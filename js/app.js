@@ -4,6 +4,7 @@
       const el = (id) => root.querySelector('#' + id);
       const Calc = window.StockSimulatorCalculations;
       const Storage = window.StockSimulatorStorage;
+      const Drive = window.StockSimulatorGoogleDrive;
       if (!Calc || !Storage) return;
 
       const state = {
@@ -1084,11 +1085,11 @@
       async function exportData() {
         const date = new Date().toISOString().slice(0, 10);
         try {
-          el('cps-save-status').textContent = '請選擇備份儲存位置';
+          el('cps-save-status').textContent = '請選擇本機備份位置';
           const result = await Storage.saveAs(exportPayload(), 'stock-simulator-' + date + '.json');
           el('cps-save-status').textContent = result.method === 'picker'
-            ? '備份已另存：' + result.filename
-            : '備份已下載至瀏覽器下載資料夾';
+            ? '本機備份已另存：' + result.filename
+            : '本機備份已下載';
           el('cps-save-status').classList.remove('text-destructive');
         } catch (error) {
           if (error && error.name === 'AbortError') {
@@ -1097,6 +1098,145 @@
           }
           el('cps-save-status').textContent = '備份失敗';
           el('cps-save-status').classList.add('text-destructive');
+        }
+      }
+
+      function setDriveStatus(message, isError) {
+        const status = el('cps-drive-status');
+        status.textContent = message;
+        status.classList.toggle('text-destructive', Boolean(isError));
+      }
+
+      function refreshDriveControls(updateStatus = true) {
+        const available = Boolean(Drive);
+        const configured = available && Drive.isConfigured();
+        const connected = configured && Drive.isConnected();
+        const connectLabel = el('cps-drive-connect').querySelector('span');
+        const storageMode = document.getElementById('cps-storage-mode');
+
+        el('cps-drive-connect').disabled = !available;
+        el('cps-drive-save').disabled = !configured;
+        el('cps-drive-load').disabled = !configured;
+        connectLabel.textContent = connected ? 'Drive 已連接' : '連接 Drive';
+        el('cps-drive-client-id').value = available ? Drive.getClientId() : '';
+        if (storageMode) storageMode.textContent = connected ? '本機＋Google Drive' : '本機自動儲存';
+
+        if (updateStatus) {
+          if (!available) setDriveStatus('Google Drive 模組無法載入', true);
+          else if (connected) setDriveStatus('已連接 Google Drive，可直接儲存或載入', false);
+          else if (configured) setDriveStatus('設定已儲存，尚未連接 Google Drive', false);
+          else setDriveStatus('尚未設定 Google Drive', false);
+        }
+      }
+
+      function setDriveBusy(isBusy) {
+        el('cps-drive-connect').disabled = isBusy;
+        el('cps-drive-save').disabled = isBusy;
+        el('cps-drive-load').disabled = isBusy;
+        el('cps-drive-apply-client').disabled = isBusy;
+        el('cps-drive-clear-client').disabled = isBusy;
+        if (!isBusy) refreshDriveControls(false);
+      }
+
+      function revealDriveSettings(message) {
+        el('cps-drive-settings').open = true;
+        if (message) setDriveStatus(message, true);
+        el('cps-drive-client-id').focus();
+      }
+
+      async function connectDrive() {
+        if (!Drive || !Drive.isConfigured()) {
+          revealDriveSettings('請先貼上 Google OAuth Client ID');
+          return false;
+        }
+        setDriveBusy(true);
+        setDriveStatus('正在連接 Google Drive…', false);
+        try {
+          await Drive.connect();
+          setDriveStatus('已連接 Google Drive，可直接儲存或載入', false);
+          return true;
+        } catch (error) {
+          setDriveStatus(error.message || 'Google Drive 連接失敗', true);
+          return false;
+        } finally {
+          setDriveBusy(false);
+        }
+      }
+
+      async function saveToDrive() {
+        if (!Drive || !Drive.isConfigured()) {
+          revealDriveSettings('請先貼上 Google OAuth Client ID');
+          return;
+        }
+        setDriveBusy(true);
+        try {
+          if (!Drive.isConnected()) {
+            setDriveStatus('請在 Google 視窗完成登入…', false);
+            await Drive.connect();
+          }
+          setDriveStatus('正在儲存到 Google Drive…', false);
+          const file = await Drive.save(exportPayload());
+          const action = file.created ? '已建立雲端備份' : '已更新雲端備份';
+          setDriveStatus(action + '：' + file.name, false);
+        } catch (error) {
+          setDriveStatus(error.message || 'Google Drive 儲存失敗', true);
+        } finally {
+          setDriveBusy(false);
+        }
+      }
+
+      async function loadFromDrive() {
+        if (!Drive || !Drive.isConfigured()) {
+          revealDriveSettings('請先貼上 Google OAuth Client ID');
+          return;
+        }
+        setDriveBusy(true);
+        try {
+          if (!Drive.isConnected()) {
+            setDriveStatus('請在 Google 視窗完成登入…', false);
+            await Drive.connect();
+          }
+          setDriveStatus('正在讀取 Google Drive 備份…', false);
+          const result = await Drive.load();
+          const payload = Storage.validate(result.payload);
+          setAutoPlaying(false);
+          restorePayload(payload, true);
+          render();
+          setDriveStatus('已從 Google Drive 載入：' + result.file.name, false);
+        } catch (error) {
+          setDriveStatus(error.message || 'Google Drive 載入失敗', true);
+        } finally {
+          setDriveBusy(false);
+        }
+      }
+
+      async function applyDriveClientId() {
+        if (!Drive) {
+          setDriveStatus('Google Drive 模組無法載入', true);
+          return;
+        }
+        try {
+          Drive.setClientId(el('cps-drive-client-id').value);
+          refreshDriveControls();
+          await connectDrive();
+          if (Drive.isConnected()) el('cps-drive-settings').open = false;
+        } catch (error) {
+          revealDriveSettings(error.message || 'Client ID 設定失敗');
+        }
+      }
+
+      async function clearDriveConnection() {
+        if (!Drive) return;
+        setDriveBusy(true);
+        setDriveStatus('正在清除 Google Drive 連接…', false);
+        try {
+          await Drive.disconnect();
+          Drive.clearClientId();
+          el('cps-drive-client-id').value = '';
+          el('cps-drive-settings').open = true;
+          setDriveStatus('Google Drive 連接已清除', false);
+        } finally {
+          setDriveBusy(false);
         }
       }
 
@@ -1132,6 +1272,11 @@
       el('cps-export-data').addEventListener('click', exportData);
       el('cps-import-data').addEventListener('click', () => el('cps-import-file').click());
       el('cps-import-file').addEventListener('change', importData);
+      el('cps-drive-connect').addEventListener('click', connectDrive);
+      el('cps-drive-save').addEventListener('click', saveToDrive);
+      el('cps-drive-load').addEventListener('click', loadFromDrive);
+      el('cps-drive-apply-client').addEventListener('click', applyDriveClientId);
+      el('cps-drive-clear-client').addEventListener('click', clearDriveConnection);
       el('cps-apply-assets').addEventListener('click', applyAssetValues);
       el('cps-reset-account').addEventListener('click', resetAccount);
       el('cps-add-stock').addEventListener('click', addStock);
@@ -1171,6 +1316,8 @@
       const savedPayload = Storage.load();
       if (savedPayload) restorePayload(savedPayload, false);
       else recordHistory(false);
+      refreshDriveControls();
+      el('cps-drive-settings').open = !Drive || !Drive.isConfigured();
       render();
       if (window.lucide) window.lucide.createIcons({ attrs: { width: 16, height: 16 } });
     })();

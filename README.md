@@ -1,32 +1,50 @@
 # 股票資產模擬器
 
-一個不需要安裝套件的純前端投資組合模擬器，可直接在瀏覽器使用，也適合部署到 GitHub Pages。除了股票與借貸，也可記錄現金、房地產、汽車與整體資產曝險。
+不需安裝套件的瀏覽器投資組合模擬器，可管理股票、現金、房地產、汽車、借貸、總曝險與股票質押維持率。
 
-## 使用方式
+## 主要功能
 
-1. 直接開啟 `index.html`。
-2. 建立股票並設定每檔股票的每日漲跌百分比。
-3. 使用「下一交易日」或「自動播放」執行情境。
-4. 資料會自動保存在目前瀏覽器。
-5. 定期使用「另存備份」保存 JSON；換電腦時可用「匯入備份」恢復。
+- 自行新增或刪除股票，設定每天個股與大盤漲跌。
+- 模擬買進、賣出、手續費與交易稅。
+- 管理現金、房地產、汽車與完整資產配置。
+- 建立信貸、房貸或股票質押，計算利息、負債與維持率。
+- 下一交易日、自動播放、績效圖與交易紀錄。
+- 瀏覽器自動儲存、Google Drive 雲端備份、本機 JSON 備份。
 
-## 完整資產與總曝險
+## Google Drive 直接備份
 
-- 總資產＝現金＋股票市值＋房地產＋汽車。
-- 總曝險＝股票市值＋房地產＋汽車。
-- 淨資產＝總資產－全部未償負債與應計利息。
-- 曝險率＝總曝險÷總資產。現金計入總資產，但不列入市場曝險。
+Google Drive 功能使用 Google Identity Services 與 Drive API。程式只要求 `drive.file` 權限，僅能管理由本程式建立或使用的檔案。
 
-在「完整資產」輸入現金、房地產與汽車金額後，按「更新資產」。第 0 天更新時會同步建立新的績效基準。
+### 第一次設定
 
-## Google Drive 備份
+1. 前往 [Google Cloud Console](https://console.cloud.google.com/)，建立或選擇一個專案。
+2. 在「API 和服務」啟用 **Google Drive API**。
+3. 設定 OAuth 同意畫面；若應用程式仍在測試模式，將自己的 Google 帳號加入測試使用者。
+4. 建立 **OAuth 2.0 用戶端 ID**，應用程式類型選擇 **網頁應用程式**。
+5. 在「已授權的 JavaScript 來源」加入：
 
-1. 在 Windows 安裝並登入 Google Drive 電腦版，讓 Google Drive 顯示在檔案總管。
-2. 按「另存備份」。
-3. 在另存視窗選擇 Google Drive 內的備份資料夾，再按「儲存」。
-4. 需要恢復時按「匯入備份」，從同一個 Google Drive 資料夾選擇 JSON 檔。
+   ```text
+   https://eidjcn852-code.github.io
+   ```
 
-支援檔案選擇視窗的 Chrome／Edge 會讓你直接指定 Google Drive 資料夾；較舊的瀏覽器則會改存到預設下載資料夾。
+6. 複製產生的 Client ID，貼到網站的「Google Drive 設定」，按「儲存並連接」。
+
+### 日常使用
+
+- **儲存雲端**：在「我的雲端硬碟」建立或更新 `stock-portfolio-simulator-cloud.json`。
+- **載入雲端**：從同一份檔案恢復模擬器資料。
+- Google 存取權杖只保留在目前頁面記憶體，不寫入 `localStorage` 或備份檔。
+- OAuth Client ID 是公開識別碼，會儲存在目前瀏覽器；它不是密碼或 Client Secret。
+
+## 本機使用
+
+直接開啟 `index.html` 可使用模擬器，但 Google OAuth 一般需要 HTTPS 網站來源，因此 Google Drive 功能請使用 GitHub Pages 公開網址。
+
+```text
+https://eidjcn852-code.github.io/SM-WL-stock-portfolio-simulator/
+```
+
+本機 JSON 備份位於「Google Drive 設定」內，可在 Google Drive 暫時無法登入時備用。
 
 ## 專案結構
 
@@ -37,38 +55,26 @@ stock-portfolio-simulator/
 ├─ js/
 │  ├─ calculations.js
 │  ├─ storage.js
+│  ├─ google-drive.js
 │  └─ app.js
 └─ tests/
    ├─ calculations.test.js
-   └─ storage.test.js
+   ├─ storage.test.js
+   ├─ google-drive.test.js
+   └─ static.test.js
 ```
 
-- `index.html`：畫面結構。
-- `styles.css`：版面、主題與響應式樣式。
-- `js/calculations.js`：手續費、利息、淨資產、總曝險與維持率等純計算。
-- `js/storage.js`：瀏覽器自動保存與 JSON 備份。
-- `js/app.js`：畫面互動、交易流程與圖表更新。
+## 測試
+
+安裝 Node.js 後，在專案資料夾執行：
+
+```powershell
+node tests/calculations.test.js
+node tests/storage.test.js
+node tests/google-drive.test.js
+node tests/static.test.js
+```
 
 ## GitHub Pages
 
-1. 建立新的 GitHub Repository。
-2. 將此資料夾內容推送到 `main` 分支。
-3. 進入 Repository 的 **Settings → Pages**。
-4. 選擇 **Deploy from a branch**、`main`、`/(root)`。
-5. 儲存後等待 GitHub 產生公開網址。
-
-所有連結都使用相對路徑，因此可部署在 GitHub Pages 的專案子目錄。
-
-## 資料與隱私
-
-- 自動保存使用瀏覽器 `localStorage`，資料不會主動上傳。
-- GitHub Pages 是公開網站，不要把個人資產資料、帳號密碼或 API Key 寫進原始碼。
-- JSON 備份可能包含你的模擬資產資料。若存放於 Google Drive，請確認雲端帳號與分享權限安全。
-
-## 維護建議
-
-- 功能修改使用獨立分支，例如 `feature/dividend`。
-- 每次只提交一個主題，提交訊息例如 `Add dividend simulation`。
-- 修改財務公式時，同步更新 `tests/calculations.test.js`。
-- 修改備份格式時，同步更新 `tests/storage.test.js`，並遞增資料版本。
-- 正式發布前建立版本標籤，例如 `v1.0.0`。
+將所有檔案上傳到 Repository 的 `main` 分支，接著在 **Settings → Pages** 選擇 **Deploy from a branch**、`main`、`/(root)`。
