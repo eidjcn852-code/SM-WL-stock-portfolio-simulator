@@ -1,0 +1,1717 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="referrer" content="no-referrer">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'unsafe-inline' 'unsafe-eval' 'wasm-unsafe-eval' blob: data: https://cdnjs.cloudflare.com https://cdn.jsdelivr.net https://esm.sh https://fonts.bunny.net https://fonts.googleapis.com https://fonts.gstatic.com https://unpkg.com; style-src 'unsafe-inline' blob: data: https://cdnjs.cloudflare.com https://cdn.jsdelivr.net https://esm.sh https://fonts.bunny.net https://fonts.googleapis.com https://fonts.gstatic.com https://unpkg.com; img-src blob: data: https://cdnjs.cloudflare.com https://cdn.jsdelivr.net https://esm.sh https://fonts.bunny.net https://fonts.googleapis.com https://fonts.gstatic.com https://unpkg.com; font-src blob: data: https://cdnjs.cloudflare.com https://cdn.jsdelivr.net https://esm.sh https://fonts.bunny.net https://fonts.googleapis.com https://fonts.gstatic.com https://unpkg.com; media-src blob: data: https://cdnjs.cloudflare.com https://cdn.jsdelivr.net https://esm.sh https://fonts.bunny.net https://fonts.googleapis.com https://fonts.gstatic.com https://unpkg.com; worker-src blob:; connect-src blob: data:; frame-src 'self'; object-src 'none'; base-uri 'none'; form-action 'none'">
+<title>Stock Market Simulator</title>
+<style>:root{color-scheme:light dark;background:light-dark(rgb(255 255 255), rgb(24 24 24))}html,body{margin:0}body{box-sizing:border-box;padding:1rem;background:inherit}iframe{display:block;width:100%;max-width:736px;height:calc(100vh - 2rem);margin:0 auto;border:0}</style>
+</head>
+<body>
+<iframe sandbox="allow-scripts" referrerpolicy="no-referrer" title="Stock Market Simulator" srcdoc="&lt;!doctype html&gt;
+&lt;html lang=&quot;en&quot;&gt;
+&lt;head&gt;
+&lt;meta charset=&quot;utf-8&quot;&gt;
+&lt;meta name=&quot;viewport&quot; content=&quot;width=device-width, initial-scale=1&quot;&gt;
+&lt;meta name=&quot;referrer&quot; content=&quot;no-referrer&quot;&gt;
+&lt;meta http-equiv=&quot;Content-Security-Policy&quot; content=&quot;default-src &#x27;none&#x27;; script-src &#x27;unsafe-inline&#x27; &#x27;unsafe-eval&#x27; &#x27;wasm-unsafe-eval&#x27; blob: data: https://cdnjs.cloudflare.com https://cdn.jsdelivr.net https://esm.sh https://fonts.bunny.net https://fonts.googleapis.com https://fonts.gstatic.com https://unpkg.com; style-src &#x27;unsafe-inline&#x27; blob: data: https://cdnjs.cloudflare.com https://cdn.jsdelivr.net https://esm.sh https://fonts.bunny.net https://fonts.googleapis.com https://fonts.gstatic.com https://unpkg.com; img-src blob: data: https://cdnjs.cloudflare.com https://cdn.jsdelivr.net https://esm.sh https://fonts.bunny.net https://fonts.googleapis.com https://fonts.gstatic.com https://unpkg.com; font-src blob: data: https://cdnjs.cloudflare.com https://cdn.jsdelivr.net https://esm.sh https://fonts.bunny.net https://fonts.googleapis.com https://fonts.gstatic.com https://unpkg.com; media-src blob: data: https://cdnjs.cloudflare.com https://cdn.jsdelivr.net https://esm.sh https://fonts.bunny.net https://fonts.googleapis.com https://fonts.gstatic.com https://unpkg.com; worker-src blob:; connect-src blob: data:; frame-src &#x27;none&#x27;; object-src &#x27;none&#x27;; base-uri &#x27;none&#x27;; form-action &#x27;none&#x27;&quot;&gt;
+&lt;title&gt;Stock Market Simulator&lt;/title&gt;
+&lt;style&gt;:root {
+  color-scheme: light dark;
+  background-color: var(--background) !important;
+
+  /* Agent-facing contract; keep in sync with SKILL.md. */
+  --background: light-dark(rgb(255 255 255), rgb(24 24 24));
+  --foreground: light-dark(rgb(26 28 31), rgb(255 255 255));
+  --card: color-mix(in oklab, var(--foreground) 5%, transparent);
+  --card-foreground: var(--foreground);
+  --popover: light-dark(rgb(255 255 255), rgb(45 45 45));
+  --popover-foreground: var(--foreground);
+  --primary: light-dark(rgb(51 156 255), rgb(131 195 255));
+  --primary-foreground: light-dark(rgb(255 255 255), rgb(13 13 13));
+  --secondary: light-dark(rgb(255 255 255 / 96%), rgb(54 54 54 / 96%));
+  --secondary-foreground: var(--foreground);
+  --muted: color-mix(in srgb, var(--foreground) 10%, transparent);
+  --muted-foreground: light-dark(
+    rgb(26 28 31 / 49.4%),
+    rgb(255 255 255 / 49.8%)
+  );
+  --accent: light-dark(rgb(229 242 255), rgb(13 39 63));
+  --accent-foreground: var(--primary);
+  --destructive: light-dark(rgb(226 85 7), rgb(255 133 73));
+  --border: light-dark(rgb(26 28 31 / 8%), rgb(255 255 255 / 8.2%));
+  --input: light-dark(
+    rgb(26 28 31 / 11.8%),
+    color-mix(in oklab, rgb(0 0 0) 10%, transparent)
+  );
+  --ring: light-dark(rgb(51 156 255), rgb(131 195 255 / 76%));
+  --font-size-base: 14px;
+  --viz-series-1: var(--primary);
+  --viz-series-2: light-dark(rgb(243 136 59), rgb(245 154 86));
+  --viz-series-3: light-dark(rgb(93 201 119), rgb(116 213 139));
+  --viz-series-4: light-dark(rgb(235 119 177), rgb(240 143 192));
+  --viz-series-5: light-dark(rgb(155 121 236), rgb(170 145 239));
+  --viz-series-6: light-dark(rgb(58 185 177), rgb(90 203 194));
+
+  /* Internal implementation variables; not part of the agent contract. */
+  --font-sans: -apple-system, system-ui, &quot;Segoe UI&quot;, sans-serif;
+  --font-mono:
+    ui-monospace, SFMono-Regular, &quot;SF Mono&quot;, Menlo, Consolas, &quot;Liberation Mono&quot;,
+    monospace;
+  --font-size-normal: max(11px, var(--font-size-base));
+  --font-size-tooltip: calc(var(--font-size-base) - 1px);
+  --font-size-small: max(11px, calc(var(--font-size-base) - 2px));
+  --font-size-h1: calc(var(--font-size-normal) * 1.7142857143);
+  --font-size-h2: calc(var(--font-size-normal) * 1.4285714286);
+  --font-size-h3: calc(var(--font-size-normal) * 1.2857142857);
+  --font-weight-normal: 430;
+  --font-weight-medium: 500;
+  --line-height-normal: calc(var(--font-size-normal) * 1.5);
+  --line-height-tooltip: calc(var(--font-size-tooltip) * 1.4285714286);
+  --line-height-small: calc(var(--font-size-small) + 4px);
+  --radius: 12.5px;
+  --radius-sm: calc(var(--radius) * 0.6);
+  --radius-md: calc(var(--radius) * 0.8);
+  --radius-lg: var(--radius);
+  --radius-2xl: calc(var(--radius) * 1.6);
+  --radius-full: 9999px;
+  --shadow-sm: 0 1px 2px -1px rgb(0 0 0 / 8%);
+  --checkmark-image: url(&quot;data:image/svg+xml,%3Csvg xmlns=&#x27;http://www.w3.org/2000/svg&#x27; viewBox=&#x27;0 0 17 17&#x27;%3E%3Cpath d=&#x27;M12.8961 3.64101C13.1297 3.41418 13.4984 3.37523 13.7779 3.56581C14.0571 3.75635 14.1554 4.11331 14.0299 4.41347L13.9615 4.53847L7.71151 13.7045C7.59411 13.8767 7.4063 13.9877 7.19881 14.0072C6.99136 14.0267 6.78564 13.9533 6.63826 13.806L2.88826 10.056L2.79842 9.9457C2.6192 9.67407 2.64927 9.30496 2.88826 9.06581C3.12738 8.82669 3.49647 8.79676 3.76815 8.97597L3.8785 9.06581L7.03084 12.2182L12.8053 3.74941L12.8961 3.64101Z&#x27;/%3E%3C/svg%3E&quot;);
+
+  /* Legacy aliases; not part of the current agent contract. */
+  --viz-bg: transparent;
+  --viz-panel: var(--card);
+  --viz-border: var(--border);
+  --viz-text: var(--foreground);
+  --viz-muted: var(--muted-foreground);
+  --viz-accent: var(--primary);
+  --viz-accent-text: var(--primary-foreground);
+  --viz-accent-bg: var(--accent);
+  --viz-font-size: var(--font-size-base);
+  --viz-warning: var(--destructive);
+  --color-background-primary: var(--background);
+  --color-text-primary: var(--foreground);
+  --color-border-secondary: var(--border);
+}
+
+:root[data-theme=&quot;light&quot;] {
+  color-scheme: light;
+}
+
+:root[data-theme=&quot;dark&quot;] {
+  color-scheme: dark;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html &gt; body {
+  margin: 0;
+  padding: 5px;
+  color: var(--foreground);
+  background: transparent !important;
+  font-family: var(--font-sans);
+  font-size: var(--font-size-normal);
+  font-weight: var(--font-weight-normal);
+  line-height: var(--line-height-normal);
+}
+
+a {
+  color: color-mix(in srgb, var(--viz-accent) 80%, var(--viz-text) 20%);
+  cursor: pointer;
+  font-weight: var(--viz-font-weight-medium);
+  text-decoration: none;
+  text-underline-offset: 2px;
+}
+
+a:is(:hover, :focus-visible) {
+  text-decoration-line: underline;
+  text-decoration-style: dashed;
+  text-decoration-thickness: 0.5px;
+}
+
+h1,
+h2,
+h3,
+h4,
+h5,
+h6,
+p {
+  margin-block: 0;
+}
+
+h1 {
+  font-size: var(--font-size-h1);
+  font-weight: var(--font-weight-medium);
+  line-height: 1.25;
+}
+
+h2 {
+  font-size: var(--font-size-h2);
+  font-weight: var(--font-weight-medium);
+  line-height: 1.25;
+}
+
+h3,
+h4,
+h5,
+h6 {
+  font-size: var(--font-size-h3);
+  font-weight: var(--font-weight-medium);
+  line-height: 1.3;
+}
+
+b,
+strong,
+th {
+  font-weight: var(--font-weight-medium);
+}
+
+code:not(pre code) {
+  display: inline;
+  padding: 1px 6px;
+  border-radius: var(--radius-sm);
+  corner-shape: superellipse(1.5);
+  background: var(--muted);
+  font-family: var(--font-mono);
+  font-size: 0.92em;
+  overflow-wrap: anywhere;
+  -webkit-box-decoration-break: clone;
+  box-decoration-break: clone;
+  word-break: break-word;
+}
+
+.table-responsive {
+  width: 100%;
+  overflow-x: auto;
+  scrollbar-width: thin;
+}
+
+.table {
+  width: 100%;
+  border-collapse: collapse;
+  color: var(--foreground);
+  font: inherit;
+  text-align: start;
+}
+
+.table :is(th, td) {
+  padding-block: 10px;
+  padding-inline: 0 24px;
+  overflow-wrap: anywhere;
+  border-bottom: 1px solid var(--border);
+  text-align: start;
+  vertical-align: top;
+}
+
+.table-responsive &gt; .table :is(th, td) {
+  overflow-wrap: break-word;
+}
+
+.table :is(th, td):last-child {
+  padding-inline-end: 0;
+}
+
+.table :is(caption, thead th) {
+  font-weight: 600;
+}
+
+.table thead th {
+  padding-block: 8px;
+  border-bottom-color: color-mix(in srgb, var(--foreground) 16%, transparent);
+}
+
+.table tbody tr:last-child :is(th, td) {
+  border-bottom: 0;
+}
+
+.table.table-sm :is(th, td) {
+  padding-block: 6px;
+}
+
+.table.table-sm :is(th, td):not(:last-child) {
+  padding-inline-end: 16px;
+}
+
+.table :is(.text-end, [align=&quot;right&quot;]) {
+  text-align: end;
+  font-variant-numeric: tabular-nums;
+}
+
+.table :is(.text-center, [align=&quot;center&quot;]) {
+  text-align: center;
+}
+
+.table .text-nowrap {
+  white-space: nowrap;
+}
+
+#widget {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  width: 100%;
+  padding: 0;
+  background: transparent !important;
+}
+
+.card {
+  min-width: 0;
+  padding: 12px;
+  overflow: hidden;
+  overflow-wrap: break-word;
+  border-radius: var(--radius-2xl);
+  corner-shape: superellipse(1.5);
+  color: var(--card-foreground);
+  background: var(--card);
+}
+
+#widget &gt; :not(.card) {
+  width: 100% !important;
+  max-width: none !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  border: 0 !important;
+  border-radius: 0 !important;
+  background: transparent !important;
+  box-shadow: none !important;
+}
+
+.tooltip {
+  position: fixed;
+  z-index: 50;
+  top: 0;
+  left: 0;
+  width: max-content;
+  max-width: min(
+    20rem,
+    var(--tooltip-available-width, calc(100vw - 10px)),
+    calc(100vw - 10px)
+  );
+  max-height: min(
+    var(--tooltip-available-height, calc(100vh - 10px)),
+    calc(100vh - 10px)
+  );
+  padding: 4px 8px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  corner-shape: superellipse(1.5);
+  color: var(--popover-foreground);
+  background: var(--popover);
+  box-shadow: none;
+  font-size: var(--font-size-tooltip);
+  line-height: var(--line-height-tooltip);
+  overflow-wrap: break-word;
+  white-space: normal;
+  pointer-events: none;
+  user-select: none;
+}
+
+.viz-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(max(180px, 24%), 1fr));
+  gap: 10px;
+}
+
+.viz-stat {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.viz-stat-value {
+  font-size: var(--font-size-h2);
+  font-weight: var(--font-weight-medium);
+  line-height: 1.25;
+}
+
+.viz-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+}
+
+.viz-badge {
+  padding: 3px 8px;
+  border-radius: var(--radius-full);
+  color: var(--accent-foreground);
+  background: var(--accent);
+  font-weight: var(--font-weight-medium);
+}
+
+small,
+.text-small,
+.viz-badge {
+  font-size: var(--font-size-small);
+  line-height: var(--line-height-small);
+}
+
+.text-muted {
+  color: var(--muted-foreground);
+}
+
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+.viz-controls {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+
+.viz-controls &gt; .form-label {
+  display: grid;
+  min-width: min(100%, 260px);
+  flex: 1 1 280px;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: baseline;
+  gap: 2px 12px;
+  margin-bottom: 0;
+}
+
+.viz-controls &gt; .form-label &gt; :is(.form-control, .form-range, .form-select) {
+  grid-column: 1 / -1;
+}
+
+.btn,
+.form-check-input,
+.form-control,
+.form-range,
+.form-select {
+  font: inherit;
+}
+
+.btn {
+  appearance: button;
+  display: inline-flex;
+  inline-size: fit-content;
+  max-inline-size: 100%;
+  min-height: 28px;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  margin: 0;
+  padding: 0 8px;
+  -webkit-app-region: no-drag;
+  border: 1px solid var(--input);
+  border-radius: var(--radius-lg);
+  corner-shape: superellipse(1.5);
+  color: var(--secondary-foreground);
+  background: var(--secondary);
+  cursor: var(--cursor-interaction, pointer);
+  text-align: center;
+  text-decoration: none;
+  white-space: nowrap;
+  user-select: none;
+  -webkit-font-smoothing: antialiased;
+}
+
+.btn:is(.btn-block, .viz-tile) {
+  inline-size: 100%;
+}
+
+.btn.viz-tile {
+  min-width: 0;
+  overflow-wrap: anywhere;
+  white-space: normal;
+}
+
+a.btn {
+  cursor: pointer;
+  text-decoration: none;
+}
+
+.btn:not(:disabled):hover {
+  background: color-mix(in srgb, var(--foreground) 6%, var(--secondary));
+}
+
+.btn-primary {
+  border-color: transparent;
+  color: var(--primary-foreground);
+  background: var(--foreground);
+  background-clip: padding-box;
+}
+
+.btn-primary .text-muted {
+  color: color-mix(in srgb, var(--primary-foreground) 50%, transparent);
+}
+
+.btn-primary:not(:disabled):hover {
+  background: color-mix(in srgb, var(--foreground) 80%, transparent);
+  background-clip: padding-box;
+}
+
+.btn-ghost {
+  border-color: transparent;
+  color: var(--muted-foreground);
+  background: transparent;
+}
+
+.btn-ghost:not(:disabled):hover {
+  color: var(--foreground);
+  background: color-mix(in srgb, var(--foreground) 6%, var(--secondary));
+}
+
+.btn:disabled {
+  cursor: not-allowed;
+  opacity: 0.4;
+}
+
+[data-lucide] {
+  stroke-width: 1.6;
+}
+
+.form-label {
+  display: block;
+  margin-bottom: 6px;
+  color: var(--foreground);
+}
+
+.form-control {
+  display: block;
+  width: 100%;
+  min-height: 28px;
+  padding: 0 8px;
+  outline: none;
+  border: 1px solid var(--input);
+  border-radius: var(--radius-lg);
+  corner-shape: superellipse(1.5);
+  color: var(--foreground);
+  background: var(--secondary);
+}
+
+.form-control::placeholder {
+  color: var(--muted-foreground);
+}
+
+.form-control[type=&quot;file&quot;] {
+  padding: 0;
+  overflow: hidden;
+  cursor: var(--cursor-interaction, pointer);
+}
+
+.form-control[type=&quot;file&quot;]::file-selector-button {
+  min-height: 26px;
+  margin-right: 8px;
+  padding: 0 8px;
+  border: 0;
+  border-right: 1px solid var(--input);
+  color: var(--secondary-foreground);
+  background: var(--secondary);
+  cursor: inherit;
+  font: inherit;
+}
+
+.form-control[type=&quot;file&quot;]:not(:disabled):hover::file-selector-button {
+  background: color-mix(in srgb, var(--foreground) 6%, var(--secondary));
+}
+
+.form-control-color[type=&quot;color&quot;] {
+  width: 40px;
+  height: 28px;
+  padding: 3px;
+  cursor: var(--cursor-interaction, pointer);
+}
+
+.form-control-color[type=&quot;color&quot;]::-webkit-color-swatch-wrapper {
+  padding: 0;
+}
+
+.form-control-color[type=&quot;color&quot;]::-webkit-color-swatch {
+  border: 0;
+  border-radius: calc(var(--radius-lg) - 4px);
+  corner-shape: superellipse(1.5);
+}
+
+textarea.form-control {
+  height: auto;
+  min-height: 72px;
+  padding: 8px 10px;
+  resize: vertical;
+}
+
+.form-control:focus-visible {
+  border-color: var(--ring);
+  box-shadow: inset 0 0 0 1px var(--ring);
+}
+
+.form-control:disabled,
+.form-select:disabled {
+  cursor: not-allowed;
+  opacity: 0.4;
+}
+
+.form-select {
+  appearance: none;
+  display: block;
+  width: 100%;
+  min-height: 28px;
+  margin: 0;
+  padding: 0 32px 0 8px;
+  outline: none;
+  border: 1px solid var(--input);
+  border-radius: var(--radius-lg);
+  corner-shape: superellipse(1.5);
+  color: var(--foreground);
+  background-color: var(--secondary);
+  background-image:
+    linear-gradient(45deg, transparent 50%, var(--muted-foreground) 50%),
+    linear-gradient(135deg, var(--muted-foreground) 50%, transparent 50%);
+  background-position:
+    calc(100% - 14px) 50%,
+    calc(100% - 10px) 50%;
+  background-repeat: no-repeat;
+  background-size: 4px 4px;
+  cursor: var(--cursor-interaction, default);
+}
+
+.form-select:not(:disabled):hover {
+  background-color: color-mix(in srgb, var(--foreground) 6%, var(--secondary));
+}
+
+.form-select:focus-visible {
+  border-color: var(--ring);
+  box-shadow: inset 0 0 0 1px var(--ring);
+}
+
+.form-check {
+  display: flex;
+  min-height: 20px;
+  align-items: center;
+  gap: 6px;
+}
+
+.form-check-input {
+  appearance: none;
+  width: 14px;
+  height: 14px;
+  flex: 0 0 auto;
+  margin: 0;
+  border: 1px solid var(--input);
+  color: var(--primary-foreground);
+  background-color: transparent;
+  cursor: var(--cursor-interaction, default);
+  transition:
+    background-color 150ms,
+    border-color 150ms,
+    box-shadow 150ms;
+}
+
+.form-check:not(.form-switch) .form-check-input[type=&quot;checkbox&quot;] {
+  border-color: var(--input);
+  border-radius: var(--radius-sm);
+  corner-shape: superellipse(1.5);
+  background-color: var(--secondary);
+  box-shadow: var(--shadow-sm);
+}
+
+.form-check:not(.form-switch)
+  .form-check-input:not(:disabled):not(:checked):hover {
+  background-color: var(--card);
+}
+
+.form-check:not(.form-switch) .form-check-input[type=&quot;checkbox&quot;]:checked {
+  border-color: var(--primary);
+  background-color: var(--primary);
+}
+
+.form-check:not(.form-switch)
+  .form-check-input[type=&quot;checkbox&quot;]:checked::before {
+  display: block;
+  width: 100%;
+  height: 100%;
+  background: var(--primary-foreground);
+  content: &quot;&quot;;
+  mask: var(--checkmark-image) center / 12px 12px no-repeat;
+}
+
+.form-check-input[type=&quot;radio&quot;] {
+  width: 14px;
+  height: 14px;
+  border-radius: var(--radius-full);
+}
+
+.form-check-input[type=&quot;radio&quot;]:checked {
+  border: 2px solid var(--primary);
+  background:
+    radial-gradient(circle, var(--primary-foreground) 0 2.5px, transparent 3px),
+    var(--primary);
+}
+
+.form-check:not(.form-switch) .form-check-input:focus-visible {
+  outline: 2px solid var(--ring);
+  outline-offset: 2px;
+}
+
+.form-check:not(.form-switch) .form-check-input:disabled {
+  cursor: not-allowed;
+  pointer-events: none;
+}
+
+.form-check:not(.form-switch) .form-check-input:disabled + .form-check-label {
+  cursor: not-allowed;
+}
+
+.form-switch .form-check-input:disabled,
+.form-switch .form-check-input:disabled + .form-check-label {
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+.form-check-label {
+  color: var(--foreground);
+  cursor: var(--cursor-interaction, default);
+}
+
+.form-switch .form-check-input {
+  position: relative;
+  width: 32px;
+  height: 20px;
+  border: 0;
+  border-radius: var(--radius-full);
+  background: var(--muted);
+  box-shadow: none;
+  transition: background-color 200ms cubic-bezier(0, 0, 0.2, 1);
+}
+
+.form-switch .form-check-input::before {
+  position: absolute;
+  top: 50%;
+  left: 0;
+  width: 16px;
+  height: 16px;
+  box-sizing: border-box;
+  border: 1px solid light-dark(var(--primary-foreground), var(--foreground));
+  border-radius: var(--radius-full);
+  background: light-dark(var(--primary-foreground), var(--foreground));
+  box-shadow: var(--shadow-sm);
+  content: &quot;&quot;;
+  transform: translate(2px, -50%);
+  transition: transform 200ms cubic-bezier(0, 0, 0.2, 1);
+}
+
+.form-switch .form-check-input:checked {
+  background: var(--primary);
+}
+
+.form-switch .form-check-input:checked::before {
+  transform: translate(14px, -50%);
+}
+
+.form-switch .form-check-input:focus-visible {
+  box-shadow: 0 0 0 2px var(--ring);
+}
+
+.form-range {
+  appearance: none;
+  display: block;
+  width: 100%;
+  height: 28px;
+  flex: 1;
+  margin: 0;
+  padding: 0;
+  outline: none;
+  border: 0;
+  accent-color: var(--primary);
+  background: linear-gradient(
+      color-mix(in srgb, var(--foreground) 7%, transparent),
+      color-mix(in srgb, var(--foreground) 7%, transparent)
+    )
+    center / 100% 2px no-repeat;
+}
+
+.form-range::-webkit-slider-runnable-track {
+  height: 28px;
+  background: transparent;
+}
+
+.form-range::-webkit-slider-thumb {
+  appearance: none;
+  width: 20px;
+  height: 20px;
+  margin-top: 4px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-full);
+  background: light-dark(var(--primary-foreground), var(--foreground));
+}
+
+.form-range:focus-visible::-webkit-slider-thumb {
+  border-color: var(--ring);
+  box-shadow: inset 0 0 0 1px var(--ring);
+}
+
+.form-range::-moz-range-track {
+  height: 28px;
+  background: transparent;
+}
+
+.form-range::-moz-range-thumb {
+  width: 20px;
+  height: 20px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-full);
+  background: light-dark(var(--primary-foreground), var(--foreground));
+}
+
+.form-range:focus-visible::-moz-range-thumb {
+  border-color: var(--ring);
+  box-shadow: inset 0 0 0 1px var(--ring);
+}
+
+.form-range:disabled {
+  cursor: not-allowed;
+  opacity: 0.4;
+}
+
+.btn:not(.btn-primary, .viz-tile):is(
+    [aria-pressed=&quot;true&quot;],
+    [aria-selected=&quot;true&quot;],
+    .is-selected
+  ) {
+  border-color: var(--primary);
+  color: var(--primary-foreground);
+  background: var(--primary);
+}
+
+.btn.viz-tile:is([aria-pressed=&quot;true&quot;], [aria-selected=&quot;true&quot;], .is-selected) {
+  border-color: var(--primary);
+  box-shadow: inset 0 0 0 1px var(--primary);
+}
+
+.btn:focus-visible {
+  outline: 2px solid var(--ring);
+  outline-offset: 2px;
+}
+
+svg {
+  display: block;
+  max-width: 100%;
+  height: auto;
+}
+
+#widget &gt; svg {
+  width: 100%;
+}
+
+.text-warning,
+.text-destructive {
+  color: var(--destructive);
+}
+
+html&gt;body{padding:0}&lt;/style&gt;
+&lt;/head&gt;
+&lt;body&gt;
+&lt;div id=&quot;stock-market-simulator&quot;&gt;
+  &lt;style&gt;
+    #stock-market-simulator {
+      color: var(--foreground);
+      display: grid;
+      gap: 16px;
+      width: 100%;
+    }
+    #stock-market-simulator .sms-status,
+    #stock-market-simulator .sms-actions,
+    #stock-market-simulator .sms-legend {
+      display: flex;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+    #stock-market-simulator .sms-status {
+      justify-content: space-between;
+    }
+    #stock-market-simulator .sms-controls-card,
+    #stock-market-simulator .sms-trade-card {
+      display: grid;
+      gap: 12px;
+    }
+    #stock-market-simulator .sms-control-grid {
+      display: grid;
+      grid-template-columns: minmax(180px, 1fr) minmax(180px, 1fr);
+      gap: 12px;
+      align-items: end;
+    }
+    #stock-market-simulator .sms-field {
+      display: grid;
+      gap: 6px;
+      min-width: 0;
+    }
+    #stock-market-simulator .sms-field-head {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      gap: 8px;
+    }
+    #stock-market-simulator .sms-chart {
+      position: relative;
+      width: 100%;
+      min-width: 0;
+    }
+    #stock-market-simulator .sms-chart svg {
+      display: block;
+      width: 100%;
+      height: 300px;
+      overflow: visible;
+    }
+    #stock-market-simulator .sms-grid-line,
+    #stock-market-simulator .sms-axis-line {
+      stroke: var(--border);
+      stroke-width: 1;
+      vector-effect: non-scaling-stroke;
+    }
+    #stock-market-simulator .sms-series-price,
+    #stock-market-simulator .sms-series-assets {
+      fill: none;
+      stroke-width: 2.5;
+      stroke-linejoin: round;
+      stroke-linecap: round;
+      vector-effect: non-scaling-stroke;
+      transition: d 240ms ease;
+    }
+    #stock-market-simulator .sms-series-price {
+      stroke: var(--viz-series-1);
+    }
+    #stock-market-simulator .sms-series-assets {
+      stroke: var(--viz-series-2);
+    }
+    #stock-market-simulator .sms-price-dot {
+      fill: var(--viz-series-1);
+    }
+    #stock-market-simulator .sms-assets-dot {
+      fill: var(--viz-series-2);
+    }
+    #stock-market-simulator .sms-hover-line {
+      stroke: var(--muted-foreground);
+      stroke-width: 1;
+      vector-effect: non-scaling-stroke;
+    }
+    #stock-market-simulator .sms-axis-text {
+      fill: var(--muted-foreground);
+      font-size: var(--font-size-base);
+      font-weight: 400;
+    }
+    #stock-market-simulator .sms-swatch {
+      width: 18px;
+      height: 3px;
+      display: inline-block;
+    }
+    #stock-market-simulator .sms-swatch-price {
+      background: var(--viz-series-1);
+    }
+    #stock-market-simulator .sms-swatch-assets {
+      background: var(--viz-series-2);
+    }
+    #stock-market-simulator .sms-tooltip {
+      position: absolute;
+      display: none;
+      pointer-events: none;
+      max-width: 220px;
+      z-index: 2;
+    }
+    #stock-market-simulator .sms-table-title {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      gap: 8px;
+    }
+    #stock-market-simulator .sms-buy {
+      color: var(--foreground);
+    }
+    #stock-market-simulator .sms-sell {
+      color: var(--foreground);
+    }
+    @media (max-width: 560px) {
+      #stock-market-simulator .sms-control-grid {
+        grid-template-columns: 1fr;
+      }
+      #stock-market-simulator .sms-chart svg {
+        height: 260px;
+      }
+      #stock-market-simulator .sms-actions .btn {
+        flex: 1 1 auto;
+      }
+    }
+    @media (prefers-reduced-motion: reduce) {
+      #stock-market-simulator .sms-series-price,
+      #stock-market-simulator .sms-series-assets {
+        transition: none;
+      }
+    }
+  &lt;/style&gt;
+
+  &lt;div class=&quot;viz-grid&quot; aria-label=&quot;模擬帳戶摘要&quot;&gt;
+    &lt;div class=&quot;card viz-stat&quot;&gt;
+      &lt;div class=&quot;text-muted&quot;&gt;股價&lt;/div&gt;
+      &lt;div class=&quot;viz-stat-value&quot; id=&quot;sms-price&quot;&gt;NT$100.00&lt;/div&gt;
+      &lt;div id=&quot;sms-daily-return&quot;&gt;第 0 天 · 0.00%&lt;/div&gt;
+    &lt;/div&gt;
+    &lt;div class=&quot;card viz-stat&quot;&gt;
+      &lt;div class=&quot;text-muted&quot;&gt;總資產&lt;/div&gt;
+      &lt;div class=&quot;viz-stat-value&quot; id=&quot;sms-total-assets&quot;&gt;NT$1,000,000&lt;/div&gt;
+      &lt;div id=&quot;sms-cash&quot;&gt;現金 NT$1,000,000&lt;/div&gt;
+    &lt;/div&gt;
+    &lt;div class=&quot;card viz-stat&quot;&gt;
+      &lt;div class=&quot;text-muted&quot;&gt;持倉&lt;/div&gt;
+      &lt;div class=&quot;viz-stat-value&quot; id=&quot;sms-position&quot;&gt;0 股&lt;/div&gt;
+      &lt;div id=&quot;sms-pnl&quot;&gt;未實現 NT$0 · 已實現 NT$0&lt;/div&gt;
+    &lt;/div&gt;
+  &lt;/div&gt;
+
+  &lt;section class=&quot;card sms-controls-card&quot; aria-label=&quot;市場控制&quot;&gt;
+    &lt;div class=&quot;sms-control-grid&quot;&gt;
+      &lt;label class=&quot;form-label sms-field&quot; for=&quot;sms-scenario&quot;&gt;
+        &lt;span&gt;市場情境&lt;/span&gt;
+        &lt;select class=&quot;form-select&quot; id=&quot;sms-scenario&quot;&gt;
+          &lt;option value=&quot;crash&quot;&gt;急跌後反彈&lt;/option&gt;
+          &lt;option value=&quot;bull&quot;&gt;多頭震盪&lt;/option&gt;
+          &lt;option value=&quot;bear&quot;&gt;空頭下行&lt;/option&gt;
+          &lt;option value=&quot;news&quot;&gt;隨機消息&lt;/option&gt;
+        &lt;/select&gt;
+      &lt;/label&gt;
+      &lt;label class=&quot;form-label sms-field&quot; for=&quot;sms-volatility&quot;&gt;
+        &lt;span class=&quot;sms-field-head&quot;&gt;&lt;span&gt;波動強度&lt;/span&gt;&lt;span id=&quot;sms-volatility-value&quot;&gt;6%&lt;/span&gt;&lt;/span&gt;
+        &lt;input class=&quot;form-range&quot; id=&quot;sms-volatility&quot; type=&quot;range&quot; min=&quot;1&quot; max=&quot;12&quot; value=&quot;6&quot; step=&quot;1&quot;&gt;
+      &lt;/label&gt;
+    &lt;/div&gt;
+    &lt;div class=&quot;sms-status&quot;&gt;
+      &lt;div class=&quot;sms-actions&quot;&gt;
+        &lt;span class=&quot;viz-badge&quot; id=&quot;sms-market-state&quot;&gt;市場未開盤&lt;/span&gt;
+        &lt;span class=&quot;text-muted&quot; id=&quot;sms-event&quot;&gt;從第 1 天開始觀察行情&lt;/span&gt;
+      &lt;/div&gt;
+      &lt;div class=&quot;sms-actions&quot;&gt;
+        &lt;button class=&quot;btn btn-primary&quot; id=&quot;sms-next-day&quot; type=&quot;button&quot;&gt;&lt;i data-lucide=&quot;skip-forward&quot; aria-hidden=&quot;true&quot;&gt;&lt;/i&gt;下一交易日&lt;/button&gt;
+        &lt;button class=&quot;btn&quot; id=&quot;sms-auto&quot; type=&quot;button&quot; aria-pressed=&quot;false&quot;&gt;&lt;i data-lucide=&quot;play&quot; aria-hidden=&quot;true&quot;&gt;&lt;/i&gt;&lt;span&gt;自動播放&lt;/span&gt;&lt;/button&gt;
+        &lt;button class=&quot;btn btn-ghost&quot; id=&quot;sms-reset&quot; type=&quot;button&quot;&gt;&lt;i data-lucide=&quot;rotate-ccw&quot; aria-hidden=&quot;true&quot;&gt;&lt;/i&gt;重設&lt;/button&gt;
+      &lt;/div&gt;
+    &lt;/div&gt;
+  &lt;/section&gt;
+
+  &lt;section aria-label=&quot;股價與資產走勢&quot;&gt;
+    &lt;div class=&quot;sms-status&quot;&gt;
+      &lt;div class=&quot;sms-legend text-small&quot;&gt;
+        &lt;span class=&quot;sms-swatch sms-swatch-price&quot; aria-hidden=&quot;true&quot;&gt;&lt;/span&gt;&lt;span&gt;股價報酬&lt;/span&gt;
+        &lt;span class=&quot;sms-swatch sms-swatch-assets&quot; aria-hidden=&quot;true&quot;&gt;&lt;/span&gt;&lt;span&gt;資產報酬&lt;/span&gt;
+      &lt;/div&gt;
+      &lt;span class=&quot;text-muted text-small&quot;&gt;起點 = 0%&lt;/span&gt;
+    &lt;/div&gt;
+    &lt;div class=&quot;sms-chart&quot; id=&quot;sms-chart-wrap&quot;&gt;
+      &lt;svg id=&quot;sms-chart&quot; role=&quot;img&quot; aria-labelledby=&quot;sms-chart-title sms-chart-desc&quot;&gt;
+        &lt;title id=&quot;sms-chart-title&quot;&gt;股價與總資產報酬走勢&lt;/title&gt;
+        &lt;desc id=&quot;sms-chart-desc&quot;&gt;比較模擬股價和帳戶總資產相對於起始日的百分比變化。&lt;/desc&gt;
+        &lt;g id=&quot;sms-chart-grid&quot;&gt;&lt;/g&gt;
+        &lt;path class=&quot;sms-series-price&quot; id=&quot;sms-price-line&quot;&gt;&lt;/path&gt;
+        &lt;path class=&quot;sms-series-assets&quot; id=&quot;sms-assets-line&quot;&gt;&lt;/path&gt;
+        &lt;line class=&quot;sms-hover-line&quot; id=&quot;sms-hover-line&quot; visibility=&quot;hidden&quot;&gt;&lt;/line&gt;
+        &lt;circle class=&quot;sms-price-dot&quot; id=&quot;sms-price-dot&quot; r=&quot;4&quot;&gt;&lt;/circle&gt;
+        &lt;circle class=&quot;sms-assets-dot&quot; id=&quot;sms-assets-dot&quot; r=&quot;4&quot;&gt;&lt;/circle&gt;
+        &lt;rect id=&quot;sms-chart-hit&quot; fill=&quot;transparent&quot;&gt;&lt;/rect&gt;
+      &lt;/svg&gt;
+      &lt;div class=&quot;tooltip sms-tooltip&quot; id=&quot;sms-tooltip&quot; role=&quot;status&quot;&gt;&lt;/div&gt;
+    &lt;/div&gt;
+    &lt;div class=&quot;text-small text-muted&quot; id=&quot;sms-selected-point&quot; aria-live=&quot;polite&quot;&gt;第 0 天 · 股價 0.00% · 資產 0.00%&lt;/div&gt;
+  &lt;/section&gt;
+
+  &lt;section class=&quot;card sms-trade-card&quot; aria-label=&quot;股票交易&quot;&gt;
+    &lt;div class=&quot;sms-control-grid&quot;&gt;
+      &lt;label class=&quot;form-label sms-field&quot; for=&quot;sms-quantity&quot;&gt;
+        &lt;span&gt;交易股數&lt;/span&gt;
+        &lt;input class=&quot;form-control&quot; id=&quot;sms-quantity&quot; type=&quot;number&quot; min=&quot;1&quot; step=&quot;100&quot; value=&quot;1000&quot; inputmode=&quot;numeric&quot;&gt;
+      &lt;/label&gt;
+      &lt;div class=&quot;sms-actions&quot;&gt;
+        &lt;button class=&quot;btn btn-primary&quot; id=&quot;sms-buy&quot; type=&quot;button&quot;&gt;&lt;i data-lucide=&quot;trending-up&quot; aria-hidden=&quot;true&quot;&gt;&lt;/i&gt;買進&lt;/button&gt;
+        &lt;button class=&quot;btn&quot; id=&quot;sms-sell&quot; type=&quot;button&quot;&gt;&lt;i data-lucide=&quot;trending-down&quot; aria-hidden=&quot;true&quot;&gt;&lt;/i&gt;賣出&lt;/button&gt;
+      &lt;/div&gt;
+    &lt;/div&gt;
+    &lt;div class=&quot;text-small&quot; id=&quot;sms-feedback&quot; aria-live=&quot;polite&quot;&gt;目前可買進 9,985 股&lt;/div&gt;
+  &lt;/section&gt;
+
+  &lt;section aria-label=&quot;最近交易紀錄&quot;&gt;
+    &lt;div class=&quot;sms-table-title&quot;&gt;
+      &lt;span&gt;最近交易&lt;/span&gt;
+      &lt;span class=&quot;text-small text-muted&quot;&gt;含手續費；賣出另計交易稅&lt;/span&gt;
+    &lt;/div&gt;
+    &lt;div class=&quot;table-responsive&quot;&gt;
+      &lt;table class=&quot;table table-sm&quot;&gt;
+        &lt;thead&gt;
+          &lt;tr&gt;
+            &lt;th&gt;日期&lt;/th&gt;
+            &lt;th&gt;動作&lt;/th&gt;
+            &lt;th class=&quot;text-end&quot;&gt;股數&lt;/th&gt;
+            &lt;th class=&quot;text-end&quot;&gt;成交價&lt;/th&gt;
+            &lt;th class=&quot;text-end&quot;&gt;現金流&lt;/th&gt;
+          &lt;/tr&gt;
+        &lt;/thead&gt;
+        &lt;tbody id=&quot;sms-transactions&quot;&gt;
+          &lt;tr&gt;&lt;td colspan=&quot;5&quot; class=&quot;text-center text-muted&quot;&gt;尚無交易&lt;/td&gt;&lt;/tr&gt;
+        &lt;/tbody&gt;
+      &lt;/table&gt;
+    &lt;/div&gt;
+  &lt;/section&gt;
+
+  &lt;script&gt;
+    (() =&gt; {
+      const root = document.getElementById(&#x27;stock-market-simulator&#x27;);
+      if (!root) return;
+
+      const el = (id) =&gt; root.querySelector(&#x27;#&#x27; + id);
+      const STARTING_CASH = 1000000;
+      const STARTING_PRICE = 100;
+      const COMMISSION_RATE = 0.001425;
+      const SELL_TAX_RATE = 0.003;
+      const MAX_HISTORY = 181;
+
+      const state = {
+        day: 0,
+        price: STARTING_PRICE,
+        previousPrice: STARTING_PRICE,
+        dailyReturn: 0,
+        cash: STARTING_CASH,
+        shares: 0,
+        averageCost: 0,
+        realizedPnl: 0,
+        seed: 41873,
+        history: [],
+        transactions: [],
+        timer: null,
+        marketLabel: &#x27;市場未開盤&#x27;,
+        eventText: &#x27;從第 1 天開始觀察行情&#x27;
+      };
+
+      const currency0 = new Intl.NumberFormat(&#x27;zh-TW&#x27;, {
+        style: &#x27;currency&#x27;, currency: &#x27;TWD&#x27;, maximumFractionDigits: 0
+      });
+      const currency2 = new Intl.NumberFormat(&#x27;zh-TW&#x27;, {
+        style: &#x27;currency&#x27;, currency: &#x27;TWD&#x27;, minimumFractionDigits: 2, maximumFractionDigits: 2
+      });
+      const number0 = new Intl.NumberFormat(&#x27;zh-TW&#x27;, { maximumFractionDigits: 0 });
+
+      function totalAssets() {
+        return state.cash + state.shares * state.price;
+      }
+
+      function unrealizedPnl() {
+        return state.shares * (state.price - state.averageCost);
+      }
+
+      function signedPercent(value) {
+        const sign = value &gt; 0 ? &#x27;+&#x27; : &#x27;&#x27;;
+        return sign + value.toFixed(2) + &#x27;%&#x27;;
+      }
+
+      function signedMoney(value) {
+        const sign = value &gt; 0 ? &#x27;+&#x27; : &#x27;&#x27;;
+        return sign + currency0.format(value);
+      }
+
+      function seededRandom() {
+        state.seed = (state.seed * 1664525 + 1013904223) &gt;&gt;&gt; 0;
+        return state.seed / 4294967296;
+      }
+
+      function normalRandom() {
+        const u = Math.max(seededRandom(), 0.000001);
+        const v = Math.max(seededRandom(), 0.000001);
+        return Math.sqrt(-2 * Math.log(u)) * Math.cos(2 * Math.PI * v);
+      }
+
+      function calculateReturn(nextDay) {
+        const scenario = el(&#x27;sms-scenario&#x27;).value;
+        const volatility = Number(el(&#x27;sms-volatility&#x27;).value) / 100;
+        let drift = 0;
+
+        if (scenario === &#x27;crash&#x27;) {
+          const phase = ((nextDay - 1) % 45) + 1;
+          if (phase &lt;= 8) drift = -0.043;
+          else if (phase &lt;= 18) drift = 0.033;
+          else drift = 0.001;
+        } else if (scenario === &#x27;bull&#x27;) {
+          drift = 0.008;
+          if (nextDay % 13 === 0) drift -= 0.045;
+        } else if (scenario === &#x27;bear&#x27;) {
+          drift = -0.007;
+          if (nextDay % 11 === 0) drift += 0.04;
+        } else {
+          drift = Math.sin(nextDay * 1.7) * volatility * 0.35;
+          if (nextDay % 7 === 0) drift += seededRandom() &gt; 0.5 ? 0.07 : -0.07;
+        }
+
+        const result = drift + normalRandom() * volatility * 0.62;
+        return Math.max(-0.18, Math.min(0.18, result));
+      }
+
+      function describeMarket(change) {
+        if (change &gt;= 0.08) return [&#x27;跳空大漲&#x27;, &#x27;買盤湧入，市場情緒快速升溫&#x27;];
+        if (change &gt;= 0.03) return [&#x27;強勢上漲&#x27;, &#x27;指數放量走高，多方掌握節奏&#x27;];
+        if (change &lt;= -0.08) return [&#x27;恐慌重挫&#x27;, &#x27;賣壓集中出籠，價格快速下探&#x27;];
+        if (change &lt;= -0.03) return [&#x27;快速下跌&#x27;, &#x27;風險偏好降溫，市場承受賣壓&#x27;];
+        if (change &gt; 0.006) return [&#x27;小幅走高&#x27;, &#x27;買賣拉鋸後略偏多方&#x27;];
+        if (change &lt; -0.006) return [&#x27;小幅走低&#x27;, &#x27;盤勢震盪，賣方略占上風&#x27;];
+        return [&#x27;震盪整理&#x27;, &#x27;多空力量接近，行情窄幅波動&#x27;];
+      }
+
+      function recordHistory() {
+        const entry = {
+          day: state.day,
+          price: state.price,
+          assets: totalAssets(),
+          priceReturn: (state.price / STARTING_PRICE - 1) * 100,
+          assetReturn: (totalAssets() / STARTING_CASH - 1) * 100
+        };
+        const last = state.history[state.history.length - 1];
+        if (last &amp;&amp; last.day === state.day) state.history[state.history.length - 1] = entry;
+        else state.history.push(entry);
+        if (state.history.length &gt; MAX_HISTORY) state.history.shift();
+      }
+
+      function advanceDay() {
+        state.previousPrice = state.price;
+        state.day += 1;
+        state.dailyReturn = calculateReturn(state.day);
+        state.price = Math.max(5, state.price * (1 + state.dailyReturn));
+        const description = describeMarket(state.dailyReturn);
+        state.marketLabel = description[0];
+        state.eventText = description[1];
+        recordHistory();
+        render();
+      }
+
+      function tradeFee(gross) {
+        return Math.max(20, Math.round(gross * COMMISSION_RATE));
+      }
+
+      function getQuantity() {
+        const value = Math.floor(Number(el(&#x27;sms-quantity&#x27;).value));
+        if (!Number.isFinite(value) || value &lt; 1) return 0;
+        return value;
+      }
+
+      function updateCurrentHistory() {
+        recordHistory();
+        render();
+      }
+
+      function buy() {
+        const quantity = getQuantity();
+        if (!quantity) {
+          showFeedback(&#x27;請輸入大於 0 的交易股數&#x27;, true);
+          return;
+        }
+        const gross = quantity * state.price;
+        const fee = tradeFee(gross);
+        const total = gross + fee;
+        if (total &gt; state.cash) {
+          showFeedback(&#x27;現金不足，目前最多可買進 &#x27; + number0.format(maxAffordableShares()) + &#x27; 股&#x27;, true);
+          return;
+        }
+        const previousBookCost = state.averageCost * state.shares;
+        state.cash -= total;
+        state.shares += quantity;
+        state.averageCost = (previousBookCost + total) / state.shares;
+        state.transactions.unshift({
+          day: state.day, type: &#x27;買進&#x27;, quantity, price: state.price, cashFlow: -total
+        });
+        showFeedback(&#x27;已買進 &#x27; + number0.format(quantity) + &#x27; 股，含手續費 &#x27; + currency0.format(fee), false);
+        updateCurrentHistory();
+      }
+
+      function sell() {
+        const quantity = getQuantity();
+        if (!quantity) {
+          showFeedback(&#x27;請輸入大於 0 的交易股數&#x27;, true);
+          return;
+        }
+        if (quantity &gt; state.shares) {
+          showFeedback(&#x27;持股不足，目前可賣出 &#x27; + number0.format(state.shares) + &#x27; 股&#x27;, true);
+          return;
+        }
+        const gross = quantity * state.price;
+        const fee = tradeFee(gross);
+        const tax = Math.round(gross * SELL_TAX_RATE);
+        const proceeds = gross - fee - tax;
+        const realized = (state.price - state.averageCost) * quantity - fee - tax;
+        state.cash += proceeds;
+        state.shares -= quantity;
+        state.realizedPnl += realized;
+        if (state.shares === 0) state.averageCost = 0;
+        state.transactions.unshift({
+          day: state.day, type: &#x27;賣出&#x27;, quantity, price: state.price, cashFlow: proceeds
+        });
+        showFeedback(&#x27;已賣出 &#x27; + number0.format(quantity) + &#x27; 股，本次損益 &#x27; + signedMoney(realized), false);
+        updateCurrentHistory();
+      }
+
+      function maxAffordableShares() {
+        if (state.cash &lt;= 20) return 0;
+        return Math.max(0, Math.floor((state.cash - 20) / (state.price * (1 + COMMISSION_RATE))));
+      }
+
+      function showFeedback(message, destructive) {
+        const feedback = el(&#x27;sms-feedback&#x27;);
+        feedback.textContent = message;
+        feedback.classList.toggle(&#x27;text-destructive&#x27;, destructive);
+      }
+
+      function setAutoPlaying(playing) {
+        const button = el(&#x27;sms-auto&#x27;);
+        if (playing) {
+          if (state.timer) return;
+          state.timer = window.setInterval(advanceDay, 700);
+        } else if (state.timer) {
+          window.clearInterval(state.timer);
+          state.timer = null;
+        }
+        button.setAttribute(&#x27;aria-pressed&#x27;, playing ? &#x27;true&#x27; : &#x27;false&#x27;);
+        button.innerHTML = playing
+          ? &#x27;&lt;i data-lucide=&quot;pause&quot; aria-hidden=&quot;true&quot;&gt;&lt;/i&gt;&lt;span&gt;暫停&lt;/span&gt;&#x27;
+          : &#x27;&lt;i data-lucide=&quot;play&quot; aria-hidden=&quot;true&quot;&gt;&lt;/i&gt;&lt;span&gt;自動播放&lt;/span&gt;&#x27;;
+        if (window.lucide) window.lucide.createIcons({ attrs: { width: 16, height: 16 } });
+      }
+
+      function resetSimulation() {
+        setAutoPlaying(false);
+        state.day = 0;
+        state.price = STARTING_PRICE;
+        state.previousPrice = STARTING_PRICE;
+        state.dailyReturn = 0;
+        state.cash = STARTING_CASH;
+        state.shares = 0;
+        state.averageCost = 0;
+        state.realizedPnl = 0;
+        state.seed = 41873;
+        state.history = [];
+        state.transactions = [];
+        state.marketLabel = &#x27;市場未開盤&#x27;;
+        state.eventText = &#x27;從第 1 天開始觀察行情&#x27;;
+        recordHistory();
+        showFeedback(&#x27;目前可買進 &#x27; + number0.format(maxAffordableShares()) + &#x27; 股&#x27;, false);
+        render();
+      }
+
+      function renderSummary() {
+        el(&#x27;sms-price&#x27;).textContent = currency2.format(state.price);
+        el(&#x27;sms-daily-return&#x27;).textContent = &#x27;第 &#x27; + state.day + &#x27; 天 · &#x27; + signedPercent(state.dailyReturn * 100);
+        el(&#x27;sms-total-assets&#x27;).textContent = currency0.format(totalAssets());
+        el(&#x27;sms-cash&#x27;).textContent = &#x27;現金 &#x27; + currency0.format(state.cash);
+        el(&#x27;sms-position&#x27;).textContent = number0.format(state.shares) + &#x27; 股&#x27;;
+        const average = state.shares ? &#x27; · 均價 &#x27; + currency2.format(state.averageCost) : &#x27;&#x27;;
+        el(&#x27;sms-pnl&#x27;).textContent = &#x27;未實現 &#x27; + signedMoney(unrealizedPnl()) + &#x27; · 已實現 &#x27; + signedMoney(state.realizedPnl) + average;
+        el(&#x27;sms-market-state&#x27;).textContent = state.marketLabel;
+        el(&#x27;sms-event&#x27;).textContent = state.eventText;
+      }
+
+      function renderTransactions() {
+        const body = el(&#x27;sms-transactions&#x27;);
+        if (!state.transactions.length) {
+          body.innerHTML = &#x27;&lt;tr&gt;&lt;td colspan=&quot;5&quot; class=&quot;text-center text-muted&quot;&gt;尚無交易&lt;/td&gt;&lt;/tr&gt;&#x27;;
+          return;
+        }
+        body.innerHTML = state.transactions.slice(0, 6).map((transaction) =&gt; {
+          const actionClass = transaction.type === &#x27;買進&#x27; ? &#x27;sms-buy&#x27; : &#x27;sms-sell&#x27;;
+          const flow = (transaction.cashFlow &gt; 0 ? &#x27;+&#x27; : &#x27;&#x27;) + currency0.format(transaction.cashFlow);
+          return &#x27;&lt;tr&gt;&#x27; +
+            &#x27;&lt;td class=&quot;text-nowrap&quot;&gt;第 &#x27; + transaction.day + &#x27; 天&lt;/td&gt;&#x27; +
+            &#x27;&lt;td class=&quot;&#x27; + actionClass + &#x27;&quot;&gt;&#x27; + transaction.type + &#x27;&lt;/td&gt;&#x27; +
+            &#x27;&lt;td class=&quot;text-end&quot;&gt;&#x27; + number0.format(transaction.quantity) + &#x27;&lt;/td&gt;&#x27; +
+            &#x27;&lt;td class=&quot;text-end&quot;&gt;&#x27; + currency2.format(transaction.price) + &#x27;&lt;/td&gt;&#x27; +
+            &#x27;&lt;td class=&quot;text-end&quot;&gt;&#x27; + flow + &#x27;&lt;/td&gt;&#x27; +
+          &#x27;&lt;/tr&gt;&#x27;;
+        }).join(&#x27;&#x27;);
+      }
+
+      function chartGeometry() {
+        const svg = el(&#x27;sms-chart&#x27;);
+        const width = Math.max(300, Math.round(svg.getBoundingClientRect().width || 720));
+        const height = svg.getBoundingClientRect().height || 300;
+        svg.setAttribute(&#x27;viewBox&#x27;, &#x27;0 0 &#x27; + width + &#x27; &#x27; + height);
+        return { width, height, left: 48, right: 18, top: 18, bottom: 36 };
+      }
+
+      function renderChart() {
+        const geometry = chartGeometry();
+        const { width, height, left, right, top, bottom } = geometry;
+        const plotWidth = Math.max(1, width - left - right);
+        const plotHeight = Math.max(1, height - top - bottom);
+        const values = state.history.flatMap((point) =&gt; [point.priceReturn, point.assetReturn]);
+        let minValue = Math.min(0, ...values);
+        let maxValue = Math.max(0, ...values);
+        const spread = Math.max(6, maxValue - minValue);
+        minValue -= spread * 0.12;
+        maxValue += spread * 0.12;
+
+        const xAt = (index) =&gt; left + (state.history.length &lt;= 1 ? 0 : index / (state.history.length - 1)) * plotWidth;
+        const yAt = (value) =&gt; top + ((maxValue - value) / (maxValue - minValue)) * plotHeight;
+        const pathFor = (key) =&gt; state.history.map((point, index) =&gt;
+          (index === 0 ? &#x27;M&#x27; : &#x27;L&#x27;) + xAt(index).toFixed(2) + &#x27;,&#x27; + yAt(point[key]).toFixed(2)
+        ).join(&#x27; &#x27;);
+
+        el(&#x27;sms-price-line&#x27;).setAttribute(&#x27;d&#x27;, pathFor(&#x27;priceReturn&#x27;));
+        el(&#x27;sms-assets-line&#x27;).setAttribute(&#x27;d&#x27;, pathFor(&#x27;assetReturn&#x27;));
+
+        const lastIndex = state.history.length - 1;
+        const latest = state.history[lastIndex];
+        const lastX = xAt(lastIndex);
+        const priceY = yAt(latest.priceReturn);
+        const assetsY = yAt(latest.assetReturn);
+        el(&#x27;sms-price-dot&#x27;).setAttribute(&#x27;cx&#x27;, lastX);
+        el(&#x27;sms-price-dot&#x27;).setAttribute(&#x27;cy&#x27;, priceY);
+        el(&#x27;sms-assets-dot&#x27;).setAttribute(&#x27;cx&#x27;, lastX);
+        el(&#x27;sms-assets-dot&#x27;).setAttribute(&#x27;cy&#x27;, assetsY);
+
+        const grid = [];
+        for (let index = 0; index &lt; 5; index += 1) {
+          const ratio = index / 4;
+          const y = top + ratio * plotHeight;
+          const value = maxValue - ratio * (maxValue - minValue);
+          grid.push(&#x27;&lt;line class=&quot;sms-grid-line&quot; x1=&quot;&#x27; + left + &#x27;&quot; x2=&quot;&#x27; + (width - right) + &#x27;&quot; y1=&quot;&#x27; + y + &#x27;&quot; y2=&quot;&#x27; + y + &#x27;&quot;&gt;&lt;/line&gt;&#x27;);
+          grid.push(&#x27;&lt;text class=&quot;sms-axis-text&quot; x=&quot;&#x27; + (left - 8) + &#x27;&quot; y=&quot;&#x27; + (y + 4) + &#x27;&quot; text-anchor=&quot;end&quot;&gt;&#x27; + signedPercent(value) + &#x27;&lt;/text&gt;&#x27;);
+        }
+        const firstDay = state.history[0].day;
+        const middleDay = state.history[Math.floor(lastIndex / 2)].day;
+        grid.push(&#x27;&lt;line class=&quot;sms-axis-line&quot; x1=&quot;&#x27; + left + &#x27;&quot; x2=&quot;&#x27; + (width - right) + &#x27;&quot; y1=&quot;&#x27; + (height - bottom) + &#x27;&quot; y2=&quot;&#x27; + (height - bottom) + &#x27;&quot;&gt;&lt;/line&gt;&#x27;);
+        grid.push(&#x27;&lt;text class=&quot;sms-axis-text&quot; x=&quot;&#x27; + left + &#x27;&quot; y=&quot;&#x27; + (height - 10) + &#x27;&quot;&gt;第 &#x27; + firstDay + &#x27; 天&lt;/text&gt;&#x27;);
+        if (lastIndex &gt; 1) grid.push(&#x27;&lt;text class=&quot;sms-axis-text&quot; x=&quot;&#x27; + xAt(Math.floor(lastIndex / 2)) + &#x27;&quot; y=&quot;&#x27; + (height - 10) + &#x27;&quot; text-anchor=&quot;middle&quot;&gt;第 &#x27; + middleDay + &#x27; 天&lt;/text&gt;&#x27;);
+        grid.push(&#x27;&lt;text class=&quot;sms-axis-text&quot; x=&quot;&#x27; + (width - right) + &#x27;&quot; y=&quot;&#x27; + (height - 10) + &#x27;&quot; text-anchor=&quot;end&quot;&gt;第 &#x27; + latest.day + &#x27; 天&lt;/text&gt;&#x27;);
+        el(&#x27;sms-chart-grid&#x27;).innerHTML = grid.join(&#x27;&#x27;);
+
+        const hit = el(&#x27;sms-chart-hit&#x27;);
+        hit.setAttribute(&#x27;x&#x27;, left);
+        hit.setAttribute(&#x27;y&#x27;, top);
+        hit.setAttribute(&#x27;width&#x27;, plotWidth);
+        hit.setAttribute(&#x27;height&#x27;, plotHeight);
+
+        el(&#x27;sms-chart&#x27;).dataset.left = left;
+        el(&#x27;sms-chart&#x27;).dataset.plotWidth = plotWidth;
+        el(&#x27;sms-chart&#x27;).dataset.top = top;
+        el(&#x27;sms-chart&#x27;).dataset.bottomY = height - bottom;
+        el(&#x27;sms-chart&#x27;).dataset.minValue = minValue;
+        el(&#x27;sms-chart&#x27;).dataset.maxValue = maxValue;
+        el(&#x27;sms-selected-point&#x27;).textContent = &#x27;第 &#x27; + latest.day + &#x27; 天 · 股價 &#x27; + signedPercent(latest.priceReturn) + &#x27; · 資產 &#x27; + signedPercent(latest.assetReturn);
+      }
+
+      function showChartPoint(event) {
+        const svg = el(&#x27;sms-chart&#x27;);
+        const rect = svg.getBoundingClientRect();
+        const left = Number(svg.dataset.left);
+        const plotWidth = Number(svg.dataset.plotWidth);
+        const localX = ((event.clientX - rect.left) / rect.width) * svg.viewBox.baseVal.width;
+        const ratio = Math.max(0, Math.min(1, (localX - left) / plotWidth));
+        const index = Math.round(ratio * (state.history.length - 1));
+        const point = state.history[index];
+        const x = left + (state.history.length &lt;= 1 ? 0 : index / (state.history.length - 1)) * plotWidth;
+        const hoverLine = el(&#x27;sms-hover-line&#x27;);
+        hoverLine.setAttribute(&#x27;x1&#x27;, x);
+        hoverLine.setAttribute(&#x27;x2&#x27;, x);
+        hoverLine.setAttribute(&#x27;y1&#x27;, svg.dataset.top);
+        hoverLine.setAttribute(&#x27;y2&#x27;, svg.dataset.bottomY);
+        hoverLine.setAttribute(&#x27;visibility&#x27;, &#x27;visible&#x27;);
+
+        const tooltip = el(&#x27;sms-tooltip&#x27;);
+        tooltip.innerHTML = &#x27;&lt;strong&gt;第 &#x27; + point.day + &#x27; 天&lt;/strong&gt;&lt;br&gt;股價 &#x27; + currency2.format(point.price) + &#x27; (&#x27; + signedPercent(point.priceReturn) + &#x27;)&lt;br&gt;總資產 &#x27; + currency0.format(point.assets) + &#x27; (&#x27; + signedPercent(point.assetReturn) + &#x27;)&#x27;;
+        tooltip.style.display = &#x27;block&#x27;;
+        const wrap = el(&#x27;sms-chart-wrap&#x27;);
+        const xCss = (x / svg.viewBox.baseVal.width) * rect.width;
+        const tooltipWidth = tooltip.getBoundingClientRect().width;
+        tooltip.style.left = Math.max(4, Math.min(wrap.clientWidth - tooltipWidth - 4, xCss + 10)) + &#x27;px&#x27;;
+        tooltip.style.top = &#x27;8px&#x27;;
+        el(&#x27;sms-selected-point&#x27;).textContent = &#x27;第 &#x27; + point.day + &#x27; 天 · 股價 &#x27; + signedPercent(point.priceReturn) + &#x27; · 資產 &#x27; + signedPercent(point.assetReturn);
+      }
+
+      function hideChartPoint() {
+        el(&#x27;sms-hover-line&#x27;).setAttribute(&#x27;visibility&#x27;, &#x27;hidden&#x27;);
+        el(&#x27;sms-tooltip&#x27;).style.display = &#x27;none&#x27;;
+        const latest = state.history[state.history.length - 1];
+        el(&#x27;sms-selected-point&#x27;).textContent = &#x27;第 &#x27; + latest.day + &#x27; 天 · 股價 &#x27; + signedPercent(latest.priceReturn) + &#x27; · 資產 &#x27; + signedPercent(latest.assetReturn);
+      }
+
+      function render() {
+        renderSummary();
+        renderTransactions();
+        renderChart();
+      }
+
+      el(&#x27;sms-next-day&#x27;).addEventListener(&#x27;click&#x27;, advanceDay);
+      el(&#x27;sms-auto&#x27;).addEventListener(&#x27;click&#x27;, () =&gt; setAutoPlaying(!state.timer));
+      el(&#x27;sms-reset&#x27;).addEventListener(&#x27;click&#x27;, resetSimulation);
+      el(&#x27;sms-buy&#x27;).addEventListener(&#x27;click&#x27;, buy);
+      el(&#x27;sms-sell&#x27;).addEventListener(&#x27;click&#x27;, sell);
+      el(&#x27;sms-volatility&#x27;).addEventListener(&#x27;input&#x27;, (event) =&gt; {
+        el(&#x27;sms-volatility-value&#x27;).textContent = event.target.value + &#x27;%&#x27;;
+      });
+      el(&#x27;sms-scenario&#x27;).addEventListener(&#x27;change&#x27;, () =&gt; {
+        state.marketLabel = &#x27;情境已切換&#x27;;
+        state.eventText = &#x27;新情境將從下一交易日開始影響行情&#x27;;
+        renderSummary();
+      });
+      el(&#x27;sms-chart-hit&#x27;).addEventListener(&#x27;pointermove&#x27;, showChartPoint);
+      el(&#x27;sms-chart-hit&#x27;).addEventListener(&#x27;pointerleave&#x27;, hideChartPoint);
+
+      let resizeFrame = null;
+      const resizeObserver = new ResizeObserver(() =&gt; {
+        if (resizeFrame) cancelAnimationFrame(resizeFrame);
+        resizeFrame = requestAnimationFrame(renderChart);
+      });
+      resizeObserver.observe(el(&#x27;sms-chart&#x27;));
+
+      recordHistory();
+      render();
+      showFeedback(&#x27;目前可買進 &#x27; + number0.format(maxAffordableShares()) + &#x27; 股&#x27;, false);
+    })();
+  &lt;/script&gt;
+&lt;/div&gt;
+
+&lt;script src=&quot;https://unpkg.com/@floating-ui/core@1.7.3/dist/floating-ui.core.umd.min.js&quot;&gt;&lt;/script&gt;
+&lt;script src=&quot;https://unpkg.com/@floating-ui/dom@1.7.4/dist/floating-ui.dom.umd.min.js&quot;&gt;&lt;/script&gt;
+&lt;script&gt;
+(() =&gt; {
+  if (window.FloatingUIDOM == null) {
+    return;
+  }
+  const { autoUpdate, computePosition, flip, offset, shift, size } =
+    window.FloatingUIDOM;
+  const tooltipPlacements = new Set([&quot;top&quot;, &quot;right&quot;, &quot;bottom&quot;, &quot;left&quot;]);
+  const tooltipId = `codex-visualization-tooltip-${
+    window.crypto?.randomUUID?.() ?? Date.now().toString(36)
+  }`;
+  const tooltipGap = 5;
+  const hoverDelay = 700;
+  const skipDelay = 300;
+  let activeTrigger = null;
+  let pendingTrigger = null;
+  let tooltip = null;
+  let openTimeout = null;
+  let autoUpdateCleanup = null;
+  let positionRequest = 0;
+  let skipDelayUntil = 0;
+
+  const getTrigger = (target) =&gt;
+    target?.nodeType === Node.ELEMENT_NODE
+      ? target.closest(&quot;[data-tooltip]&quot;)
+      : null;
+  const containsTarget = (trigger, target) =&gt;
+    target?.nodeType != null &amp;&amp; trigger.contains(target);
+  const getContent = (trigger) =&gt;
+    trigger.getAttribute(&quot;data-tooltip&quot;)?.trim() ?? &quot;&quot;;
+  const getPlacement = (trigger) =&gt; {
+    const placement = trigger.getAttribute(&quot;data-tooltip-placement&quot;);
+    return tooltipPlacements.has(placement) ? placement : &quot;top&quot;;
+  };
+  const getTooltip = () =&gt; {
+    if (tooltip == null) {
+      tooltip = document.createElement(&quot;div&quot;);
+      tooltip.id = tooltipId;
+      tooltip.className = &quot;tooltip&quot;;
+      tooltip.setAttribute(&quot;role&quot;, &quot;tooltip&quot;);
+    }
+    return tooltip;
+  };
+  const setDescribedBy = (trigger, described) =&gt; {
+    const ids = new Set(
+      (trigger.getAttribute(&quot;aria-describedby&quot;) ?? &quot;&quot;)
+        .split(/\s+/)
+        .filter(Boolean),
+    );
+    if (described) {
+      ids.add(tooltipId);
+    } else {
+      ids.delete(tooltipId);
+    }
+    if (ids.size === 0) {
+      trigger.removeAttribute(&quot;aria-describedby&quot;);
+    } else {
+      trigger.setAttribute(&quot;aria-describedby&quot;, [...ids].join(&quot; &quot;));
+    }
+  };
+  const clearOpenTimeout = () =&gt; {
+    if (openTimeout != null) {
+      window.clearTimeout(openTimeout);
+      openTimeout = null;
+    }
+    pendingTrigger = null;
+  };
+  const closeTooltip = (activateSkipDelay = true) =&gt; {
+    clearOpenTimeout();
+    positionRequest += 1;
+    autoUpdateCleanup?.();
+    autoUpdateCleanup = null;
+    if (activeTrigger == null) {
+      return;
+    }
+    setDescribedBy(activeTrigger, false);
+    activeTrigger = null;
+    tooltip?.remove();
+    if (activateSkipDelay) {
+      skipDelayUntil = Date.now() + skipDelay;
+    }
+  };
+  const updatePosition = (trigger, floating) =&gt; {
+    const request = ++positionRequest;
+    void computePosition(trigger, floating, {
+      middleware: [
+        offset(tooltipGap),
+        flip({ padding: tooltipGap }),
+        shift({ padding: tooltipGap }),
+        size({
+          padding: tooltipGap,
+          apply({ availableHeight, availableWidth, elements }) {
+            elements.floating.style.setProperty(
+              &quot;--tooltip-available-width&quot;,
+              `${Math.max(0, availableWidth)}px`,
+            );
+            elements.floating.style.setProperty(
+              &quot;--tooltip-available-height&quot;,
+              `${Math.max(0, availableHeight)}px`,
+            );
+          },
+        }),
+      ],
+      placement: getPlacement(trigger),
+      strategy: &quot;fixed&quot;,
+    })
+      .then(({ x, y }) =&gt; {
+        if (activeTrigger !== trigger || request !== positionRequest) {
+          return;
+        }
+        const scale = window.devicePixelRatio || 1;
+        floating.style.transform = `translate(${Math.round(x * scale) / scale}px, ${Math.round(y * scale) / scale}px)`;
+        floating.style.visibility = &quot;visible&quot;;
+      })
+      .catch(() =&gt; {
+        if (activeTrigger === trigger &amp;&amp; request === positionRequest) {
+          closeTooltip(false);
+        }
+      });
+  };
+  const openTooltip = (trigger) =&gt; {
+    const content = getContent(trigger);
+    if (!trigger.isConnected || content.length === 0) {
+      return;
+    }
+    clearOpenTimeout();
+    if (activeTrigger === trigger) {
+      return;
+    }
+    closeTooltip();
+    const floating = getTooltip();
+    floating.textContent = content;
+    floating.style.visibility = &quot;hidden&quot;;
+    floating.style.transform = &quot;translate(0, 0)&quot;;
+    document.body.appendChild(floating);
+    activeTrigger = trigger;
+    setDescribedBy(trigger, true);
+    autoUpdateCleanup = autoUpdate(trigger, floating, () =&gt; {
+      updatePosition(trigger, floating);
+    });
+  };
+  const requestOpen = (trigger, immediate = false) =&gt; {
+    if (
+      getContent(trigger).length === 0 ||
+      activeTrigger === trigger ||
+      pendingTrigger === trigger
+    ) {
+      return;
+    }
+    clearOpenTimeout();
+    pendingTrigger = trigger;
+    const delay =
+      immediate || activeTrigger != null || Date.now() &lt; skipDelayUntil
+        ? 0
+        : hoverDelay;
+    if (delay === 0) {
+      openTooltip(trigger);
+      return;
+    }
+    openTimeout = window.setTimeout(() =&gt; {
+      openTimeout = null;
+      pendingTrigger = null;
+      openTooltip(trigger);
+    }, delay);
+  };
+  const handlePointerOpen = (event) =&gt; {
+    if (event.pointerType === &quot;touch&quot;) {
+      return;
+    }
+    const trigger = getTrigger(event.target);
+    if (trigger == null || containsTarget(trigger, event.relatedTarget)) {
+      return;
+    }
+    requestOpen(trigger);
+  };
+  const handleLeave = (event) =&gt; {
+    const trigger = getTrigger(event.target);
+    if (trigger == null || containsTarget(trigger, event.relatedTarget)) {
+      return;
+    }
+    if (activeTrigger === trigger || pendingTrigger === trigger) {
+      closeTooltip();
+    }
+  };
+  const handleFocusIn = (event) =&gt; {
+    const trigger = getTrigger(event.target);
+    if (trigger?.matches(&quot;:focus-visible&quot;)) {
+      requestOpen(trigger, true);
+    }
+  };
+  const handleKeyDown = (event) =&gt; {
+    if (event.key === &quot;Escape&quot;) {
+      closeTooltip();
+    }
+  };
+  const handleContextMenu = (event) =&gt; {
+    const trigger = getTrigger(event.target);
+    if (activeTrigger === trigger || pendingTrigger === trigger) {
+      closeTooltip();
+    }
+  };
+  const destroy = () =&gt; {
+    closeTooltip(false);
+    document.removeEventListener(&quot;pointerover&quot;, handlePointerOpen);
+    document.removeEventListener(&quot;pointerout&quot;, handleLeave);
+    document.removeEventListener(&quot;focusin&quot;, handleFocusIn);
+    document.removeEventListener(&quot;focusout&quot;, handleLeave);
+    document.removeEventListener(&quot;keydown&quot;, handleKeyDown);
+    document.removeEventListener(&quot;contextmenu&quot;, handleContextMenu);
+    tooltip = null;
+  };
+
+  document.addEventListener(&quot;pointerover&quot;, handlePointerOpen);
+  document.addEventListener(&quot;pointerout&quot;, handleLeave);
+  document.addEventListener(&quot;focusin&quot;, handleFocusIn);
+  document.addEventListener(&quot;focusout&quot;, handleLeave);
+  document.addEventListener(&quot;keydown&quot;, handleKeyDown);
+  document.addEventListener(&quot;contextmenu&quot;, handleContextMenu);
+  window.addEventListener(&quot;pagehide&quot;, destroy, { once: true });
+})();
+&lt;/script&gt;
+&lt;script id=&quot;codex-visualization-lucide&quot; async src=&quot;https://unpkg.com/lucide@1.17.0/dist/umd/lucide.js&quot;&gt;&lt;/script&gt;
+&lt;script&gt;
+(() =&gt; {
+  const initialize = () =&gt; {
+    globalThis.lucide?.createIcons({ attrs: { width: 16, height: 16 } });
+  };
+  if (globalThis.lucide != null) {
+    initialize();
+    return;
+  }
+  document
+    .getElementById(&quot;codex-visualization-lucide&quot;)
+    ?.addEventListener(&quot;load&quot;, initialize, { once: true });
+})();
+&lt;/script&gt;
+
+&lt;/body&gt;
+&lt;/html&gt;
+"></iframe>
+</body>
+</html>

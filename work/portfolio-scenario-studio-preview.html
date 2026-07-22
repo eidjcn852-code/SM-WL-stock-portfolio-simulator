@@ -1,0 +1,1998 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="referrer" content="no-referrer">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'unsafe-inline' 'unsafe-eval' 'wasm-unsafe-eval' blob: data: https://cdnjs.cloudflare.com https://cdn.jsdelivr.net https://esm.sh https://fonts.bunny.net https://fonts.googleapis.com https://fonts.gstatic.com https://unpkg.com; style-src 'unsafe-inline' blob: data: https://cdnjs.cloudflare.com https://cdn.jsdelivr.net https://esm.sh https://fonts.bunny.net https://fonts.googleapis.com https://fonts.gstatic.com https://unpkg.com; img-src blob: data: https://cdnjs.cloudflare.com https://cdn.jsdelivr.net https://esm.sh https://fonts.bunny.net https://fonts.googleapis.com https://fonts.gstatic.com https://unpkg.com; font-src blob: data: https://cdnjs.cloudflare.com https://cdn.jsdelivr.net https://esm.sh https://fonts.bunny.net https://fonts.googleapis.com https://fonts.gstatic.com https://unpkg.com; media-src blob: data: https://cdnjs.cloudflare.com https://cdn.jsdelivr.net https://esm.sh https://fonts.bunny.net https://fonts.googleapis.com https://fonts.gstatic.com https://unpkg.com; worker-src blob:; connect-src blob: data:; frame-src 'self'; object-src 'none'; base-uri 'none'; form-action 'none'">
+<title>Portfolio Scenario Studio</title>
+<style>:root{color-scheme:light dark;background:light-dark(rgb(255 255 255), rgb(24 24 24))}html,body{margin:0}body{box-sizing:border-box;padding:1rem;background:inherit}iframe{display:block;width:100%;max-width:736px;height:calc(100vh - 2rem);margin:0 auto;border:0}</style>
+</head>
+<body>
+<iframe sandbox="allow-scripts" referrerpolicy="no-referrer" title="Portfolio Scenario Studio" srcdoc="&lt;!doctype html&gt;
+&lt;html lang=&quot;en&quot;&gt;
+&lt;head&gt;
+&lt;meta charset=&quot;utf-8&quot;&gt;
+&lt;meta name=&quot;viewport&quot; content=&quot;width=device-width, initial-scale=1&quot;&gt;
+&lt;meta name=&quot;referrer&quot; content=&quot;no-referrer&quot;&gt;
+&lt;meta http-equiv=&quot;Content-Security-Policy&quot; content=&quot;default-src &#x27;none&#x27;; script-src &#x27;unsafe-inline&#x27; &#x27;unsafe-eval&#x27; &#x27;wasm-unsafe-eval&#x27; blob: data: https://cdnjs.cloudflare.com https://cdn.jsdelivr.net https://esm.sh https://fonts.bunny.net https://fonts.googleapis.com https://fonts.gstatic.com https://unpkg.com; style-src &#x27;unsafe-inline&#x27; blob: data: https://cdnjs.cloudflare.com https://cdn.jsdelivr.net https://esm.sh https://fonts.bunny.net https://fonts.googleapis.com https://fonts.gstatic.com https://unpkg.com; img-src blob: data: https://cdnjs.cloudflare.com https://cdn.jsdelivr.net https://esm.sh https://fonts.bunny.net https://fonts.googleapis.com https://fonts.gstatic.com https://unpkg.com; font-src blob: data: https://cdnjs.cloudflare.com https://cdn.jsdelivr.net https://esm.sh https://fonts.bunny.net https://fonts.googleapis.com https://fonts.gstatic.com https://unpkg.com; media-src blob: data: https://cdnjs.cloudflare.com https://cdn.jsdelivr.net https://esm.sh https://fonts.bunny.net https://fonts.googleapis.com https://fonts.gstatic.com https://unpkg.com; worker-src blob:; connect-src blob: data:; frame-src &#x27;none&#x27;; object-src &#x27;none&#x27;; base-uri &#x27;none&#x27;; form-action &#x27;none&#x27;&quot;&gt;
+&lt;title&gt;Portfolio Scenario Studio&lt;/title&gt;
+&lt;style&gt;:root {
+  color-scheme: light dark;
+  background-color: var(--background) !important;
+
+  /* Agent-facing contract; keep in sync with SKILL.md. */
+  --background: light-dark(rgb(255 255 255), rgb(24 24 24));
+  --foreground: light-dark(rgb(26 28 31), rgb(255 255 255));
+  --card: color-mix(in oklab, var(--foreground) 5%, transparent);
+  --card-foreground: var(--foreground);
+  --popover: light-dark(rgb(255 255 255), rgb(45 45 45));
+  --popover-foreground: var(--foreground);
+  --primary: light-dark(rgb(51 156 255), rgb(131 195 255));
+  --primary-foreground: light-dark(rgb(255 255 255), rgb(13 13 13));
+  --secondary: light-dark(rgb(255 255 255 / 96%), rgb(54 54 54 / 96%));
+  --secondary-foreground: var(--foreground);
+  --muted: color-mix(in srgb, var(--foreground) 10%, transparent);
+  --muted-foreground: light-dark(
+    rgb(26 28 31 / 49.4%),
+    rgb(255 255 255 / 49.8%)
+  );
+  --accent: light-dark(rgb(229 242 255), rgb(13 39 63));
+  --accent-foreground: var(--primary);
+  --destructive: light-dark(rgb(226 85 7), rgb(255 133 73));
+  --border: light-dark(rgb(26 28 31 / 8%), rgb(255 255 255 / 8.2%));
+  --input: light-dark(
+    rgb(26 28 31 / 11.8%),
+    color-mix(in oklab, rgb(0 0 0) 10%, transparent)
+  );
+  --ring: light-dark(rgb(51 156 255), rgb(131 195 255 / 76%));
+  --font-size-base: 14px;
+  --viz-series-1: var(--primary);
+  --viz-series-2: light-dark(rgb(243 136 59), rgb(245 154 86));
+  --viz-series-3: light-dark(rgb(93 201 119), rgb(116 213 139));
+  --viz-series-4: light-dark(rgb(235 119 177), rgb(240 143 192));
+  --viz-series-5: light-dark(rgb(155 121 236), rgb(170 145 239));
+  --viz-series-6: light-dark(rgb(58 185 177), rgb(90 203 194));
+
+  /* Internal implementation variables; not part of the agent contract. */
+  --font-sans: -apple-system, system-ui, &quot;Segoe UI&quot;, sans-serif;
+  --font-mono:
+    ui-monospace, SFMono-Regular, &quot;SF Mono&quot;, Menlo, Consolas, &quot;Liberation Mono&quot;,
+    monospace;
+  --font-size-normal: max(11px, var(--font-size-base));
+  --font-size-tooltip: calc(var(--font-size-base) - 1px);
+  --font-size-small: max(11px, calc(var(--font-size-base) - 2px));
+  --font-size-h1: calc(var(--font-size-normal) * 1.7142857143);
+  --font-size-h2: calc(var(--font-size-normal) * 1.4285714286);
+  --font-size-h3: calc(var(--font-size-normal) * 1.2857142857);
+  --font-weight-normal: 430;
+  --font-weight-medium: 500;
+  --line-height-normal: calc(var(--font-size-normal) * 1.5);
+  --line-height-tooltip: calc(var(--font-size-tooltip) * 1.4285714286);
+  --line-height-small: calc(var(--font-size-small) + 4px);
+  --radius: 12.5px;
+  --radius-sm: calc(var(--radius) * 0.6);
+  --radius-md: calc(var(--radius) * 0.8);
+  --radius-lg: var(--radius);
+  --radius-2xl: calc(var(--radius) * 1.6);
+  --radius-full: 9999px;
+  --shadow-sm: 0 1px 2px -1px rgb(0 0 0 / 8%);
+  --checkmark-image: url(&quot;data:image/svg+xml,%3Csvg xmlns=&#x27;http://www.w3.org/2000/svg&#x27; viewBox=&#x27;0 0 17 17&#x27;%3E%3Cpath d=&#x27;M12.8961 3.64101C13.1297 3.41418 13.4984 3.37523 13.7779 3.56581C14.0571 3.75635 14.1554 4.11331 14.0299 4.41347L13.9615 4.53847L7.71151 13.7045C7.59411 13.8767 7.4063 13.9877 7.19881 14.0072C6.99136 14.0267 6.78564 13.9533 6.63826 13.806L2.88826 10.056L2.79842 9.9457C2.6192 9.67407 2.64927 9.30496 2.88826 9.06581C3.12738 8.82669 3.49647 8.79676 3.76815 8.97597L3.8785 9.06581L7.03084 12.2182L12.8053 3.74941L12.8961 3.64101Z&#x27;/%3E%3C/svg%3E&quot;);
+
+  /* Legacy aliases; not part of the current agent contract. */
+  --viz-bg: transparent;
+  --viz-panel: var(--card);
+  --viz-border: var(--border);
+  --viz-text: var(--foreground);
+  --viz-muted: var(--muted-foreground);
+  --viz-accent: var(--primary);
+  --viz-accent-text: var(--primary-foreground);
+  --viz-accent-bg: var(--accent);
+  --viz-font-size: var(--font-size-base);
+  --viz-warning: var(--destructive);
+  --color-background-primary: var(--background);
+  --color-text-primary: var(--foreground);
+  --color-border-secondary: var(--border);
+}
+
+:root[data-theme=&quot;light&quot;] {
+  color-scheme: light;
+}
+
+:root[data-theme=&quot;dark&quot;] {
+  color-scheme: dark;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html &gt; body {
+  margin: 0;
+  padding: 5px;
+  color: var(--foreground);
+  background: transparent !important;
+  font-family: var(--font-sans);
+  font-size: var(--font-size-normal);
+  font-weight: var(--font-weight-normal);
+  line-height: var(--line-height-normal);
+}
+
+a {
+  color: color-mix(in srgb, var(--viz-accent) 80%, var(--viz-text) 20%);
+  cursor: pointer;
+  font-weight: var(--viz-font-weight-medium);
+  text-decoration: none;
+  text-underline-offset: 2px;
+}
+
+a:is(:hover, :focus-visible) {
+  text-decoration-line: underline;
+  text-decoration-style: dashed;
+  text-decoration-thickness: 0.5px;
+}
+
+h1,
+h2,
+h3,
+h4,
+h5,
+h6,
+p {
+  margin-block: 0;
+}
+
+h1 {
+  font-size: var(--font-size-h1);
+  font-weight: var(--font-weight-medium);
+  line-height: 1.25;
+}
+
+h2 {
+  font-size: var(--font-size-h2);
+  font-weight: var(--font-weight-medium);
+  line-height: 1.25;
+}
+
+h3,
+h4,
+h5,
+h6 {
+  font-size: var(--font-size-h3);
+  font-weight: var(--font-weight-medium);
+  line-height: 1.3;
+}
+
+b,
+strong,
+th {
+  font-weight: var(--font-weight-medium);
+}
+
+code:not(pre code) {
+  display: inline;
+  padding: 1px 6px;
+  border-radius: var(--radius-sm);
+  corner-shape: superellipse(1.5);
+  background: var(--muted);
+  font-family: var(--font-mono);
+  font-size: 0.92em;
+  overflow-wrap: anywhere;
+  -webkit-box-decoration-break: clone;
+  box-decoration-break: clone;
+  word-break: break-word;
+}
+
+.table-responsive {
+  width: 100%;
+  overflow-x: auto;
+  scrollbar-width: thin;
+}
+
+.table {
+  width: 100%;
+  border-collapse: collapse;
+  color: var(--foreground);
+  font: inherit;
+  text-align: start;
+}
+
+.table :is(th, td) {
+  padding-block: 10px;
+  padding-inline: 0 24px;
+  overflow-wrap: anywhere;
+  border-bottom: 1px solid var(--border);
+  text-align: start;
+  vertical-align: top;
+}
+
+.table-responsive &gt; .table :is(th, td) {
+  overflow-wrap: break-word;
+}
+
+.table :is(th, td):last-child {
+  padding-inline-end: 0;
+}
+
+.table :is(caption, thead th) {
+  font-weight: 600;
+}
+
+.table thead th {
+  padding-block: 8px;
+  border-bottom-color: color-mix(in srgb, var(--foreground) 16%, transparent);
+}
+
+.table tbody tr:last-child :is(th, td) {
+  border-bottom: 0;
+}
+
+.table.table-sm :is(th, td) {
+  padding-block: 6px;
+}
+
+.table.table-sm :is(th, td):not(:last-child) {
+  padding-inline-end: 16px;
+}
+
+.table :is(.text-end, [align=&quot;right&quot;]) {
+  text-align: end;
+  font-variant-numeric: tabular-nums;
+}
+
+.table :is(.text-center, [align=&quot;center&quot;]) {
+  text-align: center;
+}
+
+.table .text-nowrap {
+  white-space: nowrap;
+}
+
+#widget {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  width: 100%;
+  padding: 0;
+  background: transparent !important;
+}
+
+.card {
+  min-width: 0;
+  padding: 12px;
+  overflow: hidden;
+  overflow-wrap: break-word;
+  border-radius: var(--radius-2xl);
+  corner-shape: superellipse(1.5);
+  color: var(--card-foreground);
+  background: var(--card);
+}
+
+#widget &gt; :not(.card) {
+  width: 100% !important;
+  max-width: none !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  border: 0 !important;
+  border-radius: 0 !important;
+  background: transparent !important;
+  box-shadow: none !important;
+}
+
+.tooltip {
+  position: fixed;
+  z-index: 50;
+  top: 0;
+  left: 0;
+  width: max-content;
+  max-width: min(
+    20rem,
+    var(--tooltip-available-width, calc(100vw - 10px)),
+    calc(100vw - 10px)
+  );
+  max-height: min(
+    var(--tooltip-available-height, calc(100vh - 10px)),
+    calc(100vh - 10px)
+  );
+  padding: 4px 8px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  corner-shape: superellipse(1.5);
+  color: var(--popover-foreground);
+  background: var(--popover);
+  box-shadow: none;
+  font-size: var(--font-size-tooltip);
+  line-height: var(--line-height-tooltip);
+  overflow-wrap: break-word;
+  white-space: normal;
+  pointer-events: none;
+  user-select: none;
+}
+
+.viz-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(max(180px, 24%), 1fr));
+  gap: 10px;
+}
+
+.viz-stat {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.viz-stat-value {
+  font-size: var(--font-size-h2);
+  font-weight: var(--font-weight-medium);
+  line-height: 1.25;
+}
+
+.viz-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+}
+
+.viz-badge {
+  padding: 3px 8px;
+  border-radius: var(--radius-full);
+  color: var(--accent-foreground);
+  background: var(--accent);
+  font-weight: var(--font-weight-medium);
+}
+
+small,
+.text-small,
+.viz-badge {
+  font-size: var(--font-size-small);
+  line-height: var(--line-height-small);
+}
+
+.text-muted {
+  color: var(--muted-foreground);
+}
+
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+.viz-controls {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+
+.viz-controls &gt; .form-label {
+  display: grid;
+  min-width: min(100%, 260px);
+  flex: 1 1 280px;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: baseline;
+  gap: 2px 12px;
+  margin-bottom: 0;
+}
+
+.viz-controls &gt; .form-label &gt; :is(.form-control, .form-range, .form-select) {
+  grid-column: 1 / -1;
+}
+
+.btn,
+.form-check-input,
+.form-control,
+.form-range,
+.form-select {
+  font: inherit;
+}
+
+.btn {
+  appearance: button;
+  display: inline-flex;
+  inline-size: fit-content;
+  max-inline-size: 100%;
+  min-height: 28px;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  margin: 0;
+  padding: 0 8px;
+  -webkit-app-region: no-drag;
+  border: 1px solid var(--input);
+  border-radius: var(--radius-lg);
+  corner-shape: superellipse(1.5);
+  color: var(--secondary-foreground);
+  background: var(--secondary);
+  cursor: var(--cursor-interaction, pointer);
+  text-align: center;
+  text-decoration: none;
+  white-space: nowrap;
+  user-select: none;
+  -webkit-font-smoothing: antialiased;
+}
+
+.btn:is(.btn-block, .viz-tile) {
+  inline-size: 100%;
+}
+
+.btn.viz-tile {
+  min-width: 0;
+  overflow-wrap: anywhere;
+  white-space: normal;
+}
+
+a.btn {
+  cursor: pointer;
+  text-decoration: none;
+}
+
+.btn:not(:disabled):hover {
+  background: color-mix(in srgb, var(--foreground) 6%, var(--secondary));
+}
+
+.btn-primary {
+  border-color: transparent;
+  color: var(--primary-foreground);
+  background: var(--foreground);
+  background-clip: padding-box;
+}
+
+.btn-primary .text-muted {
+  color: color-mix(in srgb, var(--primary-foreground) 50%, transparent);
+}
+
+.btn-primary:not(:disabled):hover {
+  background: color-mix(in srgb, var(--foreground) 80%, transparent);
+  background-clip: padding-box;
+}
+
+.btn-ghost {
+  border-color: transparent;
+  color: var(--muted-foreground);
+  background: transparent;
+}
+
+.btn-ghost:not(:disabled):hover {
+  color: var(--foreground);
+  background: color-mix(in srgb, var(--foreground) 6%, var(--secondary));
+}
+
+.btn:disabled {
+  cursor: not-allowed;
+  opacity: 0.4;
+}
+
+[data-lucide] {
+  stroke-width: 1.6;
+}
+
+.form-label {
+  display: block;
+  margin-bottom: 6px;
+  color: var(--foreground);
+}
+
+.form-control {
+  display: block;
+  width: 100%;
+  min-height: 28px;
+  padding: 0 8px;
+  outline: none;
+  border: 1px solid var(--input);
+  border-radius: var(--radius-lg);
+  corner-shape: superellipse(1.5);
+  color: var(--foreground);
+  background: var(--secondary);
+}
+
+.form-control::placeholder {
+  color: var(--muted-foreground);
+}
+
+.form-control[type=&quot;file&quot;] {
+  padding: 0;
+  overflow: hidden;
+  cursor: var(--cursor-interaction, pointer);
+}
+
+.form-control[type=&quot;file&quot;]::file-selector-button {
+  min-height: 26px;
+  margin-right: 8px;
+  padding: 0 8px;
+  border: 0;
+  border-right: 1px solid var(--input);
+  color: var(--secondary-foreground);
+  background: var(--secondary);
+  cursor: inherit;
+  font: inherit;
+}
+
+.form-control[type=&quot;file&quot;]:not(:disabled):hover::file-selector-button {
+  background: color-mix(in srgb, var(--foreground) 6%, var(--secondary));
+}
+
+.form-control-color[type=&quot;color&quot;] {
+  width: 40px;
+  height: 28px;
+  padding: 3px;
+  cursor: var(--cursor-interaction, pointer);
+}
+
+.form-control-color[type=&quot;color&quot;]::-webkit-color-swatch-wrapper {
+  padding: 0;
+}
+
+.form-control-color[type=&quot;color&quot;]::-webkit-color-swatch {
+  border: 0;
+  border-radius: calc(var(--radius-lg) - 4px);
+  corner-shape: superellipse(1.5);
+}
+
+textarea.form-control {
+  height: auto;
+  min-height: 72px;
+  padding: 8px 10px;
+  resize: vertical;
+}
+
+.form-control:focus-visible {
+  border-color: var(--ring);
+  box-shadow: inset 0 0 0 1px var(--ring);
+}
+
+.form-control:disabled,
+.form-select:disabled {
+  cursor: not-allowed;
+  opacity: 0.4;
+}
+
+.form-select {
+  appearance: none;
+  display: block;
+  width: 100%;
+  min-height: 28px;
+  margin: 0;
+  padding: 0 32px 0 8px;
+  outline: none;
+  border: 1px solid var(--input);
+  border-radius: var(--radius-lg);
+  corner-shape: superellipse(1.5);
+  color: var(--foreground);
+  background-color: var(--secondary);
+  background-image:
+    linear-gradient(45deg, transparent 50%, var(--muted-foreground) 50%),
+    linear-gradient(135deg, var(--muted-foreground) 50%, transparent 50%);
+  background-position:
+    calc(100% - 14px) 50%,
+    calc(100% - 10px) 50%;
+  background-repeat: no-repeat;
+  background-size: 4px 4px;
+  cursor: var(--cursor-interaction, default);
+}
+
+.form-select:not(:disabled):hover {
+  background-color: color-mix(in srgb, var(--foreground) 6%, var(--secondary));
+}
+
+.form-select:focus-visible {
+  border-color: var(--ring);
+  box-shadow: inset 0 0 0 1px var(--ring);
+}
+
+.form-check {
+  display: flex;
+  min-height: 20px;
+  align-items: center;
+  gap: 6px;
+}
+
+.form-check-input {
+  appearance: none;
+  width: 14px;
+  height: 14px;
+  flex: 0 0 auto;
+  margin: 0;
+  border: 1px solid var(--input);
+  color: var(--primary-foreground);
+  background-color: transparent;
+  cursor: var(--cursor-interaction, default);
+  transition:
+    background-color 150ms,
+    border-color 150ms,
+    box-shadow 150ms;
+}
+
+.form-check:not(.form-switch) .form-check-input[type=&quot;checkbox&quot;] {
+  border-color: var(--input);
+  border-radius: var(--radius-sm);
+  corner-shape: superellipse(1.5);
+  background-color: var(--secondary);
+  box-shadow: var(--shadow-sm);
+}
+
+.form-check:not(.form-switch)
+  .form-check-input:not(:disabled):not(:checked):hover {
+  background-color: var(--card);
+}
+
+.form-check:not(.form-switch) .form-check-input[type=&quot;checkbox&quot;]:checked {
+  border-color: var(--primary);
+  background-color: var(--primary);
+}
+
+.form-check:not(.form-switch)
+  .form-check-input[type=&quot;checkbox&quot;]:checked::before {
+  display: block;
+  width: 100%;
+  height: 100%;
+  background: var(--primary-foreground);
+  content: &quot;&quot;;
+  mask: var(--checkmark-image) center / 12px 12px no-repeat;
+}
+
+.form-check-input[type=&quot;radio&quot;] {
+  width: 14px;
+  height: 14px;
+  border-radius: var(--radius-full);
+}
+
+.form-check-input[type=&quot;radio&quot;]:checked {
+  border: 2px solid var(--primary);
+  background:
+    radial-gradient(circle, var(--primary-foreground) 0 2.5px, transparent 3px),
+    var(--primary);
+}
+
+.form-check:not(.form-switch) .form-check-input:focus-visible {
+  outline: 2px solid var(--ring);
+  outline-offset: 2px;
+}
+
+.form-check:not(.form-switch) .form-check-input:disabled {
+  cursor: not-allowed;
+  pointer-events: none;
+}
+
+.form-check:not(.form-switch) .form-check-input:disabled + .form-check-label {
+  cursor: not-allowed;
+}
+
+.form-switch .form-check-input:disabled,
+.form-switch .form-check-input:disabled + .form-check-label {
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+.form-check-label {
+  color: var(--foreground);
+  cursor: var(--cursor-interaction, default);
+}
+
+.form-switch .form-check-input {
+  position: relative;
+  width: 32px;
+  height: 20px;
+  border: 0;
+  border-radius: var(--radius-full);
+  background: var(--muted);
+  box-shadow: none;
+  transition: background-color 200ms cubic-bezier(0, 0, 0.2, 1);
+}
+
+.form-switch .form-check-input::before {
+  position: absolute;
+  top: 50%;
+  left: 0;
+  width: 16px;
+  height: 16px;
+  box-sizing: border-box;
+  border: 1px solid light-dark(var(--primary-foreground), var(--foreground));
+  border-radius: var(--radius-full);
+  background: light-dark(var(--primary-foreground), var(--foreground));
+  box-shadow: var(--shadow-sm);
+  content: &quot;&quot;;
+  transform: translate(2px, -50%);
+  transition: transform 200ms cubic-bezier(0, 0, 0.2, 1);
+}
+
+.form-switch .form-check-input:checked {
+  background: var(--primary);
+}
+
+.form-switch .form-check-input:checked::before {
+  transform: translate(14px, -50%);
+}
+
+.form-switch .form-check-input:focus-visible {
+  box-shadow: 0 0 0 2px var(--ring);
+}
+
+.form-range {
+  appearance: none;
+  display: block;
+  width: 100%;
+  height: 28px;
+  flex: 1;
+  margin: 0;
+  padding: 0;
+  outline: none;
+  border: 0;
+  accent-color: var(--primary);
+  background: linear-gradient(
+      color-mix(in srgb, var(--foreground) 7%, transparent),
+      color-mix(in srgb, var(--foreground) 7%, transparent)
+    )
+    center / 100% 2px no-repeat;
+}
+
+.form-range::-webkit-slider-runnable-track {
+  height: 28px;
+  background: transparent;
+}
+
+.form-range::-webkit-slider-thumb {
+  appearance: none;
+  width: 20px;
+  height: 20px;
+  margin-top: 4px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-full);
+  background: light-dark(var(--primary-foreground), var(--foreground));
+}
+
+.form-range:focus-visible::-webkit-slider-thumb {
+  border-color: var(--ring);
+  box-shadow: inset 0 0 0 1px var(--ring);
+}
+
+.form-range::-moz-range-track {
+  height: 28px;
+  background: transparent;
+}
+
+.form-range::-moz-range-thumb {
+  width: 20px;
+  height: 20px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-full);
+  background: light-dark(var(--primary-foreground), var(--foreground));
+}
+
+.form-range:focus-visible::-moz-range-thumb {
+  border-color: var(--ring);
+  box-shadow: inset 0 0 0 1px var(--ring);
+}
+
+.form-range:disabled {
+  cursor: not-allowed;
+  opacity: 0.4;
+}
+
+.btn:not(.btn-primary, .viz-tile):is(
+    [aria-pressed=&quot;true&quot;],
+    [aria-selected=&quot;true&quot;],
+    .is-selected
+  ) {
+  border-color: var(--primary);
+  color: var(--primary-foreground);
+  background: var(--primary);
+}
+
+.btn.viz-tile:is([aria-pressed=&quot;true&quot;], [aria-selected=&quot;true&quot;], .is-selected) {
+  border-color: var(--primary);
+  box-shadow: inset 0 0 0 1px var(--primary);
+}
+
+.btn:focus-visible {
+  outline: 2px solid var(--ring);
+  outline-offset: 2px;
+}
+
+svg {
+  display: block;
+  max-width: 100%;
+  height: auto;
+}
+
+#widget &gt; svg {
+  width: 100%;
+}
+
+.text-warning,
+.text-destructive {
+  color: var(--destructive);
+}
+
+html&gt;body{padding:0}&lt;/style&gt;
+&lt;/head&gt;
+&lt;body&gt;
+&lt;div id=&quot;portfolio-scenario-studio&quot;&gt;
+  &lt;style&gt;
+    #portfolio-scenario-studio {
+      color: var(--foreground);
+      display: grid;
+      gap: 16px;
+      width: 100%;
+    }
+    #portfolio-scenario-studio .ps-panel,
+    #portfolio-scenario-studio .ps-field {
+      display: grid;
+      gap: 10px;
+    }
+    #portfolio-scenario-studio .ps-toolbar,
+    #portfolio-scenario-studio .ps-actions,
+    #portfolio-scenario-studio .ps-legend,
+    #portfolio-scenario-studio .ps-section-head {
+      display: flex;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+    #portfolio-scenario-studio .ps-toolbar,
+    #portfolio-scenario-studio .ps-section-head {
+      justify-content: space-between;
+    }
+    #portfolio-scenario-studio .ps-control-grid {
+      display: grid;
+      grid-template-columns: minmax(190px, 1fr) minmax(190px, 1fr);
+      gap: 12px;
+      align-items: end;
+    }
+    #portfolio-scenario-studio .ps-field-head {
+      display: flex;
+      align-items: baseline;
+      justify-content: space-between;
+      gap: 8px;
+    }
+    #portfolio-scenario-studio .ps-chart-wrap {
+      position: relative;
+      width: 100%;
+      min-width: 0;
+    }
+    #portfolio-scenario-studio .ps-chart-wrap svg {
+      display: block;
+      width: 100%;
+      height: 290px;
+      overflow: visible;
+    }
+    #portfolio-scenario-studio .ps-grid-line,
+    #portfolio-scenario-studio .ps-axis-line {
+      stroke: var(--border);
+      stroke-width: 1;
+      vector-effect: non-scaling-stroke;
+    }
+    #portfolio-scenario-studio .ps-portfolio-line,
+    #portfolio-scenario-studio .ps-benchmark-line {
+      fill: none;
+      stroke-width: 2.5;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+      vector-effect: non-scaling-stroke;
+      transition: d 220ms ease;
+    }
+    #portfolio-scenario-studio .ps-portfolio-line {
+      stroke: var(--viz-series-1);
+    }
+    #portfolio-scenario-studio .ps-benchmark-line {
+      stroke: var(--viz-series-2);
+    }
+    #portfolio-scenario-studio .ps-portfolio-dot {
+      fill: var(--viz-series-1);
+    }
+    #portfolio-scenario-studio .ps-benchmark-dot {
+      fill: var(--viz-series-2);
+    }
+    #portfolio-scenario-studio .ps-hover-line {
+      stroke: var(--muted-foreground);
+      stroke-width: 1;
+      vector-effect: non-scaling-stroke;
+    }
+    #portfolio-scenario-studio .ps-axis-text {
+      fill: var(--muted-foreground);
+      font-size: var(--font-size-base);
+      font-weight: 400;
+    }
+    #portfolio-scenario-studio .ps-tooltip {
+      position: absolute;
+      display: none;
+      pointer-events: none;
+      max-width: 230px;
+      z-index: 2;
+    }
+    #portfolio-scenario-studio .ps-swatch {
+      display: inline-block;
+      width: 18px;
+      height: 3px;
+    }
+    #portfolio-scenario-studio .ps-swatch-portfolio {
+      background: var(--viz-series-1);
+    }
+    #portfolio-scenario-studio .ps-swatch-benchmark {
+      background: var(--viz-series-2);
+    }
+    #portfolio-scenario-studio .ps-allocation {
+      display: flex;
+      width: 100%;
+      height: 12px;
+      background: var(--muted);
+      overflow: hidden;
+    }
+    #portfolio-scenario-studio .ps-allocation-segment {
+      height: 100%;
+      min-width: 0;
+      transition: width 220ms ease;
+    }
+    #portfolio-scenario-studio .ps-allocation-segment:nth-child(6n + 1) { background: var(--viz-series-1); }
+    #portfolio-scenario-studio .ps-allocation-segment:nth-child(6n + 2) { background: var(--viz-series-2); }
+    #portfolio-scenario-studio .ps-allocation-segment:nth-child(6n + 3) { background: var(--viz-series-3); }
+    #portfolio-scenario-studio .ps-allocation-segment:nth-child(6n + 4) { background: var(--viz-series-4); }
+    #portfolio-scenario-studio .ps-allocation-segment:nth-child(6n + 5) { background: var(--viz-series-5); }
+    #portfolio-scenario-studio .ps-allocation-segment:nth-child(6n + 6) { background: var(--viz-series-6); }
+    #portfolio-scenario-studio .ps-move-input {
+      min-width: 92px;
+    }
+    #portfolio-scenario-studio .ps-symbol {
+      font-weight: 500;
+    }
+    #portfolio-scenario-studio .ps-details {
+      display: grid;
+      gap: 10px;
+    }
+    #portfolio-scenario-studio summary {
+      cursor: pointer;
+    }
+    @media (max-width: 590px) {
+      #portfolio-scenario-studio .ps-control-grid {
+        grid-template-columns: 1fr;
+      }
+      #portfolio-scenario-studio .ps-chart-wrap svg {
+        height: 250px;
+      }
+      #portfolio-scenario-studio .ps-actions .btn {
+        flex: 1 1 auto;
+      }
+    }
+    @media (prefers-reduced-motion: reduce) {
+      #portfolio-scenario-studio .ps-portfolio-line,
+      #portfolio-scenario-studio .ps-benchmark-line,
+      #portfolio-scenario-studio .ps-allocation-segment {
+        transition: none;
+      }
+    }
+  &lt;/style&gt;
+
+  &lt;div class=&quot;viz-grid&quot; aria-label=&quot;投資組合摘要&quot;&gt;
+    &lt;div class=&quot;card viz-stat&quot;&gt;
+      &lt;div class=&quot;text-muted&quot;&gt;總資產&lt;/div&gt;
+      &lt;div class=&quot;viz-stat-value&quot; id=&quot;ps-total-assets&quot;&gt;NT$1,000,000&lt;/div&gt;
+      &lt;div id=&quot;ps-asset-breakdown&quot;&gt;持股 NT$800,000 · 現金 NT$200,000&lt;/div&gt;
+    &lt;/div&gt;
+    &lt;div class=&quot;card viz-stat&quot;&gt;
+      &lt;div class=&quot;text-muted&quot;&gt;今日變動&lt;/div&gt;
+      &lt;div class=&quot;viz-stat-value&quot; id=&quot;ps-daily-pnl&quot;&gt;NT$0&lt;/div&gt;
+      &lt;div id=&quot;ps-daily-return&quot;&gt;組合 0.00% · 大盤 0.00%&lt;/div&gt;
+    &lt;/div&gt;
+    &lt;div class=&quot;card viz-stat&quot;&gt;
+      &lt;div class=&quot;text-muted&quot;&gt;累積損益&lt;/div&gt;
+      &lt;div class=&quot;viz-stat-value&quot; id=&quot;ps-total-pnl&quot;&gt;NT$0&lt;/div&gt;
+      &lt;div id=&quot;ps-risk-summary&quot;&gt;報酬 0.00% · 最大回撤 0.00%&lt;/div&gt;
+    &lt;/div&gt;
+  &lt;/div&gt;
+
+  &lt;section class=&quot;card ps-panel&quot; aria-label=&quot;情境設定&quot;&gt;
+    &lt;div class=&quot;ps-control-grid&quot;&gt;
+      &lt;label class=&quot;form-label ps-field&quot; for=&quot;ps-portfolio-template&quot;&gt;
+        &lt;span&gt;投資組合模板&lt;/span&gt;
+        &lt;select class=&quot;form-select&quot; id=&quot;ps-portfolio-template&quot;&gt;
+          &lt;option value=&quot;tw-core&quot;&gt;台股核心&lt;/option&gt;
+          &lt;option value=&quot;tech-growth&quot;&gt;科技成長&lt;/option&gt;
+          &lt;option value=&quot;dividend-defense&quot;&gt;股息防守&lt;/option&gt;
+          &lt;option value=&quot;blank&quot;&gt;空白組合&lt;/option&gt;
+        &lt;/select&gt;
+      &lt;/label&gt;
+      &lt;div class=&quot;ps-actions&quot;&gt;
+        &lt;button class=&quot;btn&quot; id=&quot;ps-load-template&quot; type=&quot;button&quot;&gt;&lt;i data-lucide=&quot;layout-template&quot; aria-hidden=&quot;true&quot;&gt;&lt;/i&gt;載入組合&lt;/button&gt;
+      &lt;/div&gt;
+    &lt;/div&gt;
+    &lt;div class=&quot;ps-control-grid&quot;&gt;
+      &lt;label class=&quot;form-label ps-field&quot; for=&quot;ps-market-preset&quot;&gt;
+        &lt;span&gt;當日行情模板&lt;/span&gt;
+        &lt;select class=&quot;form-select&quot; id=&quot;ps-market-preset&quot;&gt;
+          &lt;option value=&quot;custom&quot;&gt;自訂漲跌&lt;/option&gt;
+          &lt;option value=&quot;market-crash&quot;&gt;全面重挫&lt;/option&gt;
+          &lt;option value=&quot;tech-rally&quot;&gt;科技反彈&lt;/option&gt;
+          &lt;option value=&quot;rotation&quot;&gt;類股輪動&lt;/option&gt;
+          &lt;option value=&quot;quiet&quot;&gt;窄幅整理&lt;/option&gt;
+        &lt;/select&gt;
+      &lt;/label&gt;
+      &lt;div class=&quot;ps-actions&quot;&gt;
+        &lt;button class=&quot;btn&quot; id=&quot;ps-fill-preset&quot; type=&quot;button&quot;&gt;&lt;i data-lucide=&quot;wand-sparkles&quot; aria-hidden=&quot;true&quot;&gt;&lt;/i&gt;填入模板&lt;/button&gt;
+      &lt;/div&gt;
+    &lt;/div&gt;
+    &lt;div class=&quot;ps-control-grid&quot;&gt;
+      &lt;label class=&quot;form-label ps-field&quot; for=&quot;ps-benchmark-move&quot;&gt;
+        &lt;span class=&quot;ps-field-head&quot;&gt;&lt;span&gt;大盤當日漲跌&lt;/span&gt;&lt;span&gt;%&lt;/span&gt;&lt;/span&gt;
+        &lt;input class=&quot;form-control&quot; id=&quot;ps-benchmark-move&quot; type=&quot;number&quot; min=&quot;-100&quot; max=&quot;100&quot; step=&quot;0.1&quot; value=&quot;0&quot; inputmode=&quot;decimal&quot;&gt;
+      &lt;/label&gt;
+      &lt;div class=&quot;ps-actions&quot;&gt;
+        &lt;button class=&quot;btn btn-primary&quot; id=&quot;ps-apply-day&quot; type=&quot;button&quot;&gt;&lt;i data-lucide=&quot;calendar-check&quot; aria-hidden=&quot;true&quot;&gt;&lt;/i&gt;套用並前進一天&lt;/button&gt;
+        &lt;button class=&quot;btn btn-ghost&quot; id=&quot;ps-clear-moves&quot; type=&quot;button&quot;&gt;&lt;i data-lucide=&quot;eraser&quot; aria-hidden=&quot;true&quot;&gt;&lt;/i&gt;清除漲跌&lt;/button&gt;
+      &lt;/div&gt;
+    &lt;/div&gt;
+    &lt;div class=&quot;text-small&quot; id=&quot;ps-scenario-preview&quot; aria-live=&quot;polite&quot;&gt;預估今日損益 NT$0&lt;/div&gt;
+  &lt;/section&gt;
+
+  &lt;section aria-label=&quot;資產績效走勢&quot;&gt;
+    &lt;div class=&quot;ps-toolbar&quot;&gt;
+      &lt;div class=&quot;ps-legend text-small&quot;&gt;
+        &lt;span class=&quot;ps-swatch ps-swatch-portfolio&quot; aria-hidden=&quot;true&quot;&gt;&lt;/span&gt;&lt;span&gt;投資組合&lt;/span&gt;
+        &lt;span class=&quot;ps-swatch ps-swatch-benchmark&quot; aria-hidden=&quot;true&quot;&gt;&lt;/span&gt;&lt;span&gt;大盤基準&lt;/span&gt;
+      &lt;/div&gt;
+      &lt;span class=&quot;viz-badge&quot; id=&quot;ps-day-badge&quot;&gt;第 0 天&lt;/span&gt;
+    &lt;/div&gt;
+    &lt;div class=&quot;ps-chart-wrap&quot; id=&quot;ps-chart-wrap&quot;&gt;
+      &lt;svg id=&quot;ps-chart&quot; role=&quot;img&quot; aria-labelledby=&quot;ps-chart-title ps-chart-desc&quot;&gt;
+        &lt;title id=&quot;ps-chart-title&quot;&gt;投資組合與大盤累積報酬走勢&lt;/title&gt;
+        &lt;desc id=&quot;ps-chart-desc&quot;&gt;比較每日手動情境套用後，投資組合與大盤基準的累積百分比變化。&lt;/desc&gt;
+        &lt;g id=&quot;ps-chart-grid&quot;&gt;&lt;/g&gt;
+        &lt;path class=&quot;ps-portfolio-line&quot; id=&quot;ps-portfolio-line&quot;&gt;&lt;/path&gt;
+        &lt;path class=&quot;ps-benchmark-line&quot; id=&quot;ps-benchmark-line&quot;&gt;&lt;/path&gt;
+        &lt;line class=&quot;ps-hover-line&quot; id=&quot;ps-hover-line&quot; visibility=&quot;hidden&quot;&gt;&lt;/line&gt;
+        &lt;circle class=&quot;ps-portfolio-dot&quot; id=&quot;ps-portfolio-dot&quot; r=&quot;4&quot;&gt;&lt;/circle&gt;
+        &lt;circle class=&quot;ps-benchmark-dot&quot; id=&quot;ps-benchmark-dot&quot; r=&quot;4&quot;&gt;&lt;/circle&gt;
+        &lt;rect id=&quot;ps-chart-hit&quot; fill=&quot;transparent&quot;&gt;&lt;/rect&gt;
+      &lt;/svg&gt;
+      &lt;div class=&quot;tooltip ps-tooltip&quot; id=&quot;ps-tooltip&quot; role=&quot;status&quot;&gt;&lt;/div&gt;
+    &lt;/div&gt;
+    &lt;div class=&quot;text-small text-muted&quot; id=&quot;ps-selected-point&quot; aria-live=&quot;polite&quot;&gt;第 0 天 · 組合 0.00% · 大盤 0.00%&lt;/div&gt;
+  &lt;/section&gt;
+
+  &lt;section aria-label=&quot;持股與每日情境&quot;&gt;
+    &lt;div class=&quot;ps-section-head&quot;&gt;
+      &lt;span&gt;持股與每日漲跌&lt;/span&gt;
+      &lt;span class=&quot;text-small text-muted&quot; id=&quot;ps-holdings-count&quot;&gt;3 檔股票&lt;/span&gt;
+    &lt;/div&gt;
+    &lt;div class=&quot;ps-allocation&quot; id=&quot;ps-allocation&quot; role=&quot;img&quot; aria-label=&quot;投資組合權重分布&quot;&gt;&lt;/div&gt;
+    &lt;div class=&quot;table-responsive&quot;&gt;
+      &lt;table class=&quot;table table-sm&quot;&gt;
+        &lt;thead&gt;
+          &lt;tr&gt;
+            &lt;th&gt;股票&lt;/th&gt;
+            &lt;th class=&quot;text-end&quot;&gt;持股&lt;/th&gt;
+            &lt;th class=&quot;text-end&quot;&gt;現價&lt;/th&gt;
+            &lt;th class=&quot;text-end&quot;&gt;市值／損益&lt;/th&gt;
+            &lt;th class=&quot;text-end&quot;&gt;權重&lt;/th&gt;
+            &lt;th class=&quot;text-end&quot;&gt;今日漲跌&lt;/th&gt;
+            &lt;th class=&quot;text-end&quot;&gt;資產貢獻&lt;/th&gt;
+            &lt;th&gt;&lt;span class=&quot;sr-only&quot;&gt;操作&lt;/span&gt;&lt;/th&gt;
+          &lt;/tr&gt;
+        &lt;/thead&gt;
+        &lt;tbody id=&quot;ps-holdings-body&quot;&gt;&lt;/tbody&gt;
+      &lt;/table&gt;
+    &lt;/div&gt;
+  &lt;/section&gt;
+
+  &lt;section class=&quot;card ps-panel&quot; aria-label=&quot;模擬交易&quot;&gt;
+    &lt;div class=&quot;ps-section-head&quot;&gt;
+      &lt;span&gt;模擬下單&lt;/span&gt;
+      &lt;span class=&quot;text-small text-muted&quot; id=&quot;ps-trade-price&quot;&gt;成交價 NT$0&lt;/span&gt;
+    &lt;/div&gt;
+    &lt;div class=&quot;ps-control-grid&quot;&gt;
+      &lt;label class=&quot;form-label ps-field&quot; for=&quot;ps-trade-symbol&quot;&gt;
+        &lt;span&gt;股票&lt;/span&gt;
+        &lt;select class=&quot;form-select&quot; id=&quot;ps-trade-symbol&quot;&gt;&lt;/select&gt;
+      &lt;/label&gt;
+      &lt;label class=&quot;form-label ps-field&quot; for=&quot;ps-trade-quantity&quot;&gt;
+        &lt;span&gt;股數&lt;/span&gt;
+        &lt;input class=&quot;form-control&quot; id=&quot;ps-trade-quantity&quot; type=&quot;number&quot; min=&quot;1&quot; step=&quot;100&quot; value=&quot;1000&quot; inputmode=&quot;numeric&quot;&gt;
+      &lt;/label&gt;
+    &lt;/div&gt;
+    &lt;div class=&quot;ps-toolbar&quot;&gt;
+      &lt;span class=&quot;text-small&quot; id=&quot;ps-trade-feedback&quot; aria-live=&quot;polite&quot;&gt;選擇股票後即可模擬交易&lt;/span&gt;
+      &lt;div class=&quot;ps-actions&quot;&gt;
+        &lt;button class=&quot;btn btn-primary&quot; id=&quot;ps-buy&quot; type=&quot;button&quot;&gt;&lt;i data-lucide=&quot;trending-up&quot; aria-hidden=&quot;true&quot;&gt;&lt;/i&gt;買進&lt;/button&gt;
+        &lt;button class=&quot;btn&quot; id=&quot;ps-sell&quot; type=&quot;button&quot;&gt;&lt;i data-lucide=&quot;trending-down&quot; aria-hidden=&quot;true&quot;&gt;&lt;/i&gt;賣出&lt;/button&gt;
+      &lt;/div&gt;
+    &lt;/div&gt;
+    &lt;details class=&quot;ps-details&quot; id=&quot;ps-advanced-settings&quot;&gt;
+      &lt;summary&gt;股票清單與交易成本&lt;/summary&gt;
+      &lt;div class=&quot;ps-control-grid&quot;&gt;
+        &lt;label class=&quot;form-label ps-field&quot; for=&quot;ps-new-symbol&quot;&gt;
+          &lt;span&gt;股票代號&lt;/span&gt;
+          &lt;input class=&quot;form-control&quot; id=&quot;ps-new-symbol&quot; type=&quot;text&quot; value=&quot;&quot; placeholder=&quot;例如 2303&quot; maxlength=&quot;12&quot;&gt;
+        &lt;/label&gt;
+        &lt;label class=&quot;form-label ps-field&quot; for=&quot;ps-new-name&quot;&gt;
+          &lt;span&gt;股票名稱&lt;/span&gt;
+          &lt;input class=&quot;form-control&quot; id=&quot;ps-new-name&quot; type=&quot;text&quot; value=&quot;&quot; placeholder=&quot;例如 聯電&quot; maxlength=&quot;24&quot;&gt;
+        &lt;/label&gt;
+      &lt;/div&gt;
+      &lt;div class=&quot;ps-control-grid&quot;&gt;
+        &lt;label class=&quot;form-label ps-field&quot; for=&quot;ps-new-price&quot;&gt;
+          &lt;span&gt;模擬起始價&lt;/span&gt;
+          &lt;input class=&quot;form-control&quot; id=&quot;ps-new-price&quot; type=&quot;number&quot; min=&quot;0.01&quot; step=&quot;0.01&quot; value=&quot;50&quot; inputmode=&quot;decimal&quot;&gt;
+        &lt;/label&gt;
+        &lt;div class=&quot;ps-actions&quot;&gt;
+          &lt;button class=&quot;btn&quot; id=&quot;ps-add-stock&quot; type=&quot;button&quot;&gt;&lt;i data-lucide=&quot;plus&quot; aria-hidden=&quot;true&quot;&gt;&lt;/i&gt;加入股票&lt;/button&gt;
+        &lt;/div&gt;
+      &lt;/div&gt;
+      &lt;div class=&quot;ps-control-grid&quot;&gt;
+        &lt;label class=&quot;form-label ps-field&quot; for=&quot;ps-commission-rate&quot;&gt;
+          &lt;span&gt;手續費率 (%)&lt;/span&gt;
+          &lt;input class=&quot;form-control&quot; id=&quot;ps-commission-rate&quot; type=&quot;number&quot; min=&quot;0&quot; max=&quot;10&quot; step=&quot;0.0001&quot; value=&quot;0.1425&quot; inputmode=&quot;decimal&quot;&gt;
+        &lt;/label&gt;
+        &lt;label class=&quot;form-label ps-field&quot; for=&quot;ps-tax-rate&quot;&gt;
+          &lt;span&gt;賣出交易稅率 (%)&lt;/span&gt;
+          &lt;input class=&quot;form-control&quot; id=&quot;ps-tax-rate&quot; type=&quot;number&quot; min=&quot;0&quot; max=&quot;10&quot; step=&quot;0.01&quot; value=&quot;0.3&quot; inputmode=&quot;decimal&quot;&gt;
+        &lt;/label&gt;
+      &lt;/div&gt;
+    &lt;/details&gt;
+  &lt;/section&gt;
+
+  &lt;section aria-label=&quot;交易紀錄&quot;&gt;
+    &lt;div class=&quot;ps-section-head&quot;&gt;
+      &lt;span&gt;交易紀錄&lt;/span&gt;
+      &lt;span class=&quot;text-small text-muted&quot;&gt;移動平均成本法&lt;/span&gt;
+    &lt;/div&gt;
+    &lt;div class=&quot;table-responsive&quot;&gt;
+      &lt;table class=&quot;table table-sm&quot;&gt;
+        &lt;thead&gt;
+          &lt;tr&gt;
+            &lt;th&gt;日期&lt;/th&gt;
+            &lt;th&gt;動作&lt;/th&gt;
+            &lt;th&gt;股票&lt;/th&gt;
+            &lt;th class=&quot;text-end&quot;&gt;股數&lt;/th&gt;
+            &lt;th class=&quot;text-end&quot;&gt;價格&lt;/th&gt;
+            &lt;th class=&quot;text-end&quot;&gt;成本&lt;/th&gt;
+            &lt;th class=&quot;text-end&quot;&gt;現金流&lt;/th&gt;
+          &lt;/tr&gt;
+        &lt;/thead&gt;
+        &lt;tbody id=&quot;ps-transactions-body&quot;&gt;
+          &lt;tr&gt;&lt;td colspan=&quot;7&quot; class=&quot;text-center text-muted&quot;&gt;尚無交易&lt;/td&gt;&lt;/tr&gt;
+        &lt;/tbody&gt;
+      &lt;/table&gt;
+    &lt;/div&gt;
+  &lt;/section&gt;
+
+  &lt;script&gt;
+    (() =&gt; {
+      const root = document.getElementById(&#x27;portfolio-scenario-studio&#x27;);
+      if (!root) return;
+
+      const el = (id) =&gt; root.querySelector(&#x27;#&#x27; + id);
+      const STARTING_CAPITAL = 1000000;
+      const templates = {
+        &#x27;tw-core&#x27;: [
+          { symbol: &#x27;0050&#x27;, name: &#x27;台灣50&#x27;, shares: 6000, price: 60 },
+          { symbol: &#x27;2330&#x27;, name: &#x27;台積電&#x27;, shares: 300, price: 1000 },
+          { symbol: &#x27;2454&#x27;, name: &#x27;聯發科&#x27;, shares: 100, price: 1400 }
+        ],
+        &#x27;tech-growth&#x27;: [
+          { symbol: &#x27;2330&#x27;, name: &#x27;台積電&#x27;, shares: 400, price: 1000 },
+          { symbol: &#x27;2454&#x27;, name: &#x27;聯發科&#x27;, shares: 200, price: 1400 },
+          { symbol: &#x27;2382&#x27;, name: &#x27;廣達&#x27;, shares: 400, price: 300 }
+        ],
+        &#x27;dividend-defense&#x27;: [
+          { symbol: &#x27;0056&#x27;, name: &#x27;高股息&#x27;, shares: 10000, price: 36 },
+          { symbol: &#x27;00878&#x27;, name: &#x27;國泰永續高股息&#x27;, shares: 15000, price: 22 },
+          { symbol: &#x27;2881&#x27;, name: &#x27;富邦金&#x27;, shares: 2000, price: 65 }
+        ],
+        &#x27;blank&#x27;: []
+      };
+      const state = {
+        day: 0,
+        cash: STARTING_CAPITAL,
+        holdings: [],
+        benchmark: 100,
+        history: [],
+        transactions: [],
+        realizedPnl: 0,
+        lastDailyPnl: 0,
+        lastDailyReturn: 0,
+        lastBenchmarkReturn: 0,
+        nextId: 1
+      };
+
+      const money0 = new Intl.NumberFormat(&#x27;zh-TW&#x27;, {
+        style: &#x27;currency&#x27;, currency: &#x27;TWD&#x27;, maximumFractionDigits: 0
+      });
+      const money2 = new Intl.NumberFormat(&#x27;zh-TW&#x27;, {
+        style: &#x27;currency&#x27;, currency: &#x27;TWD&#x27;, minimumFractionDigits: 2, maximumFractionDigits: 2
+      });
+      const number0 = new Intl.NumberFormat(&#x27;zh-TW&#x27;, { maximumFractionDigits: 0 });
+
+      function signedPercent(value) {
+        return (value &gt; 0 ? &#x27;+&#x27; : &#x27;&#x27;) + value.toFixed(2) + &#x27;%&#x27;;
+      }
+
+      function signedMoney(value) {
+        return (value &gt; 0 ? &#x27;+&#x27; : &#x27;&#x27;) + money0.format(value);
+      }
+
+      function holdingsValue() {
+        return state.holdings.reduce((sum, holding) =&gt; sum + holding.shares * holding.price, 0);
+      }
+
+      function totalAssets() {
+        return state.cash + holdingsValue();
+      }
+
+      function unrealizedPnl() {
+        return state.holdings.reduce((sum, holding) =&gt; {
+          return sum + holding.shares * (holding.price - holding.averageCost);
+        }, 0);
+      }
+
+      function commissionRate() {
+        return Math.max(0, Number(el(&#x27;ps-commission-rate&#x27;).value) || 0) / 100;
+      }
+
+      function taxRate() {
+        return Math.max(0, Number(el(&#x27;ps-tax-rate&#x27;).value) || 0) / 100;
+      }
+
+      function tradeFee(gross) {
+        if (gross &lt;= 0 || commissionRate() === 0) return 0;
+        return Math.max(20, Math.round(gross * commissionRate()));
+      }
+
+      function maximumDrawdown() {
+        let peak = 0;
+        let maximum = 0;
+        state.history.forEach((point) =&gt; {
+          peak = Math.max(peak, point.total);
+          if (peak &gt; 0) maximum = Math.min(maximum, point.total / peak - 1);
+        });
+        return maximum * 100;
+      }
+
+      function concentration() {
+        const total = totalAssets();
+        if (total &lt;= 0) return 0;
+        return Math.max(0, ...state.holdings.map((holding) =&gt; holding.shares * holding.price / total * 100));
+      }
+
+      function recordHistory(replaceCurrent) {
+        const total = totalAssets();
+        const point = {
+          day: state.day,
+          total,
+          portfolioReturn: (total / STARTING_CAPITAL - 1) * 100,
+          benchmarkReturn: state.benchmark - 100
+        };
+        const last = state.history[state.history.length - 1];
+        if (replaceCurrent &amp;&amp; last &amp;&amp; last.day === state.day) state.history[state.history.length - 1] = point;
+        else state.history.push(point);
+      }
+
+      function loadTemplate(templateId) {
+        state.day = 0;
+        state.nextId = 1;
+        state.holdings = templates[templateId].map((item) =&gt; ({
+          id: state.nextId++,
+          symbol: item.symbol,
+          name: item.name,
+          shares: item.shares,
+          price: item.price,
+          averageCost: item.price,
+          move: 0,
+          lastContribution: 0
+        }));
+        state.cash = STARTING_CAPITAL - holdingsValue();
+        state.benchmark = 100;
+        state.history = [];
+        state.transactions = [];
+        state.realizedPnl = 0;
+        state.lastDailyPnl = 0;
+        state.lastDailyReturn = 0;
+        state.lastBenchmarkReturn = 0;
+        el(&#x27;ps-benchmark-move&#x27;).value = &#x27;0&#x27;;
+        recordHistory(false);
+        setTradeFeedback(&#x27;已載入組合，可設定各股票今日漲跌&#x27;, false);
+        render();
+      }
+
+      function presetMove(holding, preset) {
+        const symbol = holding.symbol;
+        const isTechnology = [&#x27;2330&#x27;, &#x27;2454&#x27;, &#x27;2382&#x27;].includes(symbol);
+        const isDividend = [&#x27;0056&#x27;, &#x27;00878&#x27;, &#x27;2881&#x27;].includes(symbol);
+        if (preset === &#x27;market-crash&#x27;) return isTechnology ? -10 : isDividend ? -5.5 : -7.5;
+        if (preset === &#x27;tech-rally&#x27;) return isTechnology ? 8 : isDividend ? 1 : 3.5;
+        if (preset === &#x27;rotation&#x27;) return isTechnology ? -4 : isDividend ? 3 : 0.5;
+        if (preset === &#x27;quiet&#x27;) return isTechnology ? 0.8 : isDividend ? 0.3 : 0.5;
+        return 0;
+      }
+
+      function fillPreset() {
+        const preset = el(&#x27;ps-market-preset&#x27;).value;
+        const benchmarkMoves = {
+          custom: 0,
+          &#x27;market-crash&#x27;: -8,
+          &#x27;tech-rally&#x27;: 3.5,
+          rotation: -0.5,
+          quiet: 0.3
+        };
+        state.holdings.forEach((holding) =&gt; {
+          holding.move = presetMove(holding, preset);
+        });
+        el(&#x27;ps-benchmark-move&#x27;).value = String(benchmarkMoves[preset]);
+        renderHoldings();
+        renderScenarioPreview();
+      }
+
+      function clearMoves() {
+        state.holdings.forEach((holding) =&gt; {
+          holding.move = 0;
+        });
+        el(&#x27;ps-benchmark-move&#x27;).value = &#x27;0&#x27;;
+        el(&#x27;ps-market-preset&#x27;).value = &#x27;custom&#x27;;
+        renderHoldings();
+        renderScenarioPreview();
+      }
+
+      function applyDay() {
+        const benchmarkMove = Math.max(-100, Math.min(100, Number(el(&#x27;ps-benchmark-move&#x27;).value) || 0));
+        const before = totalAssets();
+        state.holdings.forEach((holding) =&gt; {
+          const move = Math.max(-100, Math.min(100, Number(holding.move) || 0));
+          const oldValue = holding.shares * holding.price;
+          holding.price = Math.max(0.01, holding.price * (1 + move / 100));
+          holding.lastContribution = holding.shares * holding.price - oldValue;
+          holding.move = 0;
+        });
+        state.benchmark = Math.max(0.01, state.benchmark * (1 + benchmarkMove / 100));
+        state.day += 1;
+        const after = totalAssets();
+        state.lastDailyPnl = after - before;
+        state.lastDailyReturn = before &gt; 0 ? (after / before - 1) * 100 : 0;
+        state.lastBenchmarkReturn = benchmarkMove;
+        recordHistory(false);
+        el(&#x27;ps-benchmark-move&#x27;).value = &#x27;0&#x27;;
+        el(&#x27;ps-market-preset&#x27;).value = &#x27;custom&#x27;;
+        render();
+      }
+
+      function setTradeFeedback(message, destructive) {
+        const feedback = el(&#x27;ps-trade-feedback&#x27;);
+        feedback.textContent = message;
+        feedback.classList.toggle(&#x27;text-destructive&#x27;, destructive);
+      }
+
+      function selectedHolding() {
+        const id = Number(el(&#x27;ps-trade-symbol&#x27;).value);
+        return state.holdings.find((holding) =&gt; holding.id === id) || null;
+      }
+
+      function tradeQuantity() {
+        const quantity = Math.floor(Number(el(&#x27;ps-trade-quantity&#x27;).value));
+        return Number.isFinite(quantity) &amp;&amp; quantity &gt; 0 ? quantity : 0;
+      }
+
+      function buy() {
+        const holding = selectedHolding();
+        const quantity = tradeQuantity();
+        if (!holding) {
+          setTradeFeedback(&#x27;請先加入或選擇股票&#x27;, true);
+          return;
+        }
+        if (!quantity) {
+          setTradeFeedback(&#x27;請輸入大於 0 的股數&#x27;, true);
+          return;
+        }
+        const gross = quantity * holding.price;
+        const fee = tradeFee(gross);
+        const cost = gross + fee;
+        if (cost &gt; state.cash) {
+          setTradeFeedback(&#x27;現金不足，本次需要 &#x27; + money0.format(cost), true);
+          return;
+        }
+        const previousBookCost = holding.averageCost * holding.shares;
+        state.cash -= cost;
+        holding.shares += quantity;
+        holding.averageCost = (previousBookCost + cost) / holding.shares;
+        state.transactions.unshift({
+          day: state.day,
+          type: &#x27;買進&#x27;,
+          symbol: holding.symbol,
+          quantity,
+          price: holding.price,
+          costs: fee,
+          cashFlow: -cost
+        });
+        recordHistory(true);
+        setTradeFeedback(&#x27;已買進 &#x27; + holding.symbol + &#x27; &#x27; + number0.format(quantity) + &#x27; 股&#x27;, false);
+        render();
+      }
+
+      function sell() {
+        const holding = selectedHolding();
+        const quantity = tradeQuantity();
+        if (!holding) {
+          setTradeFeedback(&#x27;請先加入或選擇股票&#x27;, true);
+          return;
+        }
+        if (!quantity) {
+          setTradeFeedback(&#x27;請輸入大於 0 的股數&#x27;, true);
+          return;
+        }
+        if (quantity &gt; holding.shares) {
+          setTradeFeedback(&#x27;持股不足，目前持有 &#x27; + number0.format(holding.shares) + &#x27; 股&#x27;, true);
+          return;
+        }
+        const gross = quantity * holding.price;
+        const fee = tradeFee(gross);
+        const tax = Math.round(gross * taxRate());
+        const proceeds = gross - fee - tax;
+        const realized = (holding.price - holding.averageCost) * quantity - fee - tax;
+        state.cash += proceeds;
+        holding.shares -= quantity;
+        state.realizedPnl += realized;
+        if (holding.shares === 0) holding.averageCost = 0;
+        state.transactions.unshift({
+          day: state.day,
+          type: &#x27;賣出&#x27;,
+          symbol: holding.symbol,
+          quantity,
+          price: holding.price,
+          costs: fee + tax,
+          cashFlow: proceeds
+        });
+        recordHistory(true);
+        setTradeFeedback(&#x27;已賣出 &#x27; + holding.symbol + &#x27;，實現損益 &#x27; + signedMoney(realized), false);
+        render();
+      }
+
+      function addStock() {
+        const symbol = el(&#x27;ps-new-symbol&#x27;).value.trim().toUpperCase();
+        const name = el(&#x27;ps-new-name&#x27;).value.trim() || symbol;
+        const price = Number(el(&#x27;ps-new-price&#x27;).value);
+        if (!symbol) {
+          setTradeFeedback(&#x27;請輸入股票代號&#x27;, true);
+          return;
+        }
+        if (!Number.isFinite(price) || price &lt;= 0) {
+          setTradeFeedback(&#x27;起始價必須大於 0&#x27;, true);
+          return;
+        }
+        if (state.holdings.some((holding) =&gt; holding.symbol === symbol)) {
+          setTradeFeedback(symbol + &#x27; 已在股票清單中&#x27;, true);
+          return;
+        }
+        const holding = {
+          id: state.nextId++,
+          symbol,
+          name,
+          shares: 0,
+          price,
+          averageCost: 0,
+          move: 0,
+          lastContribution: 0
+        };
+        state.holdings.push(holding);
+        el(&#x27;ps-new-symbol&#x27;).value = &#x27;&#x27;;
+        el(&#x27;ps-new-name&#x27;).value = &#x27;&#x27;;
+        setTradeFeedback(&#x27;已加入 &#x27; + symbol + &#x27;，可從下單區買進&#x27;, false);
+        render();
+        el(&#x27;ps-trade-symbol&#x27;).value = String(holding.id);
+        renderTradePrice();
+      }
+
+      function removeStock(id) {
+        const holding = state.holdings.find((item) =&gt; item.id === id);
+        if (!holding || holding.shares !== 0) return;
+        state.holdings = state.holdings.filter((item) =&gt; item.id !== id);
+        setTradeFeedback(&#x27;已移除 &#x27; + holding.symbol, false);
+        render();
+      }
+
+      function renderSummary() {
+        const total = totalAssets();
+        const totalPnl = total - STARTING_CAPITAL;
+        el(&#x27;ps-total-assets&#x27;).textContent = money0.format(total);
+        el(&#x27;ps-asset-breakdown&#x27;).textContent = &#x27;持股 &#x27; + money0.format(holdingsValue()) + &#x27; · 現金 &#x27; + money0.format(state.cash);
+        el(&#x27;ps-daily-pnl&#x27;).textContent = signedMoney(state.lastDailyPnl);
+        el(&#x27;ps-daily-return&#x27;).textContent = &#x27;組合 &#x27; + signedPercent(state.lastDailyReturn) + &#x27; · 大盤 &#x27; + signedPercent(state.lastBenchmarkReturn);
+        el(&#x27;ps-total-pnl&#x27;).textContent = signedMoney(totalPnl);
+        el(&#x27;ps-risk-summary&#x27;).textContent = &#x27;報酬 &#x27; + signedPercent((total / STARTING_CAPITAL - 1) * 100) + &#x27; · 最大回撤 &#x27; + signedPercent(maximumDrawdown());
+        el(&#x27;ps-day-badge&#x27;).textContent = &#x27;第 &#x27; + state.day + &#x27; 天&#x27;;
+      }
+
+      function renderScenarioPreview() {
+        const total = totalAssets();
+        const expected = state.holdings.reduce((sum, holding) =&gt; {
+          return sum + holding.shares * holding.price * (Number(holding.move) || 0) / 100;
+        }, 0);
+        const expectedReturn = total &gt; 0 ? expected / total * 100 : 0;
+        el(&#x27;ps-scenario-preview&#x27;).textContent = &#x27;預估今日損益 &#x27; + signedMoney(expected) + &#x27; · 組合約 &#x27; + signedPercent(expectedReturn);
+        state.holdings.forEach((holding) =&gt; {
+          const contribution = holding.shares * holding.price * (Number(holding.move) || 0) / 100;
+          const cell = root.querySelector(&#x27;[data-contribution-id=&quot;&#x27; + holding.id + &#x27;&quot;]&#x27;);
+          if (cell) cell.textContent = signedMoney(contribution);
+        });
+      }
+
+      function renderHoldings() {
+        const body = el(&#x27;ps-holdings-body&#x27;);
+        const total = totalAssets();
+        if (!state.holdings.length) {
+          body.innerHTML = &#x27;&lt;tr&gt;&lt;td colspan=&quot;8&quot; class=&quot;text-center text-muted&quot;&gt;尚未加入股票&lt;/td&gt;&lt;/tr&gt;&#x27;;
+          el(&#x27;ps-holdings-count&#x27;).textContent = &#x27;0 檔股票&#x27;;
+          el(&#x27;ps-allocation&#x27;).innerHTML = &#x27;&#x27;;
+          el(&#x27;ps-allocation&#x27;).setAttribute(&#x27;aria-label&#x27;, &#x27;目前只有現金&#x27;);
+          return;
+        }
+        body.innerHTML = state.holdings.map((holding) =&gt; {
+          const value = holding.shares * holding.price;
+          const weight = total &gt; 0 ? value / total * 100 : 0;
+          const pnl = holding.shares * (holding.price - holding.averageCost);
+          const disabled = holding.shares !== 0 ? &#x27; disabled&#x27; : &#x27;&#x27;;
+          const removeTooltip = holding.shares !== 0 ? &#x27;需先賣出全部持股&#x27; : &#x27;移除股票&#x27;;
+          return &#x27;&lt;tr&gt;&#x27; +
+            &#x27;&lt;td&gt;&lt;span class=&quot;ps-symbol&quot;&gt;&#x27; + escapeHtml(holding.symbol) + &#x27;&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;text-small text-muted&quot;&gt;&#x27; + escapeHtml(holding.name) + &#x27; · 均價 &#x27; + money2.format(holding.averageCost) + &#x27;&lt;/span&gt;&lt;/td&gt;&#x27; +
+            &#x27;&lt;td class=&quot;text-end text-nowrap&quot;&gt;&#x27; + number0.format(holding.shares) + &#x27;&lt;/td&gt;&#x27; +
+            &#x27;&lt;td class=&quot;text-end text-nowrap&quot;&gt;&#x27; + money2.format(holding.price) + &#x27;&lt;/td&gt;&#x27; +
+            &#x27;&lt;td class=&quot;text-end text-nowrap&quot;&gt;&#x27; + money0.format(value) + &#x27;&lt;br&gt;&lt;span class=&quot;text-small&quot;&gt;&#x27; + signedMoney(pnl) + &#x27;&lt;/span&gt;&lt;/td&gt;&#x27; +
+            &#x27;&lt;td class=&quot;text-end&quot;&gt;&#x27; + weight.toFixed(1) + &#x27;%&lt;/td&gt;&#x27; +
+            &#x27;&lt;td class=&quot;text-end&quot;&gt;&lt;label class=&quot;sr-only&quot; for=&quot;ps-move-&#x27; + holding.id + &#x27;&quot;&gt;&#x27; + escapeHtml(holding.symbol) + &#x27; 今日漲跌百分比&lt;/label&gt;&lt;input class=&quot;form-control ps-move-input&quot; id=&quot;ps-move-&#x27; + holding.id + &#x27;&quot; data-move-id=&quot;&#x27; + holding.id + &#x27;&quot; type=&quot;number&quot; min=&quot;-100&quot; max=&quot;100&quot; step=&quot;0.1&quot; value=&quot;&#x27; + holding.move + &#x27;&quot; inputmode=&quot;decimal&quot;&gt;&lt;/td&gt;&#x27; +
+            &#x27;&lt;td class=&quot;text-end text-nowrap&quot; data-contribution-id=&quot;&#x27; + holding.id + &#x27;&quot;&gt;&#x27; + signedMoney(value * holding.move / 100) + &#x27;&lt;/td&gt;&#x27; +
+            &#x27;&lt;td&gt;&lt;button class=&quot;btn btn-ghost&quot; type=&quot;button&quot; data-remove-id=&quot;&#x27; + holding.id + &#x27;&quot; data-tooltip=&quot;&#x27; + removeTooltip + &#x27;&quot; aria-label=&quot;移除 &#x27; + escapeHtml(holding.symbol) + &#x27;&quot;&#x27; + disabled + &#x27;&gt;&lt;i data-lucide=&quot;x&quot; aria-hidden=&quot;true&quot;&gt;&lt;/i&gt;&lt;/button&gt;&lt;/td&gt;&#x27; +
+          &#x27;&lt;/tr&gt;&#x27;;
+        }).join(&#x27;&#x27;);
+        el(&#x27;ps-holdings-count&#x27;).textContent = state.holdings.length + &#x27; 檔股票 · 最大持股 &#x27; + concentration().toFixed(1) + &#x27;%&#x27;;
+
+        const allocationParts = state.holdings.filter((holding) =&gt; holding.shares &gt; 0).map((holding) =&gt; {
+          const weight = total &gt; 0 ? holding.shares * holding.price / total * 100 : 0;
+          return &#x27;&lt;span class=&quot;ps-allocation-segment&quot; style=&quot;width:&#x27; + weight.toFixed(3) + &#x27;%&quot; aria-hidden=&quot;true&quot;&gt;&lt;/span&gt;&#x27;;
+        });
+        el(&#x27;ps-allocation&#x27;).innerHTML = allocationParts.join(&#x27;&#x27;);
+        const allocationLabel = state.holdings.filter((holding) =&gt; holding.shares &gt; 0).map((holding) =&gt; {
+          const weight = total &gt; 0 ? holding.shares * holding.price / total * 100 : 0;
+          return holding.symbol + &#x27; &#x27; + weight.toFixed(1) + &#x27;%&#x27;;
+        }).join(&#x27;，&#x27;);
+        el(&#x27;ps-allocation&#x27;).setAttribute(&#x27;aria-label&#x27;, &#x27;權重分布：&#x27; + (allocationLabel || &#x27;目前只有現金&#x27;));
+
+        root.querySelectorAll(&#x27;[data-move-id]&#x27;).forEach((input) =&gt; {
+          input.addEventListener(&#x27;input&#x27;, (event) =&gt; {
+            const id = Number(event.target.dataset.moveId);
+            const holding = state.holdings.find((item) =&gt; item.id === id);
+            if (holding) holding.move = Math.max(-100, Math.min(100, Number(event.target.value) || 0));
+            renderScenarioPreview();
+          });
+        });
+        root.querySelectorAll(&#x27;[data-remove-id]&#x27;).forEach((button) =&gt; {
+          button.addEventListener(&#x27;click&#x27;, () =&gt; removeStock(Number(button.dataset.removeId)));
+        });
+        if (window.lucide) window.lucide.createIcons({ attrs: { width: 16, height: 16 } });
+      }
+
+      function renderTradeSelect() {
+        const select = el(&#x27;ps-trade-symbol&#x27;);
+        const previousValue = select.value;
+        if (!state.holdings.length) {
+          select.innerHTML = &#x27;&lt;option value=&quot;&quot;&gt;尚無股票&lt;/option&gt;&#x27;;
+          renderTradePrice();
+          return;
+        }
+        select.innerHTML = state.holdings.map((holding) =&gt; {
+          return &#x27;&lt;option value=&quot;&#x27; + holding.id + &#x27;&quot;&gt;&#x27; + escapeHtml(holding.symbol) + &#x27; · &#x27; + escapeHtml(holding.name) + &#x27;&lt;/option&gt;&#x27;;
+        }).join(&#x27;&#x27;);
+        if (state.holdings.some((holding) =&gt; String(holding.id) === previousValue)) select.value = previousValue;
+        renderTradePrice();
+      }
+
+      function renderTradePrice() {
+        const holding = selectedHolding();
+        el(&#x27;ps-trade-price&#x27;).textContent = holding
+          ? &#x27;成交價 &#x27; + money2.format(holding.price) + &#x27; · 持有 &#x27; + number0.format(holding.shares) + &#x27; 股&#x27;
+          : &#x27;成交價 NT$0&#x27;;
+      }
+
+      function renderTransactions() {
+        const body = el(&#x27;ps-transactions-body&#x27;);
+        if (!state.transactions.length) {
+          body.innerHTML = &#x27;&lt;tr&gt;&lt;td colspan=&quot;7&quot; class=&quot;text-center text-muted&quot;&gt;尚無交易&lt;/td&gt;&lt;/tr&gt;&#x27;;
+          return;
+        }
+        body.innerHTML = state.transactions.slice(0, 8).map((transaction) =&gt; {
+          const flow = (transaction.cashFlow &gt; 0 ? &#x27;+&#x27; : &#x27;&#x27;) + money0.format(transaction.cashFlow);
+          return &#x27;&lt;tr&gt;&#x27; +
+            &#x27;&lt;td class=&quot;text-nowrap&quot;&gt;第 &#x27; + transaction.day + &#x27; 天&lt;/td&gt;&#x27; +
+            &#x27;&lt;td&gt;&#x27; + transaction.type + &#x27;&lt;/td&gt;&#x27; +
+            &#x27;&lt;td class=&quot;ps-symbol&quot;&gt;&#x27; + escapeHtml(transaction.symbol) + &#x27;&lt;/td&gt;&#x27; +
+            &#x27;&lt;td class=&quot;text-end&quot;&gt;&#x27; + number0.format(transaction.quantity) + &#x27;&lt;/td&gt;&#x27; +
+            &#x27;&lt;td class=&quot;text-end&quot;&gt;&#x27; + money2.format(transaction.price) + &#x27;&lt;/td&gt;&#x27; +
+            &#x27;&lt;td class=&quot;text-end&quot;&gt;&#x27; + money0.format(transaction.costs) + &#x27;&lt;/td&gt;&#x27; +
+            &#x27;&lt;td class=&quot;text-end&quot;&gt;&#x27; + flow + &#x27;&lt;/td&gt;&#x27; +
+          &#x27;&lt;/tr&gt;&#x27;;
+        }).join(&#x27;&#x27;);
+      }
+
+      function escapeHtml(value) {
+        return String(value)
+          .replaceAll(&#x27;&amp;&#x27;, &#x27;&amp;amp;&#x27;)
+          .replaceAll(&#x27;&lt;&#x27;, &#x27;&amp;lt;&#x27;)
+          .replaceAll(&#x27;&gt;&#x27;, &#x27;&amp;gt;&#x27;)
+          .replaceAll(&#x27;&quot;&#x27;, &#x27;&amp;quot;&#x27;)
+          .replaceAll(&quot;&#x27;&quot;, &#x27;&amp;#039;&#x27;);
+      }
+
+      function chartGeometry() {
+        const svg = el(&#x27;ps-chart&#x27;);
+        const width = Math.max(300, Math.round(svg.getBoundingClientRect().width || 720));
+        const height = svg.getBoundingClientRect().height || 290;
+        svg.setAttribute(&#x27;viewBox&#x27;, &#x27;0 0 &#x27; + width + &#x27; &#x27; + height);
+        return { width, height, left: 50, right: 18, top: 18, bottom: 36 };
+      }
+
+      function renderChart() {
+        const geometry = chartGeometry();
+        const { width, height, left, right, top, bottom } = geometry;
+        const plotWidth = Math.max(1, width - left - right);
+        const plotHeight = Math.max(1, height - top - bottom);
+        const allValues = state.history.flatMap((point) =&gt; [point.portfolioReturn, point.benchmarkReturn]);
+        let minValue = Math.min(0, ...allValues);
+        let maxValue = Math.max(0, ...allValues);
+        const spread = Math.max(4, maxValue - minValue);
+        minValue -= spread * 0.12;
+        maxValue += spread * 0.12;
+        const xAt = (index) =&gt; left + (state.history.length &lt;= 1 ? 0 : index / (state.history.length - 1)) * plotWidth;
+        const yAt = (value) =&gt; top + (maxValue - value) / (maxValue - minValue) * plotHeight;
+        const pathFor = (key) =&gt; state.history.map((point, index) =&gt; {
+          return (index === 0 ? &#x27;M&#x27; : &#x27;L&#x27;) + xAt(index).toFixed(2) + &#x27;,&#x27; + yAt(point[key]).toFixed(2);
+        }).join(&#x27; &#x27;);
+        el(&#x27;ps-portfolio-line&#x27;).setAttribute(&#x27;d&#x27;, pathFor(&#x27;portfolioReturn&#x27;));
+        el(&#x27;ps-benchmark-line&#x27;).setAttribute(&#x27;d&#x27;, pathFor(&#x27;benchmarkReturn&#x27;));
+
+        const latestIndex = state.history.length - 1;
+        const latest = state.history[latestIndex];
+        const latestX = xAt(latestIndex);
+        el(&#x27;ps-portfolio-dot&#x27;).setAttribute(&#x27;cx&#x27;, latestX);
+        el(&#x27;ps-portfolio-dot&#x27;).setAttribute(&#x27;cy&#x27;, yAt(latest.portfolioReturn));
+        el(&#x27;ps-benchmark-dot&#x27;).setAttribute(&#x27;cx&#x27;, latestX);
+        el(&#x27;ps-benchmark-dot&#x27;).setAttribute(&#x27;cy&#x27;, yAt(latest.benchmarkReturn));
+
+        const grid = [];
+        for (let index = 0; index &lt; 5; index += 1) {
+          const ratio = index / 4;
+          const y = top + ratio * plotHeight;
+          const value = maxValue - ratio * (maxValue - minValue);
+          grid.push(&#x27;&lt;line class=&quot;ps-grid-line&quot; x1=&quot;&#x27; + left + &#x27;&quot; x2=&quot;&#x27; + (width - right) + &#x27;&quot; y1=&quot;&#x27; + y + &#x27;&quot; y2=&quot;&#x27; + y + &#x27;&quot;&gt;&lt;/line&gt;&#x27;);
+          grid.push(&#x27;&lt;text class=&quot;ps-axis-text&quot; x=&quot;&#x27; + (left - 8) + &#x27;&quot; y=&quot;&#x27; + (y + 4) + &#x27;&quot; text-anchor=&quot;end&quot;&gt;&#x27; + signedPercent(value) + &#x27;&lt;/text&gt;&#x27;);
+        }
+        grid.push(&#x27;&lt;line class=&quot;ps-axis-line&quot; x1=&quot;&#x27; + left + &#x27;&quot; x2=&quot;&#x27; + (width - right) + &#x27;&quot; y1=&quot;&#x27; + (height - bottom) + &#x27;&quot; y2=&quot;&#x27; + (height - bottom) + &#x27;&quot;&gt;&lt;/line&gt;&#x27;);
+        grid.push(&#x27;&lt;text class=&quot;ps-axis-text&quot; x=&quot;&#x27; + left + &#x27;&quot; y=&quot;&#x27; + (height - 10) + &#x27;&quot;&gt;第 &#x27; + state.history[0].day + &#x27; 天&lt;/text&gt;&#x27;);
+        if (latestIndex &gt; 1) {
+          const middleIndex = Math.floor(latestIndex / 2);
+          grid.push(&#x27;&lt;text class=&quot;ps-axis-text&quot; x=&quot;&#x27; + xAt(middleIndex) + &#x27;&quot; y=&quot;&#x27; + (height - 10) + &#x27;&quot; text-anchor=&quot;middle&quot;&gt;第 &#x27; + state.history[middleIndex].day + &#x27; 天&lt;/text&gt;&#x27;);
+        }
+        grid.push(&#x27;&lt;text class=&quot;ps-axis-text&quot; x=&quot;&#x27; + (width - right) + &#x27;&quot; y=&quot;&#x27; + (height - 10) + &#x27;&quot; text-anchor=&quot;end&quot;&gt;第 &#x27; + latest.day + &#x27; 天&lt;/text&gt;&#x27;);
+        el(&#x27;ps-chart-grid&#x27;).innerHTML = grid.join(&#x27;&#x27;);
+
+        const hit = el(&#x27;ps-chart-hit&#x27;);
+        hit.setAttribute(&#x27;x&#x27;, left);
+        hit.setAttribute(&#x27;y&#x27;, top);
+        hit.setAttribute(&#x27;width&#x27;, plotWidth);
+        hit.setAttribute(&#x27;height&#x27;, plotHeight);
+        el(&#x27;ps-chart&#x27;).dataset.left = left;
+        el(&#x27;ps-chart&#x27;).dataset.plotWidth = plotWidth;
+        el(&#x27;ps-chart&#x27;).dataset.top = top;
+        el(&#x27;ps-chart&#x27;).dataset.bottomY = height - bottom;
+        el(&#x27;ps-selected-point&#x27;).textContent = &#x27;第 &#x27; + latest.day + &#x27; 天 · 組合 &#x27; + signedPercent(latest.portfolioReturn) + &#x27; · 大盤 &#x27; + signedPercent(latest.benchmarkReturn);
+      }
+
+      function showChartPoint(event) {
+        const svg = el(&#x27;ps-chart&#x27;);
+        const rect = svg.getBoundingClientRect();
+        const left = Number(svg.dataset.left);
+        const plotWidth = Number(svg.dataset.plotWidth);
+        const localX = (event.clientX - rect.left) / rect.width * svg.viewBox.baseVal.width;
+        const ratio = Math.max(0, Math.min(1, (localX - left) / plotWidth));
+        const index = Math.round(ratio * (state.history.length - 1));
+        const point = state.history[index];
+        const x = left + (state.history.length &lt;= 1 ? 0 : index / (state.history.length - 1)) * plotWidth;
+        const hoverLine = el(&#x27;ps-hover-line&#x27;);
+        hoverLine.setAttribute(&#x27;x1&#x27;, x);
+        hoverLine.setAttribute(&#x27;x2&#x27;, x);
+        hoverLine.setAttribute(&#x27;y1&#x27;, svg.dataset.top);
+        hoverLine.setAttribute(&#x27;y2&#x27;, svg.dataset.bottomY);
+        hoverLine.setAttribute(&#x27;visibility&#x27;, &#x27;visible&#x27;);
+        const tooltip = el(&#x27;ps-tooltip&#x27;);
+        tooltip.innerHTML = &#x27;&lt;strong&gt;第 &#x27; + point.day + &#x27; 天&lt;/strong&gt;&lt;br&gt;總資產 &#x27; + money0.format(point.total) + &#x27;&lt;br&gt;組合 &#x27; + signedPercent(point.portfolioReturn) + &#x27; · 大盤 &#x27; + signedPercent(point.benchmarkReturn);
+        tooltip.style.display = &#x27;block&#x27;;
+        const xCss = x / svg.viewBox.baseVal.width * rect.width;
+        const tooltipWidth = tooltip.getBoundingClientRect().width;
+        tooltip.style.left = Math.max(4, Math.min(el(&#x27;ps-chart-wrap&#x27;).clientWidth - tooltipWidth - 4, xCss + 10)) + &#x27;px&#x27;;
+        tooltip.style.top = &#x27;8px&#x27;;
+        el(&#x27;ps-selected-point&#x27;).textContent = &#x27;第 &#x27; + point.day + &#x27; 天 · 組合 &#x27; + signedPercent(point.portfolioReturn) + &#x27; · 大盤 &#x27; + signedPercent(point.benchmarkReturn);
+      }
+
+      function hideChartPoint() {
+        el(&#x27;ps-hover-line&#x27;).setAttribute(&#x27;visibility&#x27;, &#x27;hidden&#x27;);
+        el(&#x27;ps-tooltip&#x27;).style.display = &#x27;none&#x27;;
+        const latest = state.history[state.history.length - 1];
+        el(&#x27;ps-selected-point&#x27;).textContent = &#x27;第 &#x27; + latest.day + &#x27; 天 · 組合 &#x27; + signedPercent(latest.portfolioReturn) + &#x27; · 大盤 &#x27; + signedPercent(latest.benchmarkReturn);
+      }
+
+      function render() {
+        renderSummary();
+        renderHoldings();
+        renderScenarioPreview();
+        renderTradeSelect();
+        renderTransactions();
+        renderChart();
+      }
+
+      el(&#x27;ps-load-template&#x27;).addEventListener(&#x27;click&#x27;, () =&gt; loadTemplate(el(&#x27;ps-portfolio-template&#x27;).value));
+      el(&#x27;ps-fill-preset&#x27;).addEventListener(&#x27;click&#x27;, fillPreset);
+      el(&#x27;ps-clear-moves&#x27;).addEventListener(&#x27;click&#x27;, clearMoves);
+      el(&#x27;ps-apply-day&#x27;).addEventListener(&#x27;click&#x27;, applyDay);
+      el(&#x27;ps-benchmark-move&#x27;).addEventListener(&#x27;input&#x27;, renderScenarioPreview);
+      el(&#x27;ps-trade-symbol&#x27;).addEventListener(&#x27;change&#x27;, renderTradePrice);
+      el(&#x27;ps-buy&#x27;).addEventListener(&#x27;click&#x27;, buy);
+      el(&#x27;ps-sell&#x27;).addEventListener(&#x27;click&#x27;, sell);
+      el(&#x27;ps-add-stock&#x27;).addEventListener(&#x27;click&#x27;, addStock);
+      el(&#x27;ps-chart-hit&#x27;).addEventListener(&#x27;pointermove&#x27;, showChartPoint);
+      el(&#x27;ps-chart-hit&#x27;).addEventListener(&#x27;pointerleave&#x27;, hideChartPoint);
+
+      let resizeFrame = null;
+      const resizeObserver = new ResizeObserver(() =&gt; {
+        if (resizeFrame) cancelAnimationFrame(resizeFrame);
+        resizeFrame = requestAnimationFrame(renderChart);
+      });
+      resizeObserver.observe(el(&#x27;ps-chart&#x27;));
+
+      loadTemplate(&#x27;tw-core&#x27;);
+    })();
+  &lt;/script&gt;
+&lt;/div&gt;
+
+&lt;script src=&quot;https://unpkg.com/@floating-ui/core@1.7.3/dist/floating-ui.core.umd.min.js&quot;&gt;&lt;/script&gt;
+&lt;script src=&quot;https://unpkg.com/@floating-ui/dom@1.7.4/dist/floating-ui.dom.umd.min.js&quot;&gt;&lt;/script&gt;
+&lt;script&gt;
+(() =&gt; {
+  if (window.FloatingUIDOM == null) {
+    return;
+  }
+  const { autoUpdate, computePosition, flip, offset, shift, size } =
+    window.FloatingUIDOM;
+  const tooltipPlacements = new Set([&quot;top&quot;, &quot;right&quot;, &quot;bottom&quot;, &quot;left&quot;]);
+  const tooltipId = `codex-visualization-tooltip-${
+    window.crypto?.randomUUID?.() ?? Date.now().toString(36)
+  }`;
+  const tooltipGap = 5;
+  const hoverDelay = 700;
+  const skipDelay = 300;
+  let activeTrigger = null;
+  let pendingTrigger = null;
+  let tooltip = null;
+  let openTimeout = null;
+  let autoUpdateCleanup = null;
+  let positionRequest = 0;
+  let skipDelayUntil = 0;
+
+  const getTrigger = (target) =&gt;
+    target?.nodeType === Node.ELEMENT_NODE
+      ? target.closest(&quot;[data-tooltip]&quot;)
+      : null;
+  const containsTarget = (trigger, target) =&gt;
+    target?.nodeType != null &amp;&amp; trigger.contains(target);
+  const getContent = (trigger) =&gt;
+    trigger.getAttribute(&quot;data-tooltip&quot;)?.trim() ?? &quot;&quot;;
+  const getPlacement = (trigger) =&gt; {
+    const placement = trigger.getAttribute(&quot;data-tooltip-placement&quot;);
+    return tooltipPlacements.has(placement) ? placement : &quot;top&quot;;
+  };
+  const getTooltip = () =&gt; {
+    if (tooltip == null) {
+      tooltip = document.createElement(&quot;div&quot;);
+      tooltip.id = tooltipId;
+      tooltip.className = &quot;tooltip&quot;;
+      tooltip.setAttribute(&quot;role&quot;, &quot;tooltip&quot;);
+    }
+    return tooltip;
+  };
+  const setDescribedBy = (trigger, described) =&gt; {
+    const ids = new Set(
+      (trigger.getAttribute(&quot;aria-describedby&quot;) ?? &quot;&quot;)
+        .split(/\s+/)
+        .filter(Boolean),
+    );
+    if (described) {
+      ids.add(tooltipId);
+    } else {
+      ids.delete(tooltipId);
+    }
+    if (ids.size === 0) {
+      trigger.removeAttribute(&quot;aria-describedby&quot;);
+    } else {
+      trigger.setAttribute(&quot;aria-describedby&quot;, [...ids].join(&quot; &quot;));
+    }
+  };
+  const clearOpenTimeout = () =&gt; {
+    if (openTimeout != null) {
+      window.clearTimeout(openTimeout);
+      openTimeout = null;
+    }
+    pendingTrigger = null;
+  };
+  const closeTooltip = (activateSkipDelay = true) =&gt; {
+    clearOpenTimeout();
+    positionRequest += 1;
+    autoUpdateCleanup?.();
+    autoUpdateCleanup = null;
+    if (activeTrigger == null) {
+      return;
+    }
+    setDescribedBy(activeTrigger, false);
+    activeTrigger = null;
+    tooltip?.remove();
+    if (activateSkipDelay) {
+      skipDelayUntil = Date.now() + skipDelay;
+    }
+  };
+  const updatePosition = (trigger, floating) =&gt; {
+    const request = ++positionRequest;
+    void computePosition(trigger, floating, {
+      middleware: [
+        offset(tooltipGap),
+        flip({ padding: tooltipGap }),
+        shift({ padding: tooltipGap }),
+        size({
+          padding: tooltipGap,
+          apply({ availableHeight, availableWidth, elements }) {
+            elements.floating.style.setProperty(
+              &quot;--tooltip-available-width&quot;,
+              `${Math.max(0, availableWidth)}px`,
+            );
+            elements.floating.style.setProperty(
+              &quot;--tooltip-available-height&quot;,
+              `${Math.max(0, availableHeight)}px`,
+            );
+          },
+        }),
+      ],
+      placement: getPlacement(trigger),
+      strategy: &quot;fixed&quot;,
+    })
+      .then(({ x, y }) =&gt; {
+        if (activeTrigger !== trigger || request !== positionRequest) {
+          return;
+        }
+        const scale = window.devicePixelRatio || 1;
+        floating.style.transform = `translate(${Math.round(x * scale) / scale}px, ${Math.round(y * scale) / scale}px)`;
+        floating.style.visibility = &quot;visible&quot;;
+      })
+      .catch(() =&gt; {
+        if (activeTrigger === trigger &amp;&amp; request === positionRequest) {
+          closeTooltip(false);
+        }
+      });
+  };
+  const openTooltip = (trigger) =&gt; {
+    const content = getContent(trigger);
+    if (!trigger.isConnected || content.length === 0) {
+      return;
+    }
+    clearOpenTimeout();
+    if (activeTrigger === trigger) {
+      return;
+    }
+    closeTooltip();
+    const floating = getTooltip();
+    floating.textContent = content;
+    floating.style.visibility = &quot;hidden&quot;;
+    floating.style.transform = &quot;translate(0, 0)&quot;;
+    document.body.appendChild(floating);
+    activeTrigger = trigger;
+    setDescribedBy(trigger, true);
+    autoUpdateCleanup = autoUpdate(trigger, floating, () =&gt; {
+      updatePosition(trigger, floating);
+    });
+  };
+  const requestOpen = (trigger, immediate = false) =&gt; {
+    if (
+      getContent(trigger).length === 0 ||
+      activeTrigger === trigger ||
+      pendingTrigger === trigger
+    ) {
+      return;
+    }
+    clearOpenTimeout();
+    pendingTrigger = trigger;
+    const delay =
+      immediate || activeTrigger != null || Date.now() &lt; skipDelayUntil
+        ? 0
+        : hoverDelay;
+    if (delay === 0) {
+      openTooltip(trigger);
+      return;
+    }
+    openTimeout = window.setTimeout(() =&gt; {
+      openTimeout = null;
+      pendingTrigger = null;
+      openTooltip(trigger);
+    }, delay);
+  };
+  const handlePointerOpen = (event) =&gt; {
+    if (event.pointerType === &quot;touch&quot;) {
+      return;
+    }
+    const trigger = getTrigger(event.target);
+    if (trigger == null || containsTarget(trigger, event.relatedTarget)) {
+      return;
+    }
+    requestOpen(trigger);
+  };
+  const handleLeave = (event) =&gt; {
+    const trigger = getTrigger(event.target);
+    if (trigger == null || containsTarget(trigger, event.relatedTarget)) {
+      return;
+    }
+    if (activeTrigger === trigger || pendingTrigger === trigger) {
+      closeTooltip();
+    }
+  };
+  const handleFocusIn = (event) =&gt; {
+    const trigger = getTrigger(event.target);
+    if (trigger?.matches(&quot;:focus-visible&quot;)) {
+      requestOpen(trigger, true);
+    }
+  };
+  const handleKeyDown = (event) =&gt; {
+    if (event.key === &quot;Escape&quot;) {
+      closeTooltip();
+    }
+  };
+  const handleContextMenu = (event) =&gt; {
+    const trigger = getTrigger(event.target);
+    if (activeTrigger === trigger || pendingTrigger === trigger) {
+      closeTooltip();
+    }
+  };
+  const destroy = () =&gt; {
+    closeTooltip(false);
+    document.removeEventListener(&quot;pointerover&quot;, handlePointerOpen);
+    document.removeEventListener(&quot;pointerout&quot;, handleLeave);
+    document.removeEventListener(&quot;focusin&quot;, handleFocusIn);
+    document.removeEventListener(&quot;focusout&quot;, handleLeave);
+    document.removeEventListener(&quot;keydown&quot;, handleKeyDown);
+    document.removeEventListener(&quot;contextmenu&quot;, handleContextMenu);
+    tooltip = null;
+  };
+
+  document.addEventListener(&quot;pointerover&quot;, handlePointerOpen);
+  document.addEventListener(&quot;pointerout&quot;, handleLeave);
+  document.addEventListener(&quot;focusin&quot;, handleFocusIn);
+  document.addEventListener(&quot;focusout&quot;, handleLeave);
+  document.addEventListener(&quot;keydown&quot;, handleKeyDown);
+  document.addEventListener(&quot;contextmenu&quot;, handleContextMenu);
+  window.addEventListener(&quot;pagehide&quot;, destroy, { once: true });
+})();
+&lt;/script&gt;
+&lt;script id=&quot;codex-visualization-lucide&quot; async src=&quot;https://unpkg.com/lucide@1.17.0/dist/umd/lucide.js&quot;&gt;&lt;/script&gt;
+&lt;script&gt;
+(() =&gt; {
+  const initialize = () =&gt; {
+    globalThis.lucide?.createIcons({ attrs: { width: 16, height: 16 } });
+  };
+  if (globalThis.lucide != null) {
+    initialize();
+    return;
+  }
+  document
+    .getElementById(&quot;codex-visualization-lucide&quot;)
+    ?.addEventListener(&quot;load&quot;, initialize, { once: true });
+})();
+&lt;/script&gt;
+
+&lt;/body&gt;
+&lt;/html&gt;
+"></iframe>
+</body>
+</html>

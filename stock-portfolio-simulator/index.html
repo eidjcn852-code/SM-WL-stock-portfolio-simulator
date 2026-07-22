@@ -1,0 +1,400 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="可管理股票、現金、房地產、汽車、借貸、總曝險與質押維持率的個人資產模擬器。">
+  <meta name="color-scheme" content="light dark">
+  <title>股票資產模擬器</title>
+  <link rel="stylesheet" href="styles.css">
+  <script defer src="https://cdn.jsdelivr.net/npm/lucide@0.468.0/dist/umd/lucide.min.js"></script>
+  <script defer src="js/calculations.js"></script>
+  <script defer src="js/storage.js"></script>
+  <script defer src="js/app.js"></script>
+</head>
+<body>
+  <main class="app-shell">
+    <header class="app-titlebar">
+      <h1>股票資產模擬器</h1>
+      <span class="viz-badge">瀏覽器儲存</span>
+    </header>
+    <div id="complete-brokerage-simulator">
+<div class="cps-commandbar" aria-label="模擬播放與資料控制">
+    <div class="cps-command-status">
+      <span class="viz-badge" id="cps-day-badge">第 0 天</span>
+      <span class="text-small text-muted" id="cps-save-status">自動儲存已啟用</span>
+    </div>
+    <div class="cps-actions">
+      <button class="btn btn-ghost" id="cps-export-data" type="button" title="可選擇 Google Drive 同步資料夾"><i data-lucide="save" aria-hidden="true"></i>另存備份</button>
+      <button class="btn btn-ghost" id="cps-import-data" type="button"><i data-lucide="folder-open" aria-hidden="true"></i>匯入備份</button>
+      <input class="sr-only" id="cps-import-file" type="file" accept="application/json,.json">
+      <button class="btn btn-primary" id="cps-apply-day" type="button"><i data-lucide="skip-forward" aria-hidden="true"></i>下一交易日</button>
+      <button class="btn" id="cps-auto" type="button" aria-pressed="false"><i data-lucide="play" aria-hidden="true"></i><span>自動播放</span></button>
+      <button class="btn btn-ghost" id="cps-reset-simulation" type="button"><i data-lucide="rotate-ccw" aria-hidden="true"></i>重設</button>
+    </div>
+  </div>
+
+<div class="viz-grid" aria-label="投資組合摘要">
+    <div class="card viz-stat">
+      <div class="text-muted">淨資產</div>
+      <div class="viz-stat-value" id="cps-total-assets">NT$1,000,000</div>
+      <div id="cps-asset-breakdown">總資產 NT$1,000,000 · 負債 NT$0</div>
+    </div>
+    <div class="card viz-stat">
+      <div class="text-muted">總曝險</div>
+      <div class="viz-stat-value" id="cps-total-exposure">NT$0</div>
+      <div id="cps-exposure-ratio">曝險率 0.00% · 現金 NT$1,000,000</div>
+    </div>
+    <div class="card viz-stat">
+      <div class="text-muted">今日變動</div>
+      <div class="viz-stat-value" id="cps-daily-pnl">NT$0</div>
+      <div id="cps-daily-return">組合 0.00% · 大盤 0.00%</div>
+    </div>
+    <div class="card viz-stat">
+      <div class="text-muted">累積損益</div>
+      <div class="viz-stat-value" id="cps-total-pnl">NT$0</div>
+      <div id="cps-risk-summary">最大回撤 0.00% · 維持率 —</div>
+      <div class="cps-maintenance-track" id="cps-maintenance-meter" role="progressbar" aria-label="最低質押維持率" hidden>
+        <span class="cps-maintenance-fill" id="cps-maintenance-fill" aria-hidden="true"></span>
+        <span class="cps-maintenance-marker" id="cps-maintenance-marker" aria-hidden="true"></span>
+      </div>
+    </div>
+  </div>
+
+  <section class="cps-asset-register" aria-label="完整資產與曝險設定">
+    <div class="cps-section-head">
+      <span>完整資產</span>
+      <span class="text-small text-muted" id="cps-exposure-definition">總曝險＝股票＋房地產＋汽車</span>
+    </div>
+    <div class="cps-asset-editor">
+      <label class="form-label cps-field" for="cps-cash-value">
+        <span>現金</span>
+        <input class="form-control" id="cps-cash-value" type="number" min="0" step="10000" value="1000000" inputmode="numeric">
+      </label>
+      <label class="form-label cps-field" for="cps-real-estate-value">
+        <span>房地產金額</span>
+        <input class="form-control" id="cps-real-estate-value" type="number" min="0" step="100000" value="0" inputmode="numeric">
+      </label>
+      <label class="form-label cps-field" for="cps-vehicle-value">
+        <span>汽車金額</span>
+        <input class="form-control" id="cps-vehicle-value" type="number" min="0" step="10000" value="0" inputmode="numeric">
+      </label>
+      <div class="cps-asset-apply">
+        <button class="btn btn-primary" id="cps-apply-assets" type="button"><i data-lucide="wallet-cards" aria-hidden="true"></i>更新資產</button>
+      </div>
+    </div>
+    <div class="cps-asset-mix" id="cps-asset-mix" role="img" aria-label="現金百分之百">
+      <span class="cps-asset-mix-segment is-cash" id="cps-mix-cash" aria-hidden="true"></span>
+      <span class="cps-asset-mix-segment is-stocks" id="cps-mix-stocks" aria-hidden="true"></span>
+      <span class="cps-asset-mix-segment is-property" id="cps-mix-property" aria-hidden="true"></span>
+      <span class="cps-asset-mix-segment is-vehicle" id="cps-mix-vehicle" aria-hidden="true"></span>
+    </div>
+    <div class="cps-asset-legend text-small">
+      <span><i class="is-cash" aria-hidden="true"></i>現金 <strong id="cps-legend-cash">NT$1,000,000</strong></span>
+      <span><i class="is-stocks" aria-hidden="true"></i>股票 <strong id="cps-legend-stocks">NT$0</strong></span>
+      <span><i class="is-property" aria-hidden="true"></i>房地產 <strong id="cps-legend-property">NT$0</strong></span>
+      <span><i class="is-vehicle" aria-hidden="true"></i>汽車 <strong id="cps-legend-vehicle">NT$0</strong></span>
+    </div>
+    <div class="text-small" id="cps-asset-feedback" aria-live="polite">現金可用於股票交易與償還貸款</div>
+  </section>
+
+    <div class="cps-main-grid">
+    <div class="cps-market-stage">
+<section class="cps-chart-section" aria-label="資產績效走勢">
+    <div class="cps-toolbar">
+      <div class="cps-legend text-small">
+        <span class="cps-swatch cps-swatch-portfolio" aria-hidden="true"></span><span>投資組合</span>
+        <span class="cps-swatch cps-swatch-benchmark" aria-hidden="true"></span><span>大盤基準</span>
+      </div>
+      <span class="text-small text-muted">淨資產報酬率</span>
+    </div>
+    <div class="cps-chart-wrap" id="cps-chart-wrap">
+      <svg id="cps-chart" role="img" aria-labelledby="cps-chart-title cps-chart-desc">
+        <title id="cps-chart-title">投資組合與大盤累積報酬走勢</title>
+        <desc id="cps-chart-desc">比較每天自訂漲跌套用後，投資組合與大盤基準的累積百分比變化。</desc>
+        <g id="cps-chart-grid"></g>
+        <path class="cps-portfolio-line" id="cps-portfolio-line"></path>
+        <path class="cps-benchmark-line" id="cps-benchmark-line"></path>
+        <line class="cps-hover-line" id="cps-hover-line" visibility="hidden"></line>
+        <circle class="cps-portfolio-dot" id="cps-portfolio-dot" r="4"></circle>
+        <circle class="cps-benchmark-dot" id="cps-benchmark-dot" r="4"></circle>
+        <rect id="cps-chart-hit" fill="transparent"></rect>
+      </svg>
+      <div class="tooltip cps-tooltip" id="cps-tooltip" role="status"></div>
+    </div>
+    <div class="text-small text-muted" id="cps-selected-point" aria-live="polite">第 0 天 · 組合 0.00% · 大盤 0.00%</div>
+  </section>
+
+      </div>
+    <aside class="cps-session-rail">
+<section class="card cps-panel cps-session-panel" aria-label="帳戶與每日行情設定">
+    <div class="cps-section-head">
+      <span>行情設定</span>
+      <i data-lucide="sliders-horizontal" aria-hidden="true"></i>
+    </div>
+    <div class="cps-side-grid">
+      <label class="form-label cps-field" for="cps-starting-capital">
+        <span>初始現金</span>
+        <input class="form-control" id="cps-starting-capital" type="number" min="1" step="10000" value="1000000" inputmode="numeric">
+      </label>
+      <div class="cps-actions">
+        <button class="btn" id="cps-reset-account" type="button"><i data-lucide="rotate-ccw" aria-hidden="true"></i>建立空白組合</button>
+      </div>
+    </div>
+    <div class="cps-side-grid">
+      <label class="form-label cps-field" for="cps-benchmark-move">
+        <span class="cps-field-head"><span>大盤當日漲跌</span><span>%</span></span>
+        <input class="form-control" id="cps-benchmark-move" type="number" min="-100" max="100" step="0.1" value="0" inputmode="decimal">
+      </label>
+    </div>
+    <div class="text-small" id="cps-scenario-preview" aria-live="polite">預估今日損益 NT$0</div>
+  </section>
+
+      </aside>
+  </div>
+
+    <div class="cps-section-head cps-major-head">
+    <span>投資組合操作</span>
+    <span class="text-small text-muted">新增、下單與每日漲跌</span>
+  </div>
+  <div class="cps-management-grid">
+    <div>
+<section class="card cps-panel cps-compact-panel" aria-label="新增股票">
+    <div class="cps-section-head">
+      <span>新增股票</span>
+      <i data-lucide="plus-circle" aria-hidden="true"></i>
+    </div>
+    <div class="cps-control-grid">
+      <label class="form-label cps-field" for="cps-new-symbol">
+        <span>股票代號</span>
+        <input class="form-control" id="cps-new-symbol" type="text" placeholder="例如 2330" maxlength="12">
+      </label>
+      <label class="form-label cps-field" for="cps-new-name">
+        <span>股票名稱</span>
+        <input class="form-control" id="cps-new-name" type="text" placeholder="例如 台積電" maxlength="24">
+      </label>
+    </div>
+    <div class="cps-control-grid">
+      <label class="form-label cps-field" for="cps-new-price">
+        <span>模擬起始價</span>
+        <input class="form-control" id="cps-new-price" type="number" min="0.01" step="0.01" value="100" inputmode="decimal">
+      </label>
+      <label class="form-label cps-field" for="cps-new-shares">
+        <span>初始股數</span>
+        <input class="form-control" id="cps-new-shares" type="number" min="0" step="100" value="0" inputmode="numeric">
+      </label>
+    </div>
+    <div class="cps-toolbar">
+      <span class="text-small" id="cps-add-feedback" aria-live="polite">目前可用現金 NT$1,000,000</span>
+      <button class="btn btn-primary" id="cps-add-stock" type="button"><i data-lucide="plus" aria-hidden="true"></i>加入投資組合</button>
+    </div>
+  </section>
+    </div>
+    <div>
+<section class="card cps-panel cps-compact-panel" aria-label="模擬交易">
+    <div class="cps-section-head">
+      <span>模擬下單</span>
+      <span class="text-small text-muted" id="cps-trade-price">成交價 NT$0</span>
+    </div>
+    <div class="cps-control-grid">
+      <label class="form-label cps-field" for="cps-trade-symbol">
+        <span>股票</span>
+        <select class="form-select" id="cps-trade-symbol"><option value="">尚無股票</option></select>
+      </label>
+      <label class="form-label cps-field" for="cps-trade-quantity">
+        <span>股數</span>
+        <input class="form-control" id="cps-trade-quantity" type="number" min="1" step="100" value="1000" inputmode="numeric">
+      </label>
+    </div>
+    <div class="cps-toolbar">
+      <span class="text-small" id="cps-trade-feedback" aria-live="polite">新增股票後即可模擬交易</span>
+      <div class="cps-actions">
+        <button class="btn btn-primary" id="cps-buy" type="button"><i data-lucide="trending-up" aria-hidden="true"></i>買進</button>
+        <button class="btn" id="cps-sell" type="button"><i data-lucide="trending-down" aria-hidden="true"></i>賣出</button>
+      </div>
+    </div>
+    <details class="cps-details">
+      <summary>交易成本設定</summary>
+      <div class="cps-control-grid">
+        <label class="form-label cps-field" for="cps-commission-rate">
+          <span>手續費率 (%)</span>
+          <input class="form-control" id="cps-commission-rate" type="number" min="0" max="10" step="0.0001" value="0.1425" inputmode="decimal">
+        </label>
+        <label class="form-label cps-field" for="cps-tax-rate">
+          <span>賣出交易稅率 (%)</span>
+          <input class="form-control" id="cps-tax-rate" type="number" min="0" max="10" step="0.01" value="0.3" inputmode="decimal">
+        </label>
+      </div>
+    </details>
+  </section>
+    </div>
+  </div>
+
+<section class="cps-data-section" aria-label="持股與自訂漲跌">
+    <div class="cps-section-head">
+      <span>持股與自訂漲跌</span>
+      <span class="text-small text-muted" id="cps-holdings-count">0 檔股票</span>
+    </div>
+    <div class="cps-allocation" id="cps-allocation" role="img" aria-label="目前只有現金"></div>
+    <div class="table-responsive">
+      <table class="table table-sm">
+        <thead>
+          <tr>
+            <th>股票</th>
+            <th class="text-end">持股</th>
+            <th class="text-end">現價</th>
+            <th class="text-end">市值／損益</th>
+            <th class="text-end">權重</th>
+            <th class="text-end">今日漲跌</th>
+            <th class="text-end">預估貢獻</th>
+            <th><span class="sr-only">操作</span></th>
+          </tr>
+        </thead>
+        <tbody id="cps-holdings-body">
+          <tr><td colspan="8" class="text-center text-muted">請先新增股票</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+  <div class="cps-section-head cps-major-head">
+    <span>借貸與風險</span>
+    <span class="text-small text-muted">信貸、房貸、質押與維持率</span>
+  </div>
+<section class="card cps-panel" aria-label="借貸與質押設定">
+    <div class="cps-section-head">
+      <span>借貸與質押</span>
+      <span class="text-small text-muted">每日利息＝未償本金 × 年利率 ÷ 365</span>
+    </div>
+    <div class="cps-control-grid">
+      <label class="form-label cps-field" for="cps-loan-type">
+        <span>貸款類型</span>
+        <select class="form-select" id="cps-loan-type">
+          <option value="personal">信用貸款</option>
+          <option value="mortgage">房屋貸款</option>
+          <option value="pledge">股票質押</option>
+        </select>
+      </label>
+      <label class="form-label cps-field" for="cps-loan-name">
+        <span>貸款名稱</span>
+        <input class="form-control" id="cps-loan-name" type="text" maxlength="24" placeholder="例如 資金周轉">
+      </label>
+    </div>
+    <div class="cps-control-grid">
+      <label class="form-label cps-field" for="cps-loan-amount">
+        <span>借款金額</span>
+        <input class="form-control" id="cps-loan-amount" type="number" min="1" step="10000" value="500000" inputmode="numeric">
+      </label>
+      <label class="form-label cps-field" for="cps-loan-rate">
+        <span class="cps-field-head"><span>年利率</span><span>%</span></span>
+        <input class="form-control" id="cps-loan-rate" type="number" min="0" max="100" step="0.01" value="3" inputmode="decimal">
+      </label>
+    </div>
+    <div class="cps-control-grid">
+      <label class="form-label cps-field" for="cps-loan-term">
+        <span>貸款期數（月）</span>
+        <input class="form-control" id="cps-loan-term" type="number" min="1" max="600" step="1" value="60" inputmode="numeric">
+      </label>
+    </div>
+    <div id="cps-pledge-fields" hidden>
+      <div class="cps-control-grid">
+        <label class="form-label cps-field" for="cps-collateral-stock">
+          <span>質押股票</span>
+          <select class="form-select" id="cps-collateral-stock"><option value="">尚無股票</option></select>
+        </label>
+        <label class="form-label cps-field" for="cps-pledged-shares">
+          <span>質押股數</span>
+          <input class="form-control" id="cps-pledged-shares" type="number" min="1" step="100" value="1000" inputmode="numeric">
+        </label>
+      </div>
+      <div class="cps-control-grid">
+        <label class="form-label cps-field" for="cps-warning-ratio">
+          <span class="cps-field-head"><span>維持率警示線</span><span>%</span></span>
+          <input class="form-control" id="cps-warning-ratio" type="number" min="1" step="1" value="130" inputmode="decimal">
+        </label>
+        <div class="text-small" id="cps-pledge-preview" aria-live="polite">請先選擇質押股票</div>
+      </div>
+    </div>
+    <div class="cps-toolbar">
+      <span class="text-small" id="cps-loan-feedback" aria-live="polite">借款會同時增加現金與負債</span>
+      <button class="btn btn-primary" id="cps-create-loan" type="button"><i data-lucide="landmark" aria-hidden="true"></i>建立貸款</button>
+    </div>
+    <div class="cps-loan-subsection">
+      <div class="cps-section-head">
+        <span>手動還款</span>
+        <span class="text-small text-muted">先抵應計利息，再抵本金</span>
+      </div>
+      <div class="cps-control-grid">
+        <label class="form-label cps-field" for="cps-repay-loan">
+          <span>選擇貸款</span>
+          <select class="form-select" id="cps-repay-loan"><option value="">尚無貸款</option></select>
+        </label>
+        <label class="form-label cps-field" for="cps-repay-amount">
+          <span>還款金額</span>
+          <input class="form-control" id="cps-repay-amount" type="number" min="1" step="1000" value="10000" inputmode="numeric">
+        </label>
+      </div>
+      <div class="cps-toolbar">
+        <span class="text-small" id="cps-repay-feedback" aria-live="polite">目前沒有待還款貸款</span>
+        <button class="btn" id="cps-repay" type="button"><i data-lucide="hand-coins" aria-hidden="true"></i>還款</button>
+      </div>
+    </div>
+  </section>
+
+  <section class="cps-data-section" aria-label="貸款與質押維持率">
+    <div class="cps-section-head">
+      <span>貸款明細</span>
+      <span class="text-small text-muted" id="cps-loan-count">負債 NT$0</span>
+    </div>
+    <div class="text-small" id="cps-pledge-alert" aria-live="polite">目前無股票質押</div>
+    <div class="table-responsive">
+      <table class="table table-sm">
+        <thead>
+          <tr>
+            <th>貸款</th>
+            <th class="text-end">剩餘本金</th>
+            <th class="text-end">應計利息</th>
+            <th class="text-end">利率／月付</th>
+            <th>擔保品／維持率</th>
+            <th>狀態</th>
+            <th><span class="sr-only">操作</span></th>
+          </tr>
+        </thead>
+        <tbody id="cps-loans-body">
+          <tr><td colspan="7" class="text-center text-muted">尚無貸款</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+  <div class="cps-section-head cps-major-head">
+    <span>帳戶紀錄</span>
+    <span class="text-small text-muted">交易成本與現金流</span>
+  </div>
+<section class="cps-data-section" aria-label="交易紀錄">
+    <div class="cps-section-head">
+      <span>交易紀錄</span>
+      <span class="text-small text-muted">移動平均成本法</span>
+    </div>
+    <div class="table-responsive">
+      <table class="table table-sm">
+        <thead>
+          <tr>
+            <th>日期</th>
+            <th>動作</th>
+            <th>股票</th>
+            <th class="text-end">股數</th>
+            <th class="text-end">價格</th>
+            <th class="text-end">成本</th>
+            <th class="text-end">現金流</th>
+          </tr>
+        </thead>
+        <tbody id="cps-transactions-body">
+          <tr><td colspan="7" class="text-center text-muted">尚無交易</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+    </div>
+    <noscript>此程式需要啟用 JavaScript 才能執行。</noscript>
+  </main>
+</body>
+</html>

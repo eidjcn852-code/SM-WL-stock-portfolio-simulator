@@ -1,0 +1,603 @@
+:root {
+  color-scheme: light;
+  --font-size-base: 14px;
+  --background: #f4f6f7;
+  --foreground: #202428;
+  --card: #ffffff;
+  --card-foreground: #202428;
+  --popover: #ffffff;
+  --popover-foreground: #202428;
+  --primary: #252a2f;
+  --primary-foreground: #ffffff;
+  --secondary: #e9edef;
+  --secondary-foreground: #202428;
+  --muted: #e8ecee;
+  --muted-foreground: #5d6670;
+  --accent: #dce8ed;
+  --accent-foreground: #1d272c;
+  --destructive: #b42318;
+  --border: #d6dce0;
+  --input: #c7cfd4;
+  --ring: #507687;
+  --viz-series-1: #147d64;
+  --viz-series-2: #2f6fe4;
+  --viz-series-3: #b66b13;
+  --viz-series-4: #7651a8;
+  --viz-series-5: #b84d5d;
+  --viz-series-6: #367b86;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    color-scheme: dark;
+    --background: #17191b;
+    --foreground: #edf0f2;
+    --card: #222528;
+    --card-foreground: #edf0f2;
+    --popover: #282c2f;
+    --popover-foreground: #edf0f2;
+    --primary: #eef1f3;
+    --primary-foreground: #1a1d1f;
+    --secondary: #30353a;
+    --secondary-foreground: #edf0f2;
+    --muted: #30353a;
+    --muted-foreground: #aeb6bd;
+    --accent: #31434a;
+    --accent-foreground: #f1f5f6;
+    --destructive: #ff7469;
+    --border: #3b4146;
+    --input: #525a61;
+    --ring: #8fb8c8;
+    --viz-series-1: #49b895;
+    --viz-series-2: #70a0ff;
+    --viz-series-3: #e3a34f;
+    --viz-series-4: #b492dc;
+    --viz-series-5: #e17d89;
+    --viz-series-6: #65b1ba;
+  }
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html {
+  background: var(--background);
+  color: var(--foreground);
+  font-family: Inter, "Segoe UI", "Noto Sans TC", Arial, sans-serif;
+  font-size: var(--font-size-base);
+  letter-spacing: 0;
+}
+
+body {
+  margin: 0;
+  min-width: 320px;
+  background: var(--background);
+  color: var(--foreground);
+}
+
+button,
+input,
+select,
+textarea {
+  font: inherit;
+  letter-spacing: 0;
+}
+
+button {
+  cursor: pointer;
+}
+
+.app-shell {
+  width: min(100% - 32px, 1440px);
+  margin: 0 auto;
+  padding: 20px 0 40px;
+}
+
+.app-titlebar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 14px;
+}
+
+.app-titlebar h1 {
+  margin: 0;
+  font-size: 1.2rem;
+  font-weight: 500;
+}
+
+.card {
+  padding: 16px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: var(--card);
+  color: var(--card-foreground);
+}
+
+.viz-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.viz-stat {
+  display: grid;
+  gap: 6px;
+  min-width: 0;
+}
+
+.viz-stat-value {
+  font-size: 1.65rem;
+  font-weight: 500;
+  overflow-wrap: anywhere;
+}
+
+.viz-row,
+.viz-controls {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.viz-badge {
+  display: inline-flex;
+  align-items: center;
+  min-height: 26px;
+  padding: 3px 9px;
+  border-radius: 999px;
+  background: var(--accent);
+  color: var(--accent-foreground);
+  font-weight: 500;
+  white-space: nowrap;
+}
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  min-height: 36px;
+  padding: 7px 11px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: var(--secondary);
+  color: var(--secondary-foreground);
+  text-decoration: none;
+}
+
+.btn:hover {
+  background: var(--accent);
+  color: var(--accent-foreground);
+}
+
+.btn:focus-visible,
+.form-control:focus-visible,
+.form-select:focus-visible {
+  outline: 2px solid var(--ring);
+  outline-offset: 2px;
+}
+
+.btn-primary {
+  border-color: var(--primary);
+  background: var(--primary);
+  color: var(--primary-foreground);
+}
+
+.btn-primary:hover {
+  border-color: var(--primary);
+  background: var(--primary);
+  color: var(--primary-foreground);
+  opacity: 0.9;
+}
+
+.btn-ghost {
+  border-color: transparent;
+  background: transparent;
+  color: var(--foreground);
+}
+
+.btn[disabled] {
+  cursor: not-allowed;
+  opacity: 0.45;
+}
+
+.form-label {
+  color: var(--foreground);
+}
+
+.form-control,
+.form-select {
+  width: 100%;
+  min-height: 38px;
+  padding: 7px 9px;
+  border: 1px solid var(--input);
+  border-radius: 5px;
+  background: var(--background);
+  color: var(--foreground);
+}
+
+.form-control::placeholder {
+  color: var(--muted-foreground);
+}
+
+.text-small {
+  font-size: 0.82rem;
+}
+
+.text-muted {
+  color: var(--muted-foreground);
+}
+
+.text-destructive {
+  color: var(--destructive);
+}
+
+.text-end {
+  text-align: right;
+}
+
+.text-center {
+  text-align: center;
+}
+
+.text-nowrap {
+  white-space: nowrap;
+}
+
+.table-responsive {
+  width: 100%;
+  overflow-x: auto;
+}
+
+.table {
+  width: 100%;
+  border-collapse: collapse;
+  color: var(--foreground);
+}
+
+.table th,
+.table td {
+  padding: 10px 8px;
+  border-bottom: 1px solid var(--border);
+  text-align: left;
+  vertical-align: middle;
+}
+
+.table-sm th,
+.table-sm td {
+  padding: 8px 7px;
+}
+
+.table th {
+  color: var(--muted-foreground);
+  font-weight: 500;
+  white-space: nowrap;
+}
+
+.table .text-end {
+  text-align: right;
+}
+
+.tooltip {
+  padding: 8px 10px;
+  border: 1px solid var(--border);
+  border-radius: 5px;
+  background: var(--popover);
+  color: var(--popover-foreground);
+}
+
+.sr-only {
+  position: absolute !important;
+  width: 1px !important;
+  height: 1px !important;
+  padding: 0 !important;
+  margin: -1px !important;
+  overflow: hidden !important;
+  clip: rect(0, 0, 0, 0) !important;
+  white-space: nowrap !important;
+  border: 0 !important;
+}
+
+details > summary {
+  font-weight: 500;
+}
+
+svg {
+  max-width: 100%;
+}
+
+@media (max-width: 1080px) {
+  .viz-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 760px) {
+  .app-shell {
+    width: min(100% - 20px, 1440px);
+    padding-top: 12px;
+  }
+
+  .viz-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+#complete-brokerage-simulator {
+      color: var(--foreground);
+      display: grid;
+      gap: 18px;
+      width: 100%;
+      min-width: 0;
+      font-variant-numeric: tabular-nums;
+    }
+    #complete-brokerage-simulator * { box-sizing: border-box; }
+    #complete-brokerage-simulator .cps-commandbar,
+    #complete-brokerage-simulator .cps-command-status,
+    #complete-brokerage-simulator .cps-toolbar,
+    #complete-brokerage-simulator .cps-actions,
+    #complete-brokerage-simulator .cps-legend,
+    #complete-brokerage-simulator .cps-section-head {
+      display: flex;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+    #complete-brokerage-simulator .cps-commandbar,
+    #complete-brokerage-simulator .cps-toolbar,
+    #complete-brokerage-simulator .cps-section-head {
+      justify-content: space-between;
+    }
+    #complete-brokerage-simulator .cps-commandbar {
+      position: sticky;
+      top: 0;
+      z-index: 4;
+      background: var(--background);
+      border-bottom: 1px solid var(--border);
+      padding: 0 0 12px;
+    }
+    #complete-brokerage-simulator .cps-command-status { min-width: 0; }
+    #complete-brokerage-simulator .cps-main-grid {
+      display: grid;
+      grid-template-columns: minmax(0, 2fr) minmax(250px, 0.72fr);
+      gap: 20px;
+      align-items: start;
+      min-width: 0;
+    }
+    #complete-brokerage-simulator .cps-asset-register {
+      display: grid;
+      gap: 12px;
+      padding: 16px 0;
+      border-top: 1px solid var(--border);
+      border-bottom: 1px solid var(--border);
+    }
+    #complete-brokerage-simulator .cps-asset-editor {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(150px, 1fr)) auto;
+      gap: 12px;
+      align-items: end;
+    }
+    #complete-brokerage-simulator .cps-asset-apply {
+      display: flex;
+      align-items: end;
+      min-height: 38px;
+    }
+    #complete-brokerage-simulator .cps-asset-mix {
+      display: flex;
+      width: 100%;
+      height: 10px;
+      overflow: hidden;
+      background: var(--muted);
+    }
+    #complete-brokerage-simulator .cps-asset-mix-segment {
+      display: block;
+      width: 0;
+      height: 100%;
+      transition: width 220ms ease;
+    }
+    #complete-brokerage-simulator .is-cash { background: var(--muted-foreground); }
+    #complete-brokerage-simulator .is-stocks { background: var(--viz-series-1); }
+    #complete-brokerage-simulator .is-property { background: var(--viz-series-2); }
+    #complete-brokerage-simulator .is-vehicle { background: var(--viz-series-3); }
+    #complete-brokerage-simulator .cps-asset-legend {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 8px 16px;
+    }
+    #complete-brokerage-simulator .cps-asset-legend > span {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      min-width: 0;
+      white-space: nowrap;
+    }
+    #complete-brokerage-simulator .cps-asset-legend i {
+      flex: 0 0 auto;
+      width: 9px;
+      height: 9px;
+      border-radius: 2px;
+    }
+    #complete-brokerage-simulator .cps-asset-legend strong {
+      margin-left: auto;
+      overflow-wrap: anywhere;
+      white-space: normal;
+    }
+    #complete-brokerage-simulator .cps-market-stage,
+    #complete-brokerage-simulator .cps-session-rail,
+    #complete-brokerage-simulator .cps-tab-panel,
+    #complete-brokerage-simulator .cps-panel,
+    #complete-brokerage-simulator .cps-field,
+    #complete-brokerage-simulator .cps-details,
+    #complete-brokerage-simulator .cps-data-section {
+      display: grid;
+      gap: 10px;
+      min-width: 0;
+    }
+    #complete-brokerage-simulator .cps-session-rail {
+      position: sticky;
+      top: 66px;
+    }
+    #complete-brokerage-simulator .cps-control-grid {
+      display: grid;
+      grid-template-columns: minmax(190px, 1fr) minmax(190px, 1fr);
+      gap: 12px;
+      align-items: end;
+    }
+    #complete-brokerage-simulator .cps-side-grid {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr);
+      gap: 12px;
+      align-items: end;
+    }
+    #complete-brokerage-simulator .cps-field-head {
+      display: flex;
+      align-items: baseline;
+      justify-content: space-between;
+      gap: 8px;
+    }
+    #complete-brokerage-simulator .cps-management-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 16px;
+      align-items: start;
+      min-width: 0;
+    }
+    #complete-brokerage-simulator .cps-management-grid > div { min-width: 0; }
+    #complete-brokerage-simulator .cps-management-grid .cps-control-grid {
+      grid-template-columns: minmax(0, 1fr);
+    }
+    #complete-brokerage-simulator .cps-major-head {
+      border-top: 1px solid var(--border);
+      padding-top: 16px;
+    }
+    #complete-brokerage-simulator [hidden] { display: none !important; }
+    #complete-brokerage-simulator .cps-chart-wrap {
+      position: relative;
+      width: 100%;
+      min-width: 0;
+    }
+    #complete-brokerage-simulator .cps-chart-wrap svg {
+      display: block;
+      width: 100%;
+      height: 320px;
+      overflow: visible;
+    }
+    #complete-brokerage-simulator .cps-grid-line,
+    #complete-brokerage-simulator .cps-axis-line {
+      stroke: var(--border);
+      stroke-width: 1;
+      vector-effect: non-scaling-stroke;
+    }
+    #complete-brokerage-simulator .cps-portfolio-line,
+    #complete-brokerage-simulator .cps-benchmark-line {
+      fill: none;
+      stroke-width: 2.5;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+      vector-effect: non-scaling-stroke;
+      transition: d 220ms ease;
+    }
+    #complete-brokerage-simulator .cps-portfolio-line { stroke: var(--viz-series-1); }
+    #complete-brokerage-simulator .cps-benchmark-line { stroke: var(--viz-series-2); }
+    #complete-brokerage-simulator .cps-portfolio-dot { fill: var(--viz-series-1); }
+    #complete-brokerage-simulator .cps-benchmark-dot { fill: var(--viz-series-2); }
+    #complete-brokerage-simulator .cps-hover-line {
+      stroke: var(--muted-foreground);
+      stroke-width: 1;
+      vector-effect: non-scaling-stroke;
+    }
+    #complete-brokerage-simulator .cps-axis-text {
+      fill: var(--muted-foreground);
+      font-size: var(--font-size-base);
+      font-weight: 400;
+    }
+    #complete-brokerage-simulator .cps-tooltip {
+      position: absolute;
+      display: none;
+      pointer-events: none;
+      max-width: 230px;
+      z-index: 2;
+    }
+    #complete-brokerage-simulator .cps-swatch {
+      display: inline-block;
+      width: 18px;
+      height: 3px;
+    }
+    #complete-brokerage-simulator .cps-swatch-portfolio { background: var(--viz-series-1); }
+    #complete-brokerage-simulator .cps-swatch-benchmark { background: var(--viz-series-2); }
+    #complete-brokerage-simulator .cps-allocation {
+      display: flex;
+      width: 100%;
+      height: 10px;
+      background: var(--muted);
+      overflow: hidden;
+    }
+    #complete-brokerage-simulator .cps-allocation-segment {
+      height: 100%;
+      min-width: 0;
+      transition: width 220ms ease;
+    }
+    #complete-brokerage-simulator .cps-allocation-segment:nth-child(6n + 1) { background: var(--viz-series-1); }
+    #complete-brokerage-simulator .cps-allocation-segment:nth-child(6n + 2) { background: var(--viz-series-2); }
+    #complete-brokerage-simulator .cps-allocation-segment:nth-child(6n + 3) { background: var(--viz-series-3); }
+    #complete-brokerage-simulator .cps-allocation-segment:nth-child(6n + 4) { background: var(--viz-series-4); }
+    #complete-brokerage-simulator .cps-allocation-segment:nth-child(6n + 5) { background: var(--viz-series-5); }
+    #complete-brokerage-simulator .cps-allocation-segment:nth-child(6n + 6) { background: var(--viz-series-6); }
+    #complete-brokerage-simulator .cps-maintenance-track {
+      position: relative;
+      width: 100%;
+      height: 8px;
+      background: var(--muted);
+      overflow: hidden;
+    }
+    #complete-brokerage-simulator .cps-maintenance-fill {
+      display: block;
+      height: 100%;
+      width: 0;
+      background: var(--viz-series-1);
+      transition: width 220ms ease;
+    }
+    #complete-brokerage-simulator .cps-maintenance-fill.is-danger { background: var(--destructive); }
+    #complete-brokerage-simulator .cps-maintenance-marker {
+      position: absolute;
+      top: 0;
+      bottom: 0;
+      width: 2px;
+      background: var(--foreground);
+    }
+    #complete-brokerage-simulator .cps-loan-subsection {
+      border-top: 1px solid var(--border);
+      display: grid;
+      gap: 10px;
+      padding-top: 12px;
+    }
+    #complete-brokerage-simulator .cps-threshold-input { min-width: 82px; max-width: 110px; }
+    #complete-brokerage-simulator .cps-move-input { min-width: 92px; }
+    #complete-brokerage-simulator .cps-symbol { font-weight: 500; }
+    #complete-brokerage-simulator summary { cursor: pointer; }
+    @media (max-width: 760px) {
+      #complete-brokerage-simulator .cps-main-grid { grid-template-columns: minmax(0, 1fr); }
+      #complete-brokerage-simulator .cps-session-rail { position: static; }
+      #complete-brokerage-simulator .cps-commandbar { position: static; }
+      #complete-brokerage-simulator .cps-asset-editor { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      #complete-brokerage-simulator .cps-asset-legend { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    }
+    @media (max-width: 590px) {
+      #complete-brokerage-simulator .cps-control-grid { grid-template-columns: minmax(0, 1fr); }
+      #complete-brokerage-simulator .cps-management-grid { grid-template-columns: minmax(0, 1fr); }
+      #complete-brokerage-simulator .cps-chart-wrap svg { height: 250px; }
+      #complete-brokerage-simulator .cps-actions .btn { flex: 1 1 auto; }
+      #complete-brokerage-simulator .cps-commandbar { align-items: stretch; }
+      #complete-brokerage-simulator .cps-asset-editor { grid-template-columns: minmax(0, 1fr); }
+      #complete-brokerage-simulator .cps-asset-apply .btn { width: 100%; }
+    }
+    @media (prefers-reduced-motion: reduce) {
+      #complete-brokerage-simulator .cps-portfolio-line,
+      #complete-brokerage-simulator .cps-benchmark-line,
+      #complete-brokerage-simulator .cps-allocation-segment,
+      #complete-brokerage-simulator .cps-asset-mix-segment,
+      #complete-brokerage-simulator .cps-maintenance-fill { transition: none; }
+    }
