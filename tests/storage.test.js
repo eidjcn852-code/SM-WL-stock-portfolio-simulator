@@ -23,7 +23,7 @@ vm.runInNewContext(fs.readFileSync('js/storage.js', 'utf8'), {
 });
 
 const storage = window.StockSimulatorStorage;
-const payload = {
+const legacyPayload = {
   app: 'stock-portfolio-simulator',
   version: 1,
   savedAt: '2026-07-21T00:00:00.000Z',
@@ -36,8 +36,31 @@ const payload = {
   settings: {}
 };
 
-assert.equal(storage.save(payload), true);
-assert.deepEqual(JSON.parse(JSON.stringify(storage.load())), payload);
-assert.throws(() => storage.validate({ version: 1 }), /支援/);
+async function main() {
+  assert.equal(storage.save(legacyPayload), true);
+  assert.deepEqual(JSON.parse(JSON.stringify(storage.load())), legacyPayload);
+  assert.equal(storage.validate({ ...legacyPayload, version: 2 }).version, 2);
+  assert.throws(() => storage.validate({ ...legacyPayload, version: 3 }), /支援/);
 
-console.log('storage: all tests passed');
+  let written = '';
+  window.showSaveFilePicker = async (options) => ({
+    name: options.suggestedName,
+    async createWritable() {
+      return {
+        async write(content) { written = content; },
+        async close() {}
+      };
+    }
+  });
+  const result = await storage.saveAs({ ...legacyPayload, version: 2 }, 'drive-backup.json');
+  assert.equal(result.method, 'picker');
+  assert.equal(result.filename, 'drive-backup.json');
+  assert.equal(JSON.parse(written).version, 2);
+
+  console.log('storage: all tests passed');
+}
+
+main().catch((error) => {
+  console.error(error);
+  process.exitCode = 1;
+});
