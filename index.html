@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="description" content="可自訂股票漲跌、買賣、借貸與質押維持率的個人投資組合模擬器。">
+  <meta name="description" content="可管理股票、現金、房地產、汽車、借貸、總曝險與質押維持率的個人資產模擬器。">
   <meta name="color-scheme" content="light dark">
   <title>股票資產模擬器</title>
   <link rel="stylesheet" href="styles.css">
@@ -16,7 +16,7 @@
   <main class="app-shell">
     <header class="app-titlebar">
       <h1>股票資產模擬器</h1>
-      <span class="viz-badge">本機模式</span>
+      <span class="viz-badge">瀏覽器儲存</span>
     </header>
     <div id="complete-brokerage-simulator">
 <div class="cps-commandbar" aria-label="模擬播放與資料控制">
@@ -25,8 +25,8 @@
       <span class="text-small text-muted" id="cps-save-status">自動儲存已啟用</span>
     </div>
     <div class="cps-actions">
-      <button class="btn btn-ghost" id="cps-export-data" type="button"><i data-lucide="download" aria-hidden="true"></i>匯出</button>
-      <button class="btn btn-ghost" id="cps-import-data" type="button"><i data-lucide="upload" aria-hidden="true"></i>匯入</button>
+      <button class="btn btn-ghost" id="cps-export-data" type="button" title="可選擇 Google Drive 同步資料夾"><i data-lucide="save" aria-hidden="true"></i>另存備份</button>
+      <button class="btn btn-ghost" id="cps-import-data" type="button"><i data-lucide="folder-open" aria-hidden="true"></i>匯入備份</button>
       <input class="sr-only" id="cps-import-file" type="file" accept="application/json,.json">
       <button class="btn btn-primary" id="cps-apply-day" type="button"><i data-lucide="skip-forward" aria-hidden="true"></i>下一交易日</button>
       <button class="btn" id="cps-auto" type="button" aria-pressed="false"><i data-lucide="play" aria-hidden="true"></i><span>自動播放</span></button>
@@ -39,6 +39,11 @@
       <div class="text-muted">淨資產</div>
       <div class="viz-stat-value" id="cps-total-assets">NT$1,000,000</div>
       <div id="cps-asset-breakdown">總資產 NT$1,000,000 · 負債 NT$0</div>
+    </div>
+    <div class="card viz-stat">
+      <div class="text-muted">總曝險</div>
+      <div class="viz-stat-value" id="cps-total-exposure">NT$0</div>
+      <div id="cps-exposure-ratio">曝險率 0.00% · 現金 NT$1,000,000</div>
     </div>
     <div class="card viz-stat">
       <div class="text-muted">今日變動</div>
@@ -55,6 +60,43 @@
       </div>
     </div>
   </div>
+
+  <section class="cps-asset-register" aria-label="完整資產與曝險設定">
+    <div class="cps-section-head">
+      <span>完整資產</span>
+      <span class="text-small text-muted" id="cps-exposure-definition">總曝險＝股票＋房地產＋汽車</span>
+    </div>
+    <div class="cps-asset-editor">
+      <label class="form-label cps-field" for="cps-cash-value">
+        <span>現金</span>
+        <input class="form-control" id="cps-cash-value" type="number" min="0" step="10000" value="1000000" inputmode="numeric">
+      </label>
+      <label class="form-label cps-field" for="cps-real-estate-value">
+        <span>房地產金額</span>
+        <input class="form-control" id="cps-real-estate-value" type="number" min="0" step="100000" value="0" inputmode="numeric">
+      </label>
+      <label class="form-label cps-field" for="cps-vehicle-value">
+        <span>汽車金額</span>
+        <input class="form-control" id="cps-vehicle-value" type="number" min="0" step="10000" value="0" inputmode="numeric">
+      </label>
+      <div class="cps-asset-apply">
+        <button class="btn btn-primary" id="cps-apply-assets" type="button"><i data-lucide="wallet-cards" aria-hidden="true"></i>更新資產</button>
+      </div>
+    </div>
+    <div class="cps-asset-mix" id="cps-asset-mix" role="img" aria-label="現金百分之百">
+      <span class="cps-asset-mix-segment is-cash" id="cps-mix-cash" aria-hidden="true"></span>
+      <span class="cps-asset-mix-segment is-stocks" id="cps-mix-stocks" aria-hidden="true"></span>
+      <span class="cps-asset-mix-segment is-property" id="cps-mix-property" aria-hidden="true"></span>
+      <span class="cps-asset-mix-segment is-vehicle" id="cps-mix-vehicle" aria-hidden="true"></span>
+    </div>
+    <div class="cps-asset-legend text-small">
+      <span><i class="is-cash" aria-hidden="true"></i>現金 <strong id="cps-legend-cash">NT$1,000,000</strong></span>
+      <span><i class="is-stocks" aria-hidden="true"></i>股票 <strong id="cps-legend-stocks">NT$0</strong></span>
+      <span><i class="is-property" aria-hidden="true"></i>房地產 <strong id="cps-legend-property">NT$0</strong></span>
+      <span><i class="is-vehicle" aria-hidden="true"></i>汽車 <strong id="cps-legend-vehicle">NT$0</strong></span>
+    </div>
+    <div class="text-small" id="cps-asset-feedback" aria-live="polite">現金可用於股票交易與償還貸款</div>
+  </section>
 
     <div class="cps-main-grid">
     <div class="cps-market-stage">
@@ -92,7 +134,7 @@
     </div>
     <div class="cps-side-grid">
       <label class="form-label cps-field" for="cps-starting-capital">
-        <span>初始資金</span>
+        <span>初始現金</span>
         <input class="form-control" id="cps-starting-capital" type="number" min="1" step="10000" value="1000000" inputmode="numeric">
       </label>
       <div class="cps-actions">
@@ -356,4 +398,3 @@
   </main>
 </body>
 </html>
-

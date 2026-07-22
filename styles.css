@@ -118,7 +118,7 @@ button {
 
 .viz-grid {
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-columns: repeat(4, minmax(0, 1fr));
   gap: 12px;
 }
 
@@ -309,6 +309,12 @@ svg {
   max-width: 100%;
 }
 
+@media (max-width: 1080px) {
+  .viz-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
 @media (max-width: 760px) {
   .app-shell {
     width: min(100% - 20px, 1440px);
@@ -360,6 +366,64 @@ svg {
       gap: 20px;
       align-items: start;
       min-width: 0;
+    }
+    #complete-brokerage-simulator .cps-asset-register {
+      display: grid;
+      gap: 12px;
+      padding: 16px 0;
+      border-top: 1px solid var(--border);
+      border-bottom: 1px solid var(--border);
+    }
+    #complete-brokerage-simulator .cps-asset-editor {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(150px, 1fr)) auto;
+      gap: 12px;
+      align-items: end;
+    }
+    #complete-brokerage-simulator .cps-asset-apply {
+      display: flex;
+      align-items: end;
+      min-height: 38px;
+    }
+    #complete-brokerage-simulator .cps-asset-mix {
+      display: flex;
+      width: 100%;
+      height: 10px;
+      overflow: hidden;
+      background: var(--muted);
+    }
+    #complete-brokerage-simulator .cps-asset-mix-segment {
+      display: block;
+      width: 0;
+      height: 100%;
+      transition: width 220ms ease;
+    }
+    #complete-brokerage-simulator .is-cash { background: var(--muted-foreground); }
+    #complete-brokerage-simulator .is-stocks { background: var(--viz-series-1); }
+    #complete-brokerage-simulator .is-property { background: var(--viz-series-2); }
+    #complete-brokerage-simulator .is-vehicle { background: var(--viz-series-3); }
+    #complete-brokerage-simulator .cps-asset-legend {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 8px 16px;
+    }
+    #complete-brokerage-simulator .cps-asset-legend > span {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      min-width: 0;
+      white-space: nowrap;
+    }
+    #complete-brokerage-simulator .cps-asset-legend i {
+      flex: 0 0 auto;
+      width: 9px;
+      height: 9px;
+      border-radius: 2px;
+    }
+    #complete-brokerage-simulator .cps-asset-legend strong {
+      margin-left: auto;
+      overflow-wrap: anywhere;
+      white-space: normal;
     }
     #complete-brokerage-simulator .cps-market-stage,
     #complete-brokerage-simulator .cps-session-rail,
@@ -518,6 +582,8 @@ svg {
       #complete-brokerage-simulator .cps-main-grid { grid-template-columns: minmax(0, 1fr); }
       #complete-brokerage-simulator .cps-session-rail { position: static; }
       #complete-brokerage-simulator .cps-commandbar { position: static; }
+      #complete-brokerage-simulator .cps-asset-editor { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      #complete-brokerage-simulator .cps-asset-legend { grid-template-columns: repeat(2, minmax(0, 1fr)); }
     }
     @media (max-width: 590px) {
       #complete-brokerage-simulator .cps-control-grid { grid-template-columns: minmax(0, 1fr); }
@@ -525,10 +591,13 @@ svg {
       #complete-brokerage-simulator .cps-chart-wrap svg { height: 250px; }
       #complete-brokerage-simulator .cps-actions .btn { flex: 1 1 auto; }
       #complete-brokerage-simulator .cps-commandbar { align-items: stretch; }
+      #complete-brokerage-simulator .cps-asset-editor { grid-template-columns: minmax(0, 1fr); }
+      #complete-brokerage-simulator .cps-asset-apply .btn { width: 100%; }
     }
     @media (prefers-reduced-motion: reduce) {
       #complete-brokerage-simulator .cps-portfolio-line,
       #complete-brokerage-simulator .cps-benchmark-line,
       #complete-brokerage-simulator .cps-allocation-segment,
+      #complete-brokerage-simulator .cps-asset-mix-segment,
       #complete-brokerage-simulator .cps-maintenance-fill { transition: none; }
     }
