@@ -10,6 +10,8 @@
         startingCapital: 1000000,
         day: 0,
         cash: 1000000,
+        realEstate: 0,
+        vehicles: 0,
         holdings: [],
         loans: [],
         benchmark: 100,
@@ -62,12 +64,23 @@
         return Calc.totalDebt(state.loans);
       }
 
+      function physicalAssets() {
+        return {
+          realEstate: state.realEstate,
+          vehicles: state.vehicles
+        };
+      }
+
       function grossAssets() {
-        return Calc.grossAssets(state.cash, state.holdings);
+        return Calc.grossAssets(state.cash, state.holdings, physicalAssets());
       }
 
       function totalAssets() {
-        return Calc.netAssets(state.cash, state.holdings, state.loans);
+        return Calc.netAssets(state.cash, state.holdings, state.loans, physicalAssets());
+      }
+
+      function totalExposure() {
+        return Calc.totalExposure(state.holdings, physicalAssets());
       }
 
       function isLoanActive(loan) {
@@ -143,6 +156,8 @@
         state.baseline = {
           startingCapital: state.startingCapital,
           cash: state.cash,
+          realEstate: state.realEstate,
+          vehicles: state.vehicles,
           holdings: state.holdings.map((holding) => ({ ...holding })),
           loans: state.loans.map((loan) => ({ ...loan })),
           transactions: state.transactions.map((transaction) => ({ ...transaction })),
@@ -178,6 +193,8 @@
         const warningRatios = new Map(state.loans.map((loan) => [loan.id, loan.warningRatio]));
         state.startingCapital = state.baseline.startingCapital;
         state.cash = state.baseline.cash;
+        state.realEstate = state.baseline.realEstate || 0;
+        state.vehicles = state.baseline.vehicles || 0;
         state.holdings = state.baseline.holdings.map((holding) => ({
           ...holding,
           move: moves.has(holding.symbol) ? moves.get(holding.symbol) : holding.move
@@ -214,6 +231,8 @@
         state.startingCapital = capital;
         state.day = 0;
         state.cash = capital;
+        state.realEstate = 0;
+        state.vehicles = 0;
         state.holdings = [];
         state.loans = [];
         state.benchmark = 100;
@@ -225,6 +244,9 @@
         state.lastBenchmarkReturn = 0;
         state.nextId = 1;
         state.nextLoanId = 1;
+        el('cps-cash-value').value = String(capital);
+        el('cps-real-estate-value').value = '0';
+        el('cps-vehicle-value').value = '0';
         el('cps-benchmark-move').value = '0';
         recordHistory(false);
         setAddFeedback('空白組合已建立，目前可用現金 ' + money0.format(state.cash), false);
@@ -256,6 +278,43 @@
         const feedback = el('cps-repay-feedback');
         feedback.textContent = message;
         feedback.classList.toggle('text-destructive', destructive);
+      }
+
+      function setAssetFeedback(message, destructive) {
+        const feedback = el('cps-asset-feedback');
+        feedback.textContent = message;
+        feedback.classList.toggle('text-destructive', destructive);
+      }
+
+      function applyAssetValues() {
+        const cash = Number(el('cps-cash-value').value);
+        const realEstate = Number(el('cps-real-estate-value').value);
+        const vehicles = Number(el('cps-vehicle-value').value);
+        if (![cash, realEstate, vehicles].every((value) => Number.isFinite(value) && value >= 0)) {
+          setAssetFeedback('資產金額必須是大於或等於 0 的數字', true);
+          return;
+        }
+
+        const before = totalAssets();
+        state.cash = cash;
+        state.realEstate = realEstate;
+        state.vehicles = vehicles;
+        const after = totalAssets();
+        if (state.day === 0) {
+          state.startingCapital = after;
+          state.lastDailyPnl = 0;
+          state.lastDailyReturn = 0;
+          recordHistory(true);
+          el('cps-starting-capital').value = String(cash);
+        } else {
+          state.lastDailyPnl += after - before;
+          const previousPoint = state.history[state.history.length - 2];
+          const comparison = previousPoint ? previousPoint.total : state.startingCapital;
+          state.lastDailyReturn = comparison > 0 ? (after / comparison - 1) * 100 : 0;
+          recordHistory(true);
+        }
+        setAssetFeedback('完整資產已更新，總曝險 ' + money0.format(totalExposure()), false);
+        render();
       }
 
       function addStock() {
@@ -553,6 +612,8 @@
       function renderSummary() {
         const total = totalAssets();
         const debt = totalDebt();
+        const exposure = totalExposure();
+        const exposureRate = Calc.exposureRatio(exposure, grossAssets());
         const totalPnl = total - state.startingCapital;
         const activePledges = state.loans.filter((loan) => loan.type === 'pledge' && isLoanActive(loan));
         const lowestPledge = activePledges.reduce((lowest, loan) => {
@@ -564,6 +625,8 @@
         const hasPledgeWarning = minimumRatio !== null && minimumRatio < warningRatio;
         el('cps-total-assets').textContent = money0.format(total);
         el('cps-asset-breakdown').textContent = '總資產 ' + money0.format(grossAssets()) + ' · 負債 ' + money0.format(debt);
+        el('cps-total-exposure').textContent = money0.format(exposure);
+        el('cps-exposure-ratio').textContent = '曝險率 ' + exposureRate.toFixed(2) + '% · 現金 ' + money0.format(state.cash);
         el('cps-daily-pnl').textContent = signedMoney(state.lastDailyPnl);
         el('cps-daily-pnl').classList.toggle('text-destructive', state.lastDailyPnl < 0);
         el('cps-daily-return').textContent = '組合 ' + signedPercent(state.lastDailyReturn) + ' · 大盤 ' + signedPercent(state.lastBenchmarkReturn);
@@ -587,6 +650,36 @@
           meter.setAttribute('aria-valuetext', '最低維持率 ' + minimumRatio.toFixed(1) + '%，警示線 ' + warningRatio.toFixed(1) + '%');
         }
         el('cps-day-badge').textContent = '第 ' + state.day + ' 天';
+      }
+
+      function renderAssetRegister() {
+        const stockValue = holdingsValue();
+        const gross = grossAssets();
+        const values = [state.cash, stockValue, state.realEstate, state.vehicles];
+        const inputPairs = [
+          ['cps-cash-value', state.cash],
+          ['cps-real-estate-value', state.realEstate],
+          ['cps-vehicle-value', state.vehicles]
+        ];
+        inputPairs.forEach(([id, value]) => {
+          const input = el(id);
+          if (document.activeElement !== input) input.value = String(Math.round(value));
+        });
+
+        ['cps-mix-cash', 'cps-mix-stocks', 'cps-mix-property', 'cps-mix-vehicle'].forEach((id, index) => {
+          el(id).style.width = (gross > 0 ? values[index] / gross * 100 : 0).toFixed(3) + '%';
+        });
+        el('cps-legend-cash').textContent = money0.format(state.cash);
+        el('cps-legend-stocks').textContent = money0.format(stockValue);
+        el('cps-legend-property').textContent = money0.format(state.realEstate);
+        el('cps-legend-vehicle').textContent = money0.format(state.vehicles);
+
+        const labels = ['現金', '股票', '房地產', '汽車'];
+        const allocation = labels.map((label, index) => {
+          const ratio = gross > 0 ? values[index] / gross * 100 : 0;
+          return label + ' ' + ratio.toFixed(1) + '%';
+        }).join('，');
+        el('cps-asset-mix').setAttribute('aria-label', '資產配置：' + allocation);
       }
 
       function renderScenarioPreview() {
@@ -939,7 +1032,7 @@
         };
         return {
           app: 'stock-portfolio-simulator',
-          version: 1,
+          version: 2,
           savedAt: new Date().toISOString(),
           state: serializableState,
           settings: settingsSnapshot()
@@ -956,12 +1049,23 @@
 
       function restorePayload(payload, announce) {
         const saved = payload.state;
+        const savedBaseline = saved.baseline ? {
+          ...saved.baseline,
+          realEstate: Math.max(0, Number(saved.baseline.realEstate) || 0),
+          vehicles: Math.max(0, Number(saved.baseline.vehicles) || 0),
+          holdings: saved.baseline.holdings.map((holding) => ({ ...holding })),
+          loans: saved.baseline.loans.map((loan) => ({ ...loan })),
+          transactions: saved.baseline.transactions.map((transaction) => ({ ...transaction }))
+        } : null;
         Object.assign(state, saved, {
           timer: null,
+          realEstate: Math.max(0, Number(saved.realEstate) || 0),
+          vehicles: Math.max(0, Number(saved.vehicles) || 0),
           holdings: saved.holdings.map((holding) => ({ ...holding })),
           loans: saved.loans.map((loan) => ({ ...loan })),
           history: saved.history.map((point) => ({ ...point })),
-          transactions: saved.transactions.map((transaction) => ({ ...transaction }))
+          transactions: saved.transactions.map((transaction) => ({ ...transaction })),
+          baseline: savedBaseline
         });
         applySavedSettings(payload.settings);
         if (!state.history.length) recordHistory(false);
@@ -977,10 +1081,23 @@
         el('cps-save-status').classList.toggle('text-destructive', !saved);
       }
 
-      function exportData() {
+      async function exportData() {
         const date = new Date().toISOString().slice(0, 10);
-        Storage.download(exportPayload(), 'stock-simulator-' + date + '.json');
-        el('cps-save-status').textContent = '備份已匯出';
+        try {
+          el('cps-save-status').textContent = '請選擇備份儲存位置';
+          const result = await Storage.saveAs(exportPayload(), 'stock-simulator-' + date + '.json');
+          el('cps-save-status').textContent = result.method === 'picker'
+            ? '備份已另存：' + result.filename
+            : '備份已下載至瀏覽器下載資料夾';
+          el('cps-save-status').classList.remove('text-destructive');
+        } catch (error) {
+          if (error && error.name === 'AbortError') {
+            el('cps-save-status').textContent = '已取消備份';
+            return;
+          }
+          el('cps-save-status').textContent = '備份失敗';
+          el('cps-save-status').classList.add('text-destructive');
+        }
       }
 
       async function importData(event) {
@@ -1001,6 +1118,7 @@
       function render() {
         if (state.day === 0) updateBaseline();
         renderSummary();
+        renderAssetRegister();
         renderHoldings();
         renderScenarioPreview();
         renderTradeSelect();
@@ -1014,6 +1132,7 @@
       el('cps-export-data').addEventListener('click', exportData);
       el('cps-import-data').addEventListener('click', () => el('cps-import-file').click());
       el('cps-import-file').addEventListener('change', importData);
+      el('cps-apply-assets').addEventListener('click', applyAssetValues);
       el('cps-reset-account').addEventListener('click', resetAccount);
       el('cps-add-stock').addEventListener('click', addStock);
       el('cps-apply-day').addEventListener('click', applyDay);
@@ -1055,4 +1174,3 @@
       render();
       if (window.lucide) window.lucide.createIcons({ attrs: { width: 16, height: 16 } });
     })();
-

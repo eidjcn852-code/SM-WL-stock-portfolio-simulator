@@ -21,12 +21,29 @@
     return loans.reduce((sum, loan) => sum + outstandingLoan(loan), 0);
   }
 
-  function grossAssets(cash, holdings) {
-    return finiteNumber(cash, 0) + holdingsValue(holdings);
+  function physicalAssetsValue(assets) {
+    const values = assets || {};
+    return Math.max(0, finiteNumber(values.realEstate, 0)) +
+      Math.max(0, finiteNumber(values.vehicles, 0));
   }
 
-  function netAssets(cash, holdings, loans) {
-    return grossAssets(cash, holdings) - totalDebt(loans);
+  function grossAssets(cash, holdings, assets) {
+    return Math.max(0, finiteNumber(cash, 0)) + holdingsValue(holdings) +
+      physicalAssetsValue(assets);
+  }
+
+  function totalExposure(holdings, assets) {
+    return holdingsValue(holdings) + physicalAssetsValue(assets);
+  }
+
+  function exposureRatio(exposure, grossTotal) {
+    const total = finiteNumber(grossTotal, 0);
+    if (total <= 0) return 0;
+    return Math.max(0, finiteNumber(exposure, 0)) / total * 100;
+  }
+
+  function netAssets(cash, holdings, loans, assets) {
+    return grossAssets(cash, holdings, assets) - totalDebt(loans);
   }
 
   function dailyInterest(loan) {
@@ -90,13 +107,16 @@
     dailyInterest,
     dailyInterestTotal,
     estimatedMonthlyPayment,
+    exposureRatio,
     grossAssets,
     holdingsValue,
     maintenanceRatio,
     maximumDrawdown,
     netAssets,
     outstandingLoan,
+    physicalAssetsValue,
     totalDebt,
+    totalExposure,
     tradeFee
   };
 

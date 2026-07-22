@@ -2,9 +2,10 @@
   'use strict';
 
   const STORAGE_KEY = 'stock-portfolio-simulator-v1';
+  const SUPPORTED_VERSIONS = new Set([1, 2]);
 
   function validate(payload) {
-    if (!payload || payload.app !== 'stock-portfolio-simulator' || payload.version !== 1) {
+    if (!payload || payload.app !== 'stock-portfolio-simulator' || !SUPPORTED_VERSIONS.has(payload.version)) {
       throw new Error('不是支援的模擬器備份格式');
     }
     const state = payload.state;
@@ -47,6 +48,25 @@
     global.setTimeout(() => URL.revokeObjectURL(url), 0);
   }
 
+  async function saveAs(payload, filename) {
+    if (typeof global.showSaveFilePicker !== 'function') {
+      download(payload, filename);
+      return { method: 'download', filename };
+    }
+
+    const handle = await global.showSaveFilePicker({
+      suggestedName: filename,
+      types: [{
+        description: '股票模擬器 JSON 備份',
+        accept: { 'application/json': ['.json'] }
+      }]
+    });
+    const writable = await handle.createWritable();
+    await writable.write(JSON.stringify(payload, null, 2));
+    await writable.close();
+    return { method: 'picker', filename: handle.name || filename };
+  }
+
   async function readFile(file) {
     const text = await file.text();
     return validate(JSON.parse(text));
@@ -56,6 +76,7 @@
     download,
     load,
     readFile,
+    saveAs,
     save,
     validate
   };
