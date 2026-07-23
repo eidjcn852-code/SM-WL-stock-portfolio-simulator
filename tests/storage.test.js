@@ -40,7 +40,29 @@ async function main() {
   assert.equal(storage.save(legacyPayload), true);
   assert.deepEqual(JSON.parse(JSON.stringify(storage.load())), legacyPayload);
   assert.equal(storage.validate({ ...legacyPayload, version: 2 }).version, 2);
-  assert.throws(() => storage.validate({ ...legacyPayload, version: 3 }), /支援/);
+  const account = {
+    holdings: [],
+    loans: [],
+    history: [],
+    transactions: []
+  };
+  const householdPayload = {
+    ...legacyPayload,
+    version: 3,
+    state: {
+      activeAccountId: 'SM',
+      day: 0,
+      accounts: {
+        SM: { ...account },
+        WL: { ...account }
+      }
+    }
+  };
+  assert.equal(storage.validate(householdPayload).version, 3);
+  assert.throws(
+    () => storage.validate({ ...householdPayload, state: { ...householdPayload.state, accounts: { SM: account } } }),
+    /不完整/
+  );
 
   let written = '';
   window.showSaveFilePicker = async (options) => ({

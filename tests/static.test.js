@@ -12,5 +12,10 @@ assert.deepEqual(duplicateIds, [], 'HTML contains duplicate IDs');
 assert.deepEqual(missingIds, [], 'app.js references missing HTML IDs');
 assert.match(html, /accounts\.google\.com\/gsi\/client/);
 assert.match(html, /js\/google-drive\.js/);
+assert.match(html, /id="cps-account-sm"/);
+assert.match(html, /id="cps-account-wl"/);
+assert.match(app, /version: 3/);
+assert.match(app, /accounts:\s*\{\s*SM:/);
+assert.match(app, /payload\.version === 3/);
 
 console.log('static: all checks passed');
