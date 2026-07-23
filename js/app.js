@@ -7,26 +7,47 @@
       const Drive = window.StockSimulatorGoogleDrive;
       if (!Calc || !Storage) return;
 
-      const state = {
-        startingCapital: 1000000,
+      const ACCOUNT_IDS = ['SM', 'WL'];
+      const ACCOUNT_LABELS = { SM: 'SM 帳戶', WL: 'WL 帳戶' };
+
+      function createAccount(startingCapital = 0) {
+        const capital = Math.max(0, Number(startingCapital) || 0);
+        return {
+          startingCapital: capital,
+          cash: capital,
+          realEstate: 0,
+          vehicles: 0,
+          holdings: [],
+          loans: [],
+          history: [],
+          transactions: [],
+          realizedPnl: 0,
+          lastDailyPnl: 0,
+          lastDailyReturn: 0,
+          nextId: 1,
+          nextLoanId: 1,
+          baseline: null,
+          settings: {
+            startingCapitalInput: String(capital),
+            commissionRate: '0.1425',
+            taxRate: '0.3'
+          }
+        };
+      }
+
+      const appState = {
+        activeAccountId: 'SM',
         day: 0,
-        cash: 1000000,
-        realEstate: 0,
-        vehicles: 0,
-        holdings: [],
-        loans: [],
         benchmark: 100,
-        history: [],
-        transactions: [],
-        realizedPnl: 0,
-        lastDailyPnl: 0,
-        lastDailyReturn: 0,
         lastBenchmarkReturn: 0,
-        nextId: 1,
-        nextLoanId: 1,
+        market: {},
         timer: null,
-        baseline: null
+        accounts: {
+          SM: createAccount(1000000),
+          WL: createAccount(0)
+        }
       };
+      let state = appState.accounts.SM;
 
       const money0 = new Intl.NumberFormat('zh-TW', {
         style: 'currency', currency: 'TWD', maximumFractionDigits: 0
@@ -53,35 +74,83 @@
           .replaceAll("'", '&#039;');
       }
 
+      function holdingsValueFor(account) {
+        return Calc.holdingsValue(account.holdings);
+      }
+
       function holdingsValue() {
-        return Calc.holdingsValue(state.holdings);
+        return holdingsValueFor(state);
       }
 
       function outstandingLoan(loan) {
         return Calc.outstandingLoan(loan);
       }
 
-      function totalDebt() {
-        return Calc.totalDebt(state.loans);
+      function totalDebtFor(account) {
+        return Calc.totalDebt(account.loans);
       }
 
-      function physicalAssets() {
+      function totalDebt() {
+        return totalDebtFor(state);
+      }
+
+      function physicalAssetsFor(account) {
         return {
-          realEstate: state.realEstate,
-          vehicles: state.vehicles
+          realEstate: account.realEstate,
+          vehicles: account.vehicles
         };
       }
 
+      function physicalAssets() {
+        return physicalAssetsFor(state);
+      }
+
+      function grossAssetsFor(account) {
+        return Calc.grossAssets(account.cash, account.holdings, physicalAssetsFor(account));
+      }
+
       function grossAssets() {
-        return Calc.grossAssets(state.cash, state.holdings, physicalAssets());
+        return grossAssetsFor(state);
+      }
+
+      function totalAssetsFor(account) {
+        return Calc.netAssets(account.cash, account.holdings, account.loans, physicalAssetsFor(account));
       }
 
       function totalAssets() {
-        return Calc.netAssets(state.cash, state.holdings, state.loans, physicalAssets());
+        return totalAssetsFor(state);
+      }
+
+      function totalExposureFor(account) {
+        return Calc.totalExposure(account.holdings, physicalAssetsFor(account));
       }
 
       function totalExposure() {
-        return Calc.totalExposure(state.holdings, physicalAssets());
+        return totalExposureFor(state);
+      }
+
+      function householdSum(calculator) {
+        return ACCOUNT_IDS.reduce((sum, accountId) => sum + calculator(appState.accounts[accountId]), 0);
+      }
+
+      function householdGrossAssets() {
+        return householdSum(grossAssetsFor);
+      }
+
+      function householdTotalAssets() {
+        return householdSum(totalAssetsFor);
+      }
+
+      function householdDebt() {
+        return householdSum(totalDebtFor);
+      }
+
+      function householdExposure() {
+        return householdSum(totalExposureFor);
+      }
+
+      function householdStartingCapital() {
+        return householdSum((account) => account.startingCapital);
       }
 
       function isLoanActive(loan) {
@@ -98,10 +167,14 @@
         return Calc.dailyInterestTotal(state.loans);
       }
 
-      function maintenanceRatio(loan) {
+      function maintenanceRatioFor(account, loan) {
         if (loan.type !== 'pledge' || !isLoanActive(loan)) return null;
-        const holding = state.holdings.find((item) => item.id === loan.collateralHoldingId);
+        const holding = account.holdings.find((item) => item.id === loan.collateralHoldingId);
         return Calc.maintenanceRatio(loan, holding);
+      }
+
+      function maintenanceRatio(loan) {
+        return maintenanceRatioFor(state, loan);
       }
 
       function minimumPledgeRatio() {
@@ -131,51 +204,70 @@
         return Calc.tradeFee(gross, commissionRate());
       }
 
+      function householdHistory() {
+        const days = new Set();
+        ACCOUNT_IDS.forEach((accountId) => {
+          appState.accounts[accountId].history.forEach((point) => days.add(point.day));
+        });
+        return [...days].sort((a, b) => a - b).map((day) => {
+          const total = ACCOUNT_IDS.reduce((sum, accountId) => {
+            const history = appState.accounts[accountId].history;
+            const point = [...history].reverse().find((item) => item.day <= day);
+            return sum + (point ? point.total : 0);
+          }, 0);
+          return { day, total };
+        });
+      }
+
       function maximumDrawdown() {
-        return Calc.maximumDrawdown(state.history);
+        return Calc.maximumDrawdown(householdHistory());
       }
 
       function concentration() {
         return Calc.concentration(state.holdings, grossAssets());
       }
 
-      function recordHistory(replaceCurrent) {
-        const total = totalAssets();
+      function recordHistoryFor(account, replaceCurrent) {
+        const total = totalAssetsFor(account);
         const point = {
-          day: state.day,
+          day: appState.day,
           total,
-          portfolioReturn: state.startingCapital > 0 ? (total / state.startingCapital - 1) * 100 : 0,
-          benchmarkReturn: state.benchmark - 100
+          portfolioReturn: account.startingCapital > 0 ? (total / account.startingCapital - 1) * 100 : 0,
+          benchmarkReturn: appState.benchmark - 100
         };
-        const last = state.history[state.history.length - 1];
-        if (replaceCurrent && last && last.day === state.day) state.history[state.history.length - 1] = point;
-        else state.history.push(point);
+        const last = account.history[account.history.length - 1];
+        if (replaceCurrent && last && last.day === appState.day) account.history[account.history.length - 1] = point;
+        else account.history.push(point);
       }
 
-      function updateBaseline() {
-        if (state.day !== 0) return;
-        state.baseline = {
-          startingCapital: state.startingCapital,
-          cash: state.cash,
-          realEstate: state.realEstate,
-          vehicles: state.vehicles,
-          holdings: state.holdings.map((holding) => ({ ...holding })),
-          loans: state.loans.map((loan) => ({ ...loan })),
-          transactions: state.transactions.map((transaction) => ({ ...transaction })),
-          realizedPnl: state.realizedPnl,
-          nextId: state.nextId,
-          nextLoanId: state.nextLoanId
+      function recordHistory(replaceCurrent) {
+        recordHistoryFor(state, replaceCurrent);
+      }
+
+      function updateBaseline(account = state, force = false) {
+        if (appState.day !== 0 && !force) return;
+        account.baseline = {
+          startingCapital: account.startingCapital,
+          cash: account.cash,
+          realEstate: account.realEstate,
+          vehicles: account.vehicles,
+          holdings: account.holdings.map((holding) => ({ ...holding })),
+          loans: account.loans.map((loan) => ({ ...loan })),
+          transactions: account.transactions.map((transaction) => ({ ...transaction })),
+          realizedPnl: account.realizedPnl,
+          nextId: account.nextId,
+          nextLoanId: account.nextLoanId
         };
       }
 
       function setAutoPlaying(playing) {
         const button = el('cps-auto');
         if (playing) {
-          if (state.timer) return;
-          state.timer = window.setInterval(applyDay, 700);
-        } else if (state.timer) {
-          window.clearInterval(state.timer);
-          state.timer = null;
+          if (appState.timer) return;
+          appState.timer = window.setInterval(applyDay, 700);
+        } else if (appState.timer) {
+          window.clearInterval(appState.timer);
+          appState.timer = null;
         }
         button.setAttribute('aria-pressed', playing ? 'true' : 'false');
         button.innerHTML = playing
@@ -186,38 +278,41 @@
 
       function resetSimulation() {
         setAutoPlaying(false);
-        if (!state.baseline) {
-          resetAccount();
-          return;
-        }
-        const moves = new Map(state.holdings.map((holding) => [holding.symbol, holding.move]));
-        const warningRatios = new Map(state.loans.map((loan) => [loan.id, loan.warningRatio]));
-        state.startingCapital = state.baseline.startingCapital;
-        state.cash = state.baseline.cash;
-        state.realEstate = state.baseline.realEstate || 0;
-        state.vehicles = state.baseline.vehicles || 0;
-        state.holdings = state.baseline.holdings.map((holding) => ({
-          ...holding,
-          move: moves.has(holding.symbol) ? moves.get(holding.symbol) : holding.move
-        }));
-        state.loans = state.baseline.loans.map((loan) => ({
-          ...loan,
-          warningRatio: warningRatios.has(loan.id) ? warningRatios.get(loan.id) : loan.warningRatio
-        }));
-        state.transactions = state.baseline.transactions.map((transaction) => ({ ...transaction }));
-        state.realizedPnl = state.baseline.realizedPnl;
-        state.nextId = state.baseline.nextId;
-        state.nextLoanId = state.baseline.nextLoanId;
-        state.day = 0;
-        state.benchmark = 100;
-        state.history = [];
-        state.lastDailyPnl = 0;
-        state.lastDailyReturn = 0;
-        state.lastBenchmarkReturn = 0;
-        recordHistory(false);
-        setAddFeedback('已回到第 0 天，股票清單與初始持倉已保留', false);
+        captureAccountSettings();
+        ACCOUNT_IDS.forEach((accountId) => {
+          const account = appState.accounts[accountId];
+          if (!account.baseline) updateBaseline(account, true);
+          const warningRatios = new Map(account.loans.map((loan) => [loan.id, loan.warningRatio]));
+          const baseline = account.baseline;
+          Object.assign(account, {
+            startingCapital: baseline.startingCapital,
+            cash: baseline.cash,
+            realEstate: baseline.realEstate || 0,
+            vehicles: baseline.vehicles || 0,
+            holdings: baseline.holdings.map((holding) => ({ ...holding })),
+            loans: baseline.loans.map((loan) => ({
+              ...loan,
+              warningRatio: warningRatios.has(loan.id) ? warningRatios.get(loan.id) : loan.warningRatio
+            })),
+            transactions: baseline.transactions.map((transaction) => ({ ...transaction })),
+            realizedPnl: baseline.realizedPnl,
+            nextId: baseline.nextId,
+            nextLoanId: baseline.nextLoanId,
+            history: [],
+            lastDailyPnl: 0,
+            lastDailyReturn: 0
+          });
+        });
+        appState.day = 0;
+        appState.benchmark = 100;
+        appState.lastBenchmarkReturn = 0;
+        rebuildMarketFromAccounts(true);
+        ACCOUNT_IDS.forEach((accountId) => recordHistoryFor(appState.accounts[accountId], false));
+        el('cps-benchmark-move').value = '0';
+        applyAccountSettings();
+        setAddFeedback('SM 與 WL 已回到第 0 天，初始持倉均已保留', false);
         setTradeFeedback('模擬紀錄已重設', false);
-        setLoanFeedback('貸款已回到模擬開始前狀態', false);
+        setLoanFeedback('兩個帳戶的貸款已回到模擬開始前狀態', false);
         setRepayFeedback('可選擇貸款進行部分或全額還款', false);
         render();
       }
@@ -225,32 +320,26 @@
       function resetAccount() {
         setAutoPlaying(false);
         const capital = Number(el('cps-starting-capital').value);
-        if (!Number.isFinite(capital) || capital <= 0) {
-          setAddFeedback('初始資金必須大於 0', true);
+        if (!Number.isFinite(capital) || capital < 0) {
+          setAddFeedback('初始資金不可小於 0', true);
           return;
         }
-        state.startingCapital = capital;
-        state.day = 0;
-        state.cash = capital;
-        state.realEstate = 0;
-        state.vehicles = 0;
-        state.holdings = [];
-        state.loans = [];
-        state.benchmark = 100;
-        state.history = [];
-        state.transactions = [];
-        state.realizedPnl = 0;
-        state.lastDailyPnl = 0;
-        state.lastDailyReturn = 0;
-        state.lastBenchmarkReturn = 0;
-        state.nextId = 1;
-        state.nextLoanId = 1;
+        captureAccountSettings();
+        const accountId = appState.activeAccountId;
+        const account = createAccount(capital);
+        account.settings = {
+          ...state.settings,
+          startingCapitalInput: String(capital)
+        };
+        appState.accounts[accountId] = account;
+        state = account;
+        recordHistory(false);
+        updateBaseline(state, true);
+        rebuildMarketFromAccounts(false);
         el('cps-cash-value').value = String(capital);
         el('cps-real-estate-value').value = '0';
         el('cps-vehicle-value').value = '0';
-        el('cps-benchmark-move').value = '0';
-        recordHistory(false);
-        setAddFeedback('空白組合已建立，目前可用現金 ' + money0.format(state.cash), false);
+        setAddFeedback(ACCOUNT_LABELS[accountId] + '已建立空白組合，目前可用現金 ' + money0.format(state.cash), false);
         setTradeFeedback('新增股票後即可模擬交易', false);
         setLoanFeedback('借款會同時增加現金與負債', false);
         setRepayFeedback('目前沒有待還款貸款', false);
@@ -301,11 +390,12 @@
         state.realEstate = realEstate;
         state.vehicles = vehicles;
         const after = totalAssets();
-        if (state.day === 0) {
+        if (appState.day === 0) {
           state.startingCapital = after;
           state.lastDailyPnl = 0;
           state.lastDailyReturn = 0;
           recordHistory(true);
+          state.settings.startingCapitalInput = String(cash);
           el('cps-starting-capital').value = String(cash);
         } else {
           state.lastDailyPnl += after - before;
@@ -314,20 +404,63 @@
           state.lastDailyReturn = comparison > 0 ? (after / comparison - 1) * 100 : 0;
           recordHistory(true);
         }
-        setAssetFeedback('完整資產已更新，總曝險 ' + money0.format(totalExposure()), false);
+        setAssetFeedback(ACCOUNT_LABELS[appState.activeAccountId] + '資產已更新，帳戶曝險 ' + money0.format(totalExposure()), false);
         render();
+      }
+
+      function rebuildMarketFromAccounts(resetPrices) {
+        const previous = appState.market || {};
+        const market = {};
+        ACCOUNT_IDS.forEach((accountId) => {
+          appState.accounts[accountId].holdings.forEach((holding) => {
+            if (!market[holding.symbol]) {
+              market[holding.symbol] = {
+                price: resetPrices || !previous[holding.symbol]
+                  ? Math.max(0.01, Number(holding.price) || 0.01)
+                  : Math.max(0.01, Number(previous[holding.symbol].price) || Number(holding.price) || 0.01),
+                move: previous[holding.symbol]
+                  ? Math.max(-100, Math.min(100, Number(previous[holding.symbol].move) || 0))
+                  : Math.max(-100, Math.min(100, Number(holding.move) || 0)),
+                name: holding.name || holding.symbol
+              };
+            }
+            holding.price = market[holding.symbol].price;
+            holding.move = market[holding.symbol].move;
+          });
+        });
+        appState.market = market;
+      }
+
+      function syncAccountPrices(account) {
+        account.holdings.forEach((holding) => {
+          const quote = appState.market[holding.symbol];
+          if (!quote) return;
+          holding.price = quote.price;
+          holding.move = quote.move;
+        });
+      }
+
+      function setMarketMove(symbol, move) {
+        const quote = appState.market[symbol];
+        if (!quote) return;
+        quote.move = Math.max(-100, Math.min(100, Number(move) || 0));
+        ACCOUNT_IDS.forEach((accountId) => {
+          appState.accounts[accountId].holdings
+            .filter((holding) => holding.symbol === symbol)
+            .forEach((holding) => { holding.move = quote.move; });
+        });
       }
 
       function addStock() {
         const symbol = el('cps-new-symbol').value.trim().toUpperCase();
         const name = el('cps-new-name').value.trim() || symbol;
-        const price = Number(el('cps-new-price').value);
+        const requestedPrice = Number(el('cps-new-price').value);
         const shares = Math.floor(Number(el('cps-new-shares').value) || 0);
         if (!symbol) {
           setAddFeedback('請輸入股票代號', true);
           return;
         }
-        if (!Number.isFinite(price) || price <= 0) {
+        if (!Number.isFinite(requestedPrice) || requestedPrice <= 0) {
           setAddFeedback('模擬起始價必須大於 0', true);
           return;
         }
@@ -340,6 +473,8 @@
           return;
         }
 
+        const existingQuote = appState.market[symbol];
+        const price = existingQuote ? existingQuote.price : requestedPrice;
         const gross = shares * price;
         const fee = shares > 0 ? tradeFee(gross) : 0;
         const cost = gross + fee;
@@ -355,13 +490,16 @@
           shares,
           price,
           averageCost: shares > 0 ? cost / shares : 0,
-          move: 0
+          move: existingQuote ? existingQuote.move : 0
         };
         state.holdings.push(holding);
+        if (!existingQuote) {
+          appState.market[symbol] = { price, move: 0, name };
+        }
         if (shares > 0) {
           state.cash -= cost;
           state.transactions.unshift({
-            day: state.day,
+            day: appState.day,
             type: '買進',
             symbol,
             quantity: shares,
@@ -374,7 +512,8 @@
         el('cps-new-symbol').value = '';
         el('cps-new-name').value = '';
         el('cps-new-shares').value = '0';
-        setAddFeedback('已加入 ' + symbol + '，目前可用現金 ' + money0.format(state.cash), false);
+        const sharedPriceNote = existingQuote ? '（沿用 SM/WL 共用行情 ' + money2.format(price) + '）' : '';
+        setAddFeedback('已加入 ' + symbol + sharedPriceNote + '，目前可用現金 ' + money0.format(state.cash), false);
         render();
         el('cps-trade-symbol').value = String(holding.id);
         renderTradePrice();
@@ -384,12 +523,16 @@
         const holding = state.holdings.find((item) => item.id === id);
         if (!holding || holding.shares !== 0 || pledgedSharesFor(id) > 0) return;
         state.holdings = state.holdings.filter((item) => item.id !== id);
+        const stillUsed = ACCOUNT_IDS.some((accountId) => {
+          return appState.accounts[accountId].holdings.some((item) => item.symbol === holding.symbol);
+        });
+        if (!stillUsed) delete appState.market[holding.symbol];
         setAddFeedback('已移除 ' + holding.symbol, false);
         render();
       }
 
       function clearMoves() {
-        state.holdings.forEach((holding) => { holding.move = 0; });
+        Object.keys(appState.market).forEach((symbol) => setMarketMove(symbol, 0));
         el('cps-benchmark-move').value = '0';
         renderHoldings();
         renderScenarioPreview();
@@ -397,21 +540,29 @@
 
       function applyDay() {
         const benchmarkMove = Math.max(-100, Math.min(100, Number(el('cps-benchmark-move').value) || 0));
-        const before = totalAssets();
-        state.holdings.forEach((holding) => {
-          const move = Math.max(-100, Math.min(100, Number(holding.move) || 0));
-          holding.price = Math.max(0.01, holding.price * (1 + move / 100));
+        captureAccountSettings();
+        const before = {};
+        ACCOUNT_IDS.forEach((accountId) => {
+          before[accountId] = totalAssetsFor(appState.accounts[accountId]);
         });
-        state.benchmark = Math.max(0.01, state.benchmark * (1 + benchmarkMove / 100));
-        state.loans.forEach((loan) => {
-          if (loan.balance > 0) loan.accruedInterest += Calc.dailyInterest(loan);
+        Object.values(appState.market).forEach((quote) => {
+          const move = Math.max(-100, Math.min(100, Number(quote.move) || 0));
+          quote.price = Math.max(0.01, quote.price * (1 + move / 100));
         });
-        state.day += 1;
-        const after = totalAssets();
-        state.lastDailyPnl = after - before;
-        state.lastDailyReturn = before > 0 ? (after / before - 1) * 100 : 0;
-        state.lastBenchmarkReturn = benchmarkMove;
-        recordHistory(false);
+        appState.benchmark = Math.max(0.01, appState.benchmark * (1 + benchmarkMove / 100));
+        appState.day += 1;
+        appState.lastBenchmarkReturn = benchmarkMove;
+        ACCOUNT_IDS.forEach((accountId) => {
+          const account = appState.accounts[accountId];
+          syncAccountPrices(account);
+          account.loans.forEach((loan) => {
+            if (loan.balance > 0) loan.accruedInterest += Calc.dailyInterest(loan);
+          });
+          const after = totalAssetsFor(account);
+          account.lastDailyPnl = after - before[accountId];
+          account.lastDailyReturn = before[accountId] > 0 ? (after / before[accountId] - 1) * 100 : 0;
+          recordHistoryFor(account, false);
+        });
         render();
       }
 
@@ -448,7 +599,7 @@
         holding.shares += quantity;
         holding.averageCost = (previousBookCost + cost) / holding.shares;
         state.transactions.unshift({
-          day: state.day,
+          day: appState.day,
           type: '買進',
           symbol: holding.symbol,
           quantity,
@@ -488,7 +639,7 @@
         state.realizedPnl += realized;
         if (holding.shares === 0) holding.averageCost = 0;
         state.transactions.unshift({
-          day: state.day,
+          day: appState.day,
           type: '賣出',
           symbol: holding.symbol,
           quantity,
@@ -558,7 +709,7 @@
           accruedInterest: 0,
           annualRate,
           termMonths,
-          createdDay: state.day,
+          createdDay: appState.day,
           collateralHoldingId,
           pledgedShares,
           warningRatio
@@ -611,26 +762,38 @@
       }
 
       function renderSummary() {
-        const total = totalAssets();
-        const debt = totalDebt();
-        const exposure = totalExposure();
-        const exposureRate = Calc.exposureRatio(exposure, grossAssets());
-        const totalPnl = total - state.startingCapital;
-        const activePledges = state.loans.filter((loan) => loan.type === 'pledge' && isLoanActive(loan));
-        const lowestPledge = activePledges.reduce((lowest, loan) => {
-          if (!lowest) return loan;
-          return maintenanceRatio(loan) < maintenanceRatio(lowest) ? loan : lowest;
+        const total = householdTotalAssets();
+        const gross = householdGrossAssets();
+        const debt = householdDebt();
+        const exposure = householdExposure();
+        const cash = householdSum((account) => account.cash);
+        const exposureRate = Calc.exposureRatio(exposure, gross);
+        const totalPnl = total - householdStartingCapital();
+        const dailyPnl = householdSum((account) => account.lastDailyPnl);
+        const previousTotal = total - dailyPnl;
+        const dailyReturn = previousTotal > 0 ? dailyPnl / previousTotal * 100 : 0;
+        const pledges = [];
+        ACCOUNT_IDS.forEach((accountId) => {
+          const account = appState.accounts[accountId];
+          account.loans
+            .filter((loan) => loan.type === 'pledge' && isLoanActive(loan))
+            .forEach((loan) => {
+              pledges.push({ accountId, loan, ratio: maintenanceRatioFor(account, loan) });
+            });
+        });
+        const lowestPledge = pledges.reduce((lowest, item) => {
+          return !lowest || item.ratio < lowest.ratio ? item : lowest;
         }, null);
-        const minimumRatio = lowestPledge ? maintenanceRatio(lowestPledge) : null;
-        const warningRatio = lowestPledge ? lowestPledge.warningRatio : 130;
+        const minimumRatio = lowestPledge ? lowestPledge.ratio : null;
+        const warningRatio = lowestPledge ? lowestPledge.loan.warningRatio : 130;
         const hasPledgeWarning = minimumRatio !== null && minimumRatio < warningRatio;
         el('cps-total-assets').textContent = money0.format(total);
-        el('cps-asset-breakdown').textContent = '總資產 ' + money0.format(grossAssets()) + ' · 負債 ' + money0.format(debt);
+        el('cps-asset-breakdown').textContent = 'SM + WL 總資產 ' + money0.format(gross) + ' · 負債 ' + money0.format(debt);
         el('cps-total-exposure').textContent = money0.format(exposure);
-        el('cps-exposure-ratio').textContent = '曝險率 ' + exposureRate.toFixed(2) + '% · 現金 ' + money0.format(state.cash);
-        el('cps-daily-pnl').textContent = signedMoney(state.lastDailyPnl);
-        el('cps-daily-pnl').classList.toggle('text-destructive', state.lastDailyPnl < 0);
-        el('cps-daily-return').textContent = '組合 ' + signedPercent(state.lastDailyReturn) + ' · 大盤 ' + signedPercent(state.lastBenchmarkReturn);
+        el('cps-exposure-ratio').textContent = '家庭曝險率 ' + exposureRate.toFixed(2) + '% · 現金 ' + money0.format(cash);
+        el('cps-daily-pnl').textContent = signedMoney(dailyPnl);
+        el('cps-daily-pnl').classList.toggle('text-destructive', dailyPnl < 0);
+        el('cps-daily-return').textContent = '家庭 ' + signedPercent(dailyReturn) + ' · 大盤 ' + signedPercent(appState.lastBenchmarkReturn);
         el('cps-total-pnl').textContent = signedMoney(totalPnl);
         el('cps-total-pnl').classList.toggle('text-destructive', totalPnl < 0);
         el('cps-risk-summary').textContent = '最大回撤 ' + signedPercent(maximumDrawdown()) + ' · 維持率 ' + (minimumRatio === null ? '—' : minimumRatio.toFixed(1) + '%');
@@ -648,15 +811,22 @@
           meter.setAttribute('aria-valuemin', '0');
           meter.setAttribute('aria-valuemax', scaleMax.toFixed(0));
           meter.setAttribute('aria-valuenow', minimumRatio.toFixed(1));
-          meter.setAttribute('aria-valuetext', '最低維持率 ' + minimumRatio.toFixed(1) + '%，警示線 ' + warningRatio.toFixed(1) + '%');
+          meter.setAttribute(
+            'aria-valuetext',
+            (lowestPledge ? ACCOUNT_LABELS[lowestPledge.accountId] : '') + '最低維持率 ' +
+              minimumRatio.toFixed(1) + '%，警示線 ' + warningRatio.toFixed(1) + '%'
+          );
         }
-        el('cps-day-badge').textContent = '第 ' + state.day + ' 天';
+        el('cps-day-badge').textContent = '第 ' + appState.day + ' 天';
       }
 
       function renderAssetRegister() {
-        const stockValue = holdingsValue();
-        const gross = grossAssets();
-        const values = [state.cash, stockValue, state.realEstate, state.vehicles];
+        const householdCash = householdSum((account) => account.cash);
+        const stockValue = householdSum(holdingsValueFor);
+        const realEstate = householdSum((account) => account.realEstate);
+        const vehicles = householdSum((account) => account.vehicles);
+        const gross = householdGrossAssets();
+        const values = [householdCash, stockValue, realEstate, vehicles];
         const inputPairs = [
           ['cps-cash-value', state.cash],
           ['cps-real-estate-value', state.realEstate],
@@ -670,17 +840,35 @@
         ['cps-mix-cash', 'cps-mix-stocks', 'cps-mix-property', 'cps-mix-vehicle'].forEach((id, index) => {
           el(id).style.width = (gross > 0 ? values[index] / gross * 100 : 0).toFixed(3) + '%';
         });
-        el('cps-legend-cash').textContent = money0.format(state.cash);
+        el('cps-legend-cash').textContent = money0.format(householdCash);
         el('cps-legend-stocks').textContent = money0.format(stockValue);
-        el('cps-legend-property').textContent = money0.format(state.realEstate);
-        el('cps-legend-vehicle').textContent = money0.format(state.vehicles);
+        el('cps-legend-property').textContent = money0.format(realEstate);
+        el('cps-legend-vehicle').textContent = money0.format(vehicles);
 
         const labels = ['現金', '股票', '房地產', '汽車'];
         const allocation = labels.map((label, index) => {
           const ratio = gross > 0 ? values[index] / gross * 100 : 0;
           return label + ' ' + ratio.toFixed(1) + '%';
         }).join('，');
-        el('cps-asset-mix').setAttribute('aria-label', '資產配置：' + allocation);
+        el('cps-asset-mix').setAttribute('aria-label', 'SM 與 WL 家庭資產配置：' + allocation);
+      }
+
+      function renderAccountContext() {
+        ACCOUNT_IDS.forEach((accountId) => {
+          const button = el('cps-account-' + accountId.toLowerCase());
+          const selected = appState.activeAccountId === accountId;
+          button.classList.toggle('is-active', selected);
+          button.setAttribute('aria-selected', selected ? 'true' : 'false');
+          button.tabIndex = selected ? 0 : -1;
+        });
+        const label = ACCOUNT_LABELS[appState.activeAccountId];
+        el('cps-active-account-name').textContent = label;
+        el('cps-account-assets-title').textContent = label + '資產設定';
+        el('cps-chart-account-label').textContent = label + '淨資產報酬率';
+        el('cps-account-net').textContent = money0.format(totalAssets());
+        el('cps-account-gross').textContent = money0.format(grossAssets());
+        el('cps-account-debt').textContent = money0.format(totalDebt());
+        el('cps-account-exposure').textContent = money0.format(totalExposure());
       }
 
       function renderScenarioPreview() {
@@ -700,6 +888,7 @@
       }
 
       function renderHoldings() {
+        syncAccountPrices(state);
         const body = el('cps-holdings-body');
         const total = grossAssets();
         if (!state.holdings.length) {
@@ -745,7 +934,7 @@
           input.addEventListener('input', (event) => {
             const id = Number(event.target.dataset.moveId);
             const holding = state.holdings.find((item) => item.id === id);
-            if (holding) holding.move = Math.max(-100, Math.min(100, Number(event.target.value) || 0));
+            if (holding) setMarketMove(holding.symbol, event.target.value);
             renderScenarioPreview();
           });
         });
@@ -1007,72 +1196,174 @@
       }
 
 
+      function captureAccountSettings() {
+        if (!state.settings) state.settings = {};
+        state.settings.startingCapitalInput = el('cps-starting-capital').value;
+        state.settings.commissionRate = el('cps-commission-rate').value;
+        state.settings.taxRate = el('cps-tax-rate').value;
+      }
+
+      function applyAccountSettings() {
+        const settings = state.settings || {};
+        el('cps-starting-capital').value = settings.startingCapitalInput !== undefined
+          ? settings.startingCapitalInput
+          : String(state.startingCapital);
+        el('cps-commission-rate').value = settings.commissionRate !== undefined ? settings.commissionRate : '0.1425';
+        el('cps-tax-rate').value = settings.taxRate !== undefined ? settings.taxRate : '0.3';
+      }
+
+      function switchAccount(accountId) {
+        if (!ACCOUNT_IDS.includes(accountId) || accountId === appState.activeAccountId) return;
+        captureAccountSettings();
+        setAutoPlaying(false);
+        appState.activeAccountId = accountId;
+        state = appState.accounts[accountId];
+        applyAccountSettings();
+        setAssetFeedback('正在編輯 ' + ACCOUNT_LABELS[accountId], false);
+        setAddFeedback('目前正在管理 ' + ACCOUNT_LABELS[accountId], false);
+        setTradeFeedback('交易只會記入 ' + ACCOUNT_LABELS[accountId], false);
+        setLoanFeedback('借貸只會記入 ' + ACCOUNT_LABELS[accountId], false);
+        setRepayFeedback(state.loans.some(isLoanActive) ? '可選擇貸款進行還款' : '目前沒有待還款貸款', false);
+        render();
+      }
+
       function settingsSnapshot() {
+        captureAccountSettings();
         return {
-          startingCapitalInput: el('cps-starting-capital').value,
-          benchmarkMove: el('cps-benchmark-move').value,
-          commissionRate: el('cps-commission-rate').value,
-          taxRate: el('cps-tax-rate').value
+          benchmarkMove: el('cps-benchmark-move').value
+        };
+      }
+
+      function serializeBaseline(baseline) {
+        if (!baseline) return null;
+        return {
+          ...baseline,
+          holdings: baseline.holdings.map((holding) => ({ ...holding })),
+          loans: baseline.loans.map((loan) => ({ ...loan })),
+          transactions: baseline.transactions.map((transaction) => ({ ...transaction }))
+        };
+      }
+
+      function serializeAccount(account) {
+        return {
+          ...account,
+          holdings: account.holdings.map((holding) => ({ ...holding })),
+          loans: account.loans.map((loan) => ({ ...loan })),
+          history: account.history.map((point) => ({ ...point })),
+          transactions: account.transactions.map((transaction) => ({ ...transaction })),
+          settings: { ...account.settings },
+          baseline: serializeBaseline(account.baseline)
         };
       }
 
       function exportPayload() {
-        const serializableState = {
-          ...state,
-          timer: null,
-          holdings: state.holdings.map((holding) => ({ ...holding })),
-          loans: state.loans.map((loan) => ({ ...loan })),
-          history: state.history.map((point) => ({ ...point })),
-          transactions: state.transactions.map((transaction) => ({ ...transaction })),
-          baseline: state.baseline ? {
-            ...state.baseline,
-            holdings: state.baseline.holdings.map((holding) => ({ ...holding })),
-            loans: state.baseline.loans.map((loan) => ({ ...loan })),
-            transactions: state.baseline.transactions.map((transaction) => ({ ...transaction }))
-          } : null
-        };
+        const settings = settingsSnapshot();
         return {
           app: 'stock-portfolio-simulator',
-          version: 2,
+          version: 3,
           savedAt: new Date().toISOString(),
-          state: serializableState,
-          settings: settingsSnapshot()
+          state: {
+            activeAccountId: appState.activeAccountId,
+            day: appState.day,
+            benchmark: appState.benchmark,
+            lastBenchmarkReturn: appState.lastBenchmarkReturn,
+            market: Object.fromEntries(
+              Object.entries(appState.market).map(([symbol, quote]) => [symbol, { ...quote }])
+            ),
+            accounts: {
+              SM: serializeAccount(appState.accounts.SM),
+              WL: serializeAccount(appState.accounts.WL)
+            }
+          },
+          settings
         };
       }
 
-      function applySavedSettings(settings) {
-        if (!settings) return;
-        if (settings.startingCapitalInput !== undefined) el('cps-starting-capital').value = settings.startingCapitalInput;
-        if (settings.benchmarkMove !== undefined) el('cps-benchmark-move').value = settings.benchmarkMove;
-        if (settings.commissionRate !== undefined) el('cps-commission-rate').value = settings.commissionRate;
-        if (settings.taxRate !== undefined) el('cps-tax-rate').value = settings.taxRate;
+      function normalizeBaseline(baseline) {
+        if (!baseline) return null;
+        return {
+          ...baseline,
+          realEstate: Math.max(0, Number(baseline.realEstate) || 0),
+          vehicles: Math.max(0, Number(baseline.vehicles) || 0),
+          holdings: Array.isArray(baseline.holdings) ? baseline.holdings.map((holding) => ({ ...holding })) : [],
+          loans: Array.isArray(baseline.loans) ? baseline.loans.map((loan) => ({ ...loan })) : [],
+          transactions: Array.isArray(baseline.transactions) ? baseline.transactions.map((transaction) => ({ ...transaction })) : []
+        };
       }
 
-      function restorePayload(payload, announce) {
-        const saved = payload.state;
-        const savedBaseline = saved.baseline ? {
-          ...saved.baseline,
-          realEstate: Math.max(0, Number(saved.baseline.realEstate) || 0),
-          vehicles: Math.max(0, Number(saved.baseline.vehicles) || 0),
-          holdings: saved.baseline.holdings.map((holding) => ({ ...holding })),
-          loans: saved.baseline.loans.map((loan) => ({ ...loan })),
-          transactions: saved.baseline.transactions.map((transaction) => ({ ...transaction }))
-        } : null;
-        Object.assign(state, saved, {
-          timer: null,
+      function normalizeAccount(saved, fallbackCapital = 0, legacySettings = null) {
+        const account = createAccount(saved && saved.startingCapital !== undefined ? saved.startingCapital : fallbackCapital);
+        if (!saved) return account;
+        Object.assign(account, saved, {
+          startingCapital: Math.max(0, Number(saved.startingCapital) || 0),
+          cash: Math.max(0, Number(saved.cash) || 0),
           realEstate: Math.max(0, Number(saved.realEstate) || 0),
           vehicles: Math.max(0, Number(saved.vehicles) || 0),
           holdings: saved.holdings.map((holding) => ({ ...holding })),
           loans: saved.loans.map((loan) => ({ ...loan })),
           history: saved.history.map((point) => ({ ...point })),
           transactions: saved.transactions.map((transaction) => ({ ...transaction })),
-          baseline: savedBaseline
+          settings: {
+            ...account.settings,
+            ...(legacySettings || {}),
+            ...(saved.settings || {})
+          },
+          baseline: normalizeBaseline(saved.baseline)
+        });
+        return account;
+      }
+
+      function applySavedSettings(settings) {
+        if (settings && settings.benchmarkMove !== undefined) {
+          el('cps-benchmark-move').value = settings.benchmarkMove;
+        }
+        applyAccountSettings();
+      }
+
+      function restorePayload(payload, announce) {
+        const saved = payload.state;
+        setAutoPlaying(false);
+        if (payload.version === 3 && saved.accounts) {
+          appState.activeAccountId = ACCOUNT_IDS.includes(saved.activeAccountId) ? saved.activeAccountId : 'SM';
+          appState.day = Math.max(0, Math.floor(Number(saved.day) || 0));
+          appState.benchmark = Math.max(0.01, Number(saved.benchmark) || 100);
+          appState.lastBenchmarkReturn = Number(saved.lastBenchmarkReturn) || 0;
+          appState.accounts.SM = normalizeAccount(saved.accounts.SM);
+          appState.accounts.WL = normalizeAccount(saved.accounts.WL);
+          appState.market = Object.fromEntries(
+            Object.entries(saved.market || {}).map(([symbol, quote]) => [symbol, {
+              price: Math.max(0.01, Number(quote.price) || 0.01),
+              move: Math.max(-100, Math.min(100, Number(quote.move) || 0)),
+              name: quote.name || symbol
+            }])
+          );
+        } else {
+          const legacySettings = {
+            startingCapitalInput: payload.settings && payload.settings.startingCapitalInput,
+            commissionRate: payload.settings && payload.settings.commissionRate,
+            taxRate: payload.settings && payload.settings.taxRate
+          };
+          appState.activeAccountId = 'SM';
+          appState.day = Math.max(0, Math.floor(Number(saved.day) || 0));
+          appState.benchmark = Math.max(0.01, Number(saved.benchmark) || 100);
+          appState.lastBenchmarkReturn = Number(saved.lastBenchmarkReturn) || 0;
+          appState.accounts.SM = normalizeAccount(saved, 0, legacySettings);
+          appState.accounts.WL = createAccount(0);
+          appState.market = {};
+        }
+        rebuildMarketFromAccounts(false);
+        state = appState.accounts[appState.activeAccountId];
+        ACCOUNT_IDS.forEach((accountId) => {
+          const account = appState.accounts[accountId];
+          if (!account.history.length) recordHistoryFor(account, false);
+          if (!account.baseline) updateBaseline(account, true);
         });
         applySavedSettings(payload.settings);
-        if (!state.history.length) recordHistory(false);
         if (announce) {
-          setAddFeedback('資料匯入完成，共 ' + state.holdings.length + ' 檔股票、' + state.loans.length + ' 筆貸款', false);
-          setTradeFeedback('帳戶狀態已恢復', false);
+          const stockCount = householdSum((account) => account.holdings.length);
+          const loanCount = householdSum((account) => account.loans.length);
+          setAddFeedback('SM/WL 資料匯入完成，共 ' + stockCount + ' 檔帳戶持股、' + loanCount + ' 筆貸款', false);
+          setTradeFeedback('兩個帳戶狀態已恢復', false);
         }
       }
 
@@ -1256,9 +1547,10 @@
       }
 
       function render() {
-        if (state.day === 0) updateBaseline();
+        if (appState.day === 0) ACCOUNT_IDS.forEach((accountId) => updateBaseline(appState.accounts[accountId]));
         renderSummary();
         renderAssetRegister();
+        renderAccountContext();
         renderHoldings();
         renderScenarioPreview();
         renderTradeSelect();
@@ -1277,11 +1569,13 @@
       el('cps-drive-load').addEventListener('click', loadFromDrive);
       el('cps-drive-apply-client').addEventListener('click', applyDriveClientId);
       el('cps-drive-clear-client').addEventListener('click', clearDriveConnection);
+      el('cps-account-sm').addEventListener('click', () => switchAccount('SM'));
+      el('cps-account-wl').addEventListener('click', () => switchAccount('WL'));
       el('cps-apply-assets').addEventListener('click', applyAssetValues);
       el('cps-reset-account').addEventListener('click', resetAccount);
       el('cps-add-stock').addEventListener('click', addStock);
       el('cps-apply-day').addEventListener('click', applyDay);
-      el('cps-auto').addEventListener('click', () => setAutoPlaying(!state.timer));
+      el('cps-auto').addEventListener('click', () => setAutoPlaying(!appState.timer));
       el('cps-reset-simulation').addEventListener('click', resetSimulation);
       el('cps-benchmark-move').addEventListener('input', renderScenarioPreview);
       el('cps-trade-symbol').addEventListener('change', renderTradePrice);
@@ -1315,7 +1609,14 @@
 
       const savedPayload = Storage.load();
       if (savedPayload) restorePayload(savedPayload, false);
-      else recordHistory(false);
+      else {
+        ACCOUNT_IDS.forEach((accountId) => {
+          recordHistoryFor(appState.accounts[accountId], false);
+          updateBaseline(appState.accounts[accountId], true);
+        });
+        rebuildMarketFromAccounts(false);
+        applyAccountSettings();
+      }
       refreshDriveControls();
       el('cps-drive-settings').open = !Drive || !Drive.isConfigured();
       render();

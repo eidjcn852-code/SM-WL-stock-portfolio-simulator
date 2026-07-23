@@ -2,15 +2,22 @@
   'use strict';
 
   const STORAGE_KEY = 'stock-portfolio-simulator-v1';
-  const SUPPORTED_VERSIONS = new Set([1, 2]);
+  const SUPPORTED_VERSIONS = new Set([1, 2, 3]);
 
   function validate(payload) {
     if (!payload || payload.app !== 'stock-portfolio-simulator' || !SUPPORTED_VERSIONS.has(payload.version)) {
       throw new Error('不是支援的模擬器備份格式');
     }
     const state = payload.state;
-    if (!state || !Array.isArray(state.holdings) || !Array.isArray(state.loans) ||
-        !Array.isArray(state.history) || !Array.isArray(state.transactions)) {
+    const hasAccountData = (account) => account &&
+      Array.isArray(account.holdings) &&
+      Array.isArray(account.loans) &&
+      Array.isArray(account.history) &&
+      Array.isArray(account.transactions);
+    const validState = payload.version === 3
+      ? state && state.accounts && hasAccountData(state.accounts.SM) && hasAccountData(state.accounts.WL)
+      : hasAccountData(state);
+    if (!validState) {
       throw new Error('備份內容不完整');
     }
     return payload;
