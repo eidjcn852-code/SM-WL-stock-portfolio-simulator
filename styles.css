@@ -411,6 +411,95 @@ svg {
       border-top: 1px solid var(--border);
       border-bottom: 1px solid var(--border);
     }
+    #complete-brokerage-simulator .cps-household-register {
+      border-top: 0;
+    }
+    #complete-brokerage-simulator .cps-account-workspace {
+      display: grid;
+      grid-template-columns: auto minmax(220px, 0.7fr) minmax(420px, 1.3fr);
+      align-items: stretch;
+      gap: 16px;
+      padding: 16px 0;
+      border-bottom: 1px solid var(--border);
+    }
+    #complete-brokerage-simulator .cps-account-switcher {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(92px, 1fr));
+      align-self: stretch;
+      padding: 3px;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      background: var(--muted);
+    }
+    #complete-brokerage-simulator .cps-account-tab {
+      display: grid;
+      place-content: center;
+      gap: 1px;
+      min-width: 92px;
+      min-height: 58px;
+      padding: 7px 14px;
+      border: 0;
+      border-radius: 4px;
+      background: transparent;
+      color: var(--muted-foreground);
+      text-align: center;
+    }
+    #complete-brokerage-simulator .cps-account-tab span {
+      font-size: 1rem;
+      font-weight: 600;
+    }
+    #complete-brokerage-simulator .cps-account-tab small {
+      color: inherit;
+      font-size: 0.78rem;
+    }
+    #complete-brokerage-simulator .cps-account-tab.is-active {
+      background: var(--primary);
+      color: var(--primary-foreground);
+    }
+    #complete-brokerage-simulator .cps-account-tab:focus-visible {
+      outline: 2px solid var(--ring);
+      outline-offset: 2px;
+    }
+    #complete-brokerage-simulator .cps-account-heading {
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      gap: 5px;
+      min-width: 0;
+    }
+    #complete-brokerage-simulator .cps-account-heading > div {
+      display: grid;
+      gap: 2px;
+    }
+    #complete-brokerage-simulator .cps-account-heading strong {
+      font-size: 1.15rem;
+      font-weight: 600;
+    }
+    #complete-brokerage-simulator .cps-account-metrics {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      align-items: center;
+      min-width: 0;
+      border-left: 1px solid var(--border);
+    }
+    #complete-brokerage-simulator .cps-account-metrics > span {
+      display: grid;
+      gap: 4px;
+      min-width: 0;
+      padding: 6px 14px;
+      border-right: 1px solid var(--border);
+    }
+    #complete-brokerage-simulator .cps-account-metrics small {
+      color: var(--muted-foreground);
+    }
+    #complete-brokerage-simulator .cps-account-metrics strong {
+      overflow-wrap: anywhere;
+      font-size: 0.98rem;
+      font-weight: 600;
+    }
+    #complete-brokerage-simulator .cps-account-assets {
+      border-top: 0;
+    }
     #complete-brokerage-simulator .cps-asset-editor {
       display: grid;
       grid-template-columns: repeat(3, minmax(150px, 1fr)) auto;
@@ -622,6 +711,12 @@ svg {
       #complete-brokerage-simulator .cps-asset-editor { grid-template-columns: repeat(2, minmax(0, 1fr)); }
       #complete-brokerage-simulator .cps-asset-legend { grid-template-columns: repeat(2, minmax(0, 1fr)); }
       #complete-brokerage-simulator .cps-cloud-config { grid-template-columns: minmax(0, 1fr); }
+      #complete-brokerage-simulator .cps-account-workspace {
+        grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+      }
+      #complete-brokerage-simulator .cps-account-metrics {
+        grid-column: 1 / -1;
+      }
     }
     @media (max-width: 590px) {
       #complete-brokerage-simulator .cps-control-grid { grid-template-columns: minmax(0, 1fr); }
@@ -631,6 +726,12 @@ svg {
       #complete-brokerage-simulator .cps-commandbar { align-items: stretch; }
       #complete-brokerage-simulator .cps-asset-editor { grid-template-columns: minmax(0, 1fr); }
       #complete-brokerage-simulator .cps-asset-apply .btn { width: 100%; }
+      #complete-brokerage-simulator .cps-account-workspace { grid-template-columns: minmax(0, 1fr); }
+      #complete-brokerage-simulator .cps-account-metrics {
+        grid-column: auto;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+      #complete-brokerage-simulator .cps-account-heading { text-align: center; }
     }
     @media (prefers-reduced-motion: reduce) {
       #complete-brokerage-simulator .cps-portfolio-line,

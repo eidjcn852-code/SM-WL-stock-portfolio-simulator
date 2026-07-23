@@ -62,24 +62,24 @@
     </details>
   </details>
 
-<div class="viz-grid" aria-label="投資組合摘要">
+<div class="viz-grid" aria-label="SM 與 WL 家庭資產摘要">
     <div class="card viz-stat">
-      <div class="text-muted">淨資產</div>
+      <div class="text-muted">家庭淨資產</div>
       <div class="viz-stat-value" id="cps-total-assets">NT$1,000,000</div>
       <div id="cps-asset-breakdown">總資產 NT$1,000,000 · 負債 NT$0</div>
     </div>
     <div class="card viz-stat">
-      <div class="text-muted">總曝險</div>
+      <div class="text-muted">家庭總曝險</div>
       <div class="viz-stat-value" id="cps-total-exposure">NT$0</div>
       <div id="cps-exposure-ratio">曝險率 0.00% · 現金 NT$1,000,000</div>
     </div>
     <div class="card viz-stat">
-      <div class="text-muted">今日變動</div>
+      <div class="text-muted">家庭今日變動</div>
       <div class="viz-stat-value" id="cps-daily-pnl">NT$0</div>
       <div id="cps-daily-return">組合 0.00% · 大盤 0.00%</div>
     </div>
     <div class="card viz-stat">
-      <div class="text-muted">累積損益</div>
+      <div class="text-muted">家庭累積損益</div>
       <div class="viz-stat-value" id="cps-total-pnl">NT$0</div>
       <div id="cps-risk-summary">最大回撤 0.00% · 維持率 —</div>
       <div class="cps-maintenance-track" id="cps-maintenance-meter" role="progressbar" aria-label="最低質押維持率" hidden>
@@ -89,10 +89,55 @@
     </div>
   </div>
 
-  <section class="cps-asset-register" aria-label="完整資產與曝險設定">
+  <section class="cps-asset-register cps-household-register" aria-label="SM 與 WL 家庭完整資產">
     <div class="cps-section-head">
-      <span>完整資產</span>
+      <span>家庭完整資產 <span class="viz-badge">SM + WL</span></span>
       <span class="text-small text-muted" id="cps-exposure-definition">總曝險＝股票＋房地產＋汽車</span>
+    </div>
+    <div class="cps-asset-mix" id="cps-asset-mix" role="img" aria-label="現金百分之百">
+      <span class="cps-asset-mix-segment is-cash" id="cps-mix-cash" aria-hidden="true"></span>
+      <span class="cps-asset-mix-segment is-stocks" id="cps-mix-stocks" aria-hidden="true"></span>
+      <span class="cps-asset-mix-segment is-property" id="cps-mix-property" aria-hidden="true"></span>
+      <span class="cps-asset-mix-segment is-vehicle" id="cps-mix-vehicle" aria-hidden="true"></span>
+    </div>
+    <div class="cps-asset-legend text-small">
+      <span><i class="is-cash" aria-hidden="true"></i>現金 <strong id="cps-legend-cash">NT$1,000,000</strong></span>
+      <span><i class="is-stocks" aria-hidden="true"></i>股票 <strong id="cps-legend-stocks">NT$0</strong></span>
+      <span><i class="is-property" aria-hidden="true"></i>房地產 <strong id="cps-legend-property">NT$0</strong></span>
+      <span><i class="is-vehicle" aria-hidden="true"></i>汽車 <strong id="cps-legend-vehicle">NT$0</strong></span>
+    </div>
+  </section>
+
+  <section class="cps-account-workspace" aria-label="帳戶選擇與帳戶摘要">
+    <div class="cps-account-switcher" role="tablist" aria-label="選擇要管理的帳戶">
+      <button class="cps-account-tab is-active" id="cps-account-sm" type="button" role="tab" aria-selected="true">
+        <span>SM</span>
+        <small>我的帳戶</small>
+      </button>
+      <button class="cps-account-tab" id="cps-account-wl" type="button" role="tab" aria-selected="false" tabindex="-1">
+        <span>WL</span>
+        <small>老婆帳戶</small>
+      </button>
+    </div>
+    <div class="cps-account-heading">
+      <div>
+        <span class="text-small text-muted">目前管理</span>
+        <strong id="cps-active-account-name">SM 帳戶</strong>
+      </div>
+      <span class="text-small text-muted">下方操作與紀錄只影響目前帳戶</span>
+    </div>
+    <div class="cps-account-metrics" aria-label="目前帳戶摘要">
+      <span><small>淨資產</small><strong id="cps-account-net">NT$1,000,000</strong></span>
+      <span><small>總資產</small><strong id="cps-account-gross">NT$1,000,000</strong></span>
+      <span><small>負債</small><strong id="cps-account-debt">NT$0</strong></span>
+      <span><small>曝險</small><strong id="cps-account-exposure">NT$0</strong></span>
+    </div>
+  </section>
+
+  <section class="cps-asset-register cps-account-assets" aria-label="目前帳戶完整資產設定">
+    <div class="cps-section-head">
+      <span id="cps-account-assets-title">SM 帳戶資產設定</span>
+      <span class="text-small text-muted">現金可用於股票交易與償還貸款</span>
     </div>
     <div class="cps-asset-editor">
       <label class="form-label cps-field" for="cps-cash-value">
@@ -108,22 +153,10 @@
         <input class="form-control" id="cps-vehicle-value" type="number" min="0" step="10000" value="0" inputmode="numeric">
       </label>
       <div class="cps-asset-apply">
-        <button class="btn btn-primary" id="cps-apply-assets" type="button"><i data-lucide="wallet-cards" aria-hidden="true"></i>更新資產</button>
+        <button class="btn btn-primary" id="cps-apply-assets" type="button"><i data-lucide="wallet-cards" aria-hidden="true"></i>更新此帳戶</button>
       </div>
     </div>
-    <div class="cps-asset-mix" id="cps-asset-mix" role="img" aria-label="現金百分之百">
-      <span class="cps-asset-mix-segment is-cash" id="cps-mix-cash" aria-hidden="true"></span>
-      <span class="cps-asset-mix-segment is-stocks" id="cps-mix-stocks" aria-hidden="true"></span>
-      <span class="cps-asset-mix-segment is-property" id="cps-mix-property" aria-hidden="true"></span>
-      <span class="cps-asset-mix-segment is-vehicle" id="cps-mix-vehicle" aria-hidden="true"></span>
-    </div>
-    <div class="cps-asset-legend text-small">
-      <span><i class="is-cash" aria-hidden="true"></i>現金 <strong id="cps-legend-cash">NT$1,000,000</strong></span>
-      <span><i class="is-stocks" aria-hidden="true"></i>股票 <strong id="cps-legend-stocks">NT$0</strong></span>
-      <span><i class="is-property" aria-hidden="true"></i>房地產 <strong id="cps-legend-property">NT$0</strong></span>
-      <span><i class="is-vehicle" aria-hidden="true"></i>汽車 <strong id="cps-legend-vehicle">NT$0</strong></span>
-    </div>
-    <div class="text-small" id="cps-asset-feedback" aria-live="polite">現金可用於股票交易與償還貸款</div>
+    <div class="text-small" id="cps-asset-feedback" aria-live="polite">正在編輯 SM 帳戶</div>
   </section>
 
     <div class="cps-main-grid">
@@ -134,7 +167,7 @@
         <span class="cps-swatch cps-swatch-portfolio" aria-hidden="true"></span><span>投資組合</span>
         <span class="cps-swatch cps-swatch-benchmark" aria-hidden="true"></span><span>大盤基準</span>
       </div>
-      <span class="text-small text-muted">淨資產報酬率</span>
+      <span class="text-small text-muted" id="cps-chart-account-label">SM 帳戶淨資產報酬率</span>
     </div>
     <div class="cps-chart-wrap" id="cps-chart-wrap">
       <svg id="cps-chart" role="img" aria-labelledby="cps-chart-title cps-chart-desc">
@@ -155,9 +188,9 @@
 
       </div>
     <aside class="cps-session-rail">
-<section class="card cps-panel cps-session-panel" aria-label="帳戶與每日行情設定">
+<section class="card cps-panel cps-session-panel" aria-label="目前帳戶與共用每日行情設定">
     <div class="cps-section-head">
-      <span>行情設定</span>
+      <span>帳戶與共用行情</span>
       <i data-lucide="sliders-horizontal" aria-hidden="true"></i>
     </div>
     <div class="cps-side-grid">
