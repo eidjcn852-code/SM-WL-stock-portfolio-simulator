@@ -702,6 +702,12 @@ svg {
     }
     #complete-brokerage-simulator .cps-threshold-input { min-width: 82px; max-width: 110px; }
     #complete-brokerage-simulator .cps-move-input { min-width: 92px; }
+    #complete-brokerage-simulator .cps-exposure-cell { min-width: 120px; }
+    #complete-brokerage-simulator .cps-exposure-input {
+      min-width: 82px;
+      max-width: 96px;
+      margin-left: auto;
+    }
     #complete-brokerage-simulator .cps-symbol { font-weight: 500; }
     #complete-brokerage-simulator summary { cursor: pointer; }
     @media (max-width: 760px) {

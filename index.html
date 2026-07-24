@@ -92,7 +92,7 @@
   <section class="cps-asset-register cps-household-register" aria-label="SM 與 WL 家庭完整資產">
     <div class="cps-section-head">
       <span>家庭完整資產 <span class="viz-badge">SM + WL</span></span>
-      <span class="text-small text-muted" id="cps-exposure-definition">總曝險＝股票＋房地產＋汽車</span>
+      <span class="text-small text-muted" id="cps-exposure-definition">總曝險＝股票市值×曝險倍數＋房地產＋汽車</span>
     </div>
     <div class="cps-asset-mix" id="cps-asset-mix" role="img" aria-label="現金百分之百">
       <span class="cps-asset-mix-segment is-cash" id="cps-mix-cash" aria-hidden="true"></span>
@@ -245,6 +245,12 @@
         <input class="form-control" id="cps-new-shares" type="number" min="0" step="100" value="0" inputmode="numeric">
       </label>
     </div>
+    <div class="cps-control-grid">
+      <label class="form-label cps-field" for="cps-new-exposure-multiplier">
+        <span>曝險倍數</span>
+        <input class="form-control" id="cps-new-exposure-multiplier" type="number" min="0.1" max="10" step="0.1" value="1" inputmode="decimal">
+      </label>
+    </div>
     <div class="cps-toolbar">
       <span class="text-small" id="cps-add-feedback" aria-live="polite">持股建檔不會動用帳戶現金</span>
       <button class="btn btn-primary" id="cps-add-stock" type="button"><i data-lucide="plus" aria-hidden="true"></i>加入既有持股</button>
@@ -306,13 +312,14 @@
             <th class="text-end">現價</th>
             <th class="text-end">市值／損益</th>
             <th class="text-end">權重</th>
+            <th class="text-end">曝險倍數</th>
             <th class="text-end">今日漲跌</th>
             <th class="text-end">預估貢獻</th>
             <th><span class="sr-only">操作</span></th>
           </tr>
         </thead>
         <tbody id="cps-holdings-body">
-          <tr><td colspan="8" class="text-center text-muted">請先新增股票</td></tr>
+          <tr><td colspan="9" class="text-center text-muted">請先新增股票</td></tr>
         </tbody>
       </table>
     </div>
