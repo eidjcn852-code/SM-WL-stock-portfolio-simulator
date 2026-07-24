@@ -14,6 +14,7 @@ const tokenClient = {
   requestAccessToken(options) {
     tokenRequestCount += 1;
     assert.equal(options.prompt, '');
+    assert.equal(options.login_hint, 'eidjcn852@gmail.com');
     this.callback({ access_token: 'test-access-token', expires_in: 3600 });
   }
 };
@@ -30,6 +31,7 @@ const window = {
         initTokenClient(options) {
           assert.match(options.client_id, /\.apps\.googleusercontent\.com$/);
           assert.equal(options.scope, 'https://www.googleapis.com/auth/drive.file');
+          assert.equal(options.login_hint, 'eidjcn852@gmail.com');
           return tokenClient;
         },
         revoke(token, callback) {
@@ -77,8 +79,13 @@ async function main() {
 
   drive.setClientId('123456789-test.apps.googleusercontent.com');
   assert.equal(drive.isConfigured(), true);
+  responses.push({
+    status: 200,
+    body: { user: { displayName: 'Vic Su', emailAddress: 'eidjcn852@gmail.com' } }
+  });
   await drive.connect();
   assert.equal(drive.isConnected(), true);
+  assert.equal(drive.getConnectedAccountEmail(), 'eidjcn852@gmail.com');
   assert.equal(tokenRequestCount, 1);
   await drive.connect();
   assert.equal(tokenRequestCount, 1, 'valid access tokens should be reused');
@@ -89,10 +96,10 @@ async function main() {
   );
   const created = await drive.save(payload);
   assert.equal(created.created, true);
-  assert.match(requests[1].url, /uploadType=multipart/);
-  assert.equal(requests[1].options.method, 'POST');
-  assert.match(requests[1].options.body, /stock-portfolio-simulator-cloud\.json/);
-  assert.match(requests[1].options.body, /"version": 2/);
+  assert.match(requests[2].url, /uploadType=multipart/);
+  assert.equal(requests[2].options.method, 'POST');
+  assert.match(requests[2].options.body, /stock-portfolio-simulator-cloud\.json/);
+  assert.match(requests[2].options.body, /"version": 2/);
 
   responses.push(
     { status: 200, body: { files: [{ id: 'created-file', name: drive.FILE_NAME }] } },
@@ -100,8 +107,8 @@ async function main() {
   );
   const updated = await drive.save(payload);
   assert.equal(updated.created, false);
-  assert.equal(requests[3].options.method, 'PATCH');
-  assert.match(requests[3].url, /files\/created-file/);
+  assert.equal(requests[4].options.method, 'PATCH');
+  assert.match(requests[4].url, /files\/created-file/);
 
   responses.push(
     { status: 200, body: { files: [{ id: 'created-file', name: drive.FILE_NAME }] } },
@@ -110,11 +117,24 @@ async function main() {
   const loaded = await drive.load();
   assert.equal(loaded.file.id, 'created-file');
   assert.equal(loaded.payload.app, 'stock-portfolio-simulator');
-  assert.match(requests[5].url, /alt=media/);
+  assert.match(requests[6].url, /alt=media/);
 
   await drive.disconnect();
   assert.equal(revokedToken, 'test-access-token');
   assert.equal(drive.isConnected(), false);
+
+  drive.setClientId('123456789-test.apps.googleusercontent.com');
+  responses.push({
+    status: 200,
+    body: { user: { displayName: 'Other User', emailAddress: 'other@example.com' } }
+  });
+  await assert.rejects(
+    drive.connect(),
+    (error) => error && error.code === 'ACCOUNT_MISMATCH'
+  );
+  assert.equal(drive.isConnected(), false);
+  assert.equal(tokenRequestCount, 2);
+
   drive.clearClientId();
   assert.equal(drive.isConfigured(), false);
 

@@ -15,12 +15,16 @@ assert.match(html, /js\/google-drive\.js/);
 assert.match(html, /id="cps-account-sm"/);
 assert.match(html, /id="cps-account-wl"/);
 assert.match(html, /id="cps-new-exposure-multiplier"/);
+assert.match(html, /自動雲端帳戶：<strong>eidjcn852@gmail\.com<\/strong>/);
 assert.match(app, /version: 3/);
 assert.match(app, /accounts:\s*\{\s*SM:/);
 assert.match(app, /payload\.version === 3/);
 assert.match(app, /data-exposure-id/);
 assert.match(app, /=== '00631L' \? 2 : 1/);
 assert.match(app, /Calc\.exposureRatio\(exposure, total\)/);
+assert.match(app, /function scheduleDriveAutoSave\(\)/);
+assert.match(app, /if \(saved\) scheduleDriveAutoSave\(\)/);
+assert.match(app, /DRIVE_AUTO_SAVE_DELAY = 1500/);
 assert.match(html, /不含汽車與現金/);
 
 const addStockBody = app.slice(app.indexOf('function addStock()'), app.indexOf('function removeStock('));
