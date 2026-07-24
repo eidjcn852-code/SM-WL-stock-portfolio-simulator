@@ -13,7 +13,7 @@ const tokenClient = {
   error_callback() {},
   requestAccessToken(options) {
     tokenRequestCount += 1;
-    assert.equal(options.prompt, 'consent');
+    assert.equal(options.prompt, '');
     this.callback({ access_token: 'test-access-token', expires_in: 3600 });
   }
 };
@@ -80,6 +80,8 @@ async function main() {
   await drive.connect();
   assert.equal(drive.isConnected(), true);
   assert.equal(tokenRequestCount, 1);
+  await drive.connect();
+  assert.equal(tokenRequestCount, 1, 'valid access tokens should be reused');
 
   responses.push(
     { status: 200, body: { files: [] } },
