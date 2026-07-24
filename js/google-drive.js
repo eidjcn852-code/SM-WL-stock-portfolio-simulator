@@ -3,6 +3,7 @@
 
   const CLIENT_ID_KEY = 'stock-portfolio-simulator-google-client-id';
   const SCOPE = 'https://www.googleapis.com/auth/drive.file';
+  const ACCOUNT_EMAIL = 'eidjcn852@gmail.com';
   const FILE_NAME = 'stock-portfolio-simulator-cloud.json';
   const API_ROOT = 'https://www.googleapis.com/drive/v3';
   const UPLOAD_ROOT = 'https://www.googleapis.com/upload/drive/v3';
@@ -15,6 +16,7 @@
   let tokenClientId = '';
   let accessToken = '';
   let accessTokenExpiresAt = 0;
+  let connectedAccountEmail = '';
 
   function driveError(code, message) {
     const error = new Error(message);
@@ -62,6 +64,7 @@
     tokenClientId = '';
     accessToken = '';
     accessTokenExpiresAt = 0;
+    connectedAccountEmail = '';
   }
 
   function isConfigured() {
@@ -100,6 +103,7 @@
       tokenClient = global.google.accounts.oauth2.initTokenClient({
         client_id: clientId,
         scope: SCOPE,
+        login_hint: ACCOUNT_EMAIL,
         callback: function () {}
       });
       tokenClientId = clientId;
@@ -109,11 +113,15 @@
 
   async function connect() {
     if (isConnected()) {
-      return { connected: true, expiresAt: accessTokenExpiresAt };
+      return {
+        connected: true,
+        expiresAt: accessTokenExpiresAt,
+        accountEmail: connectedAccountEmail
+      };
     }
     const client = await getTokenClient();
     return new Promise((resolve, reject) => {
-      client.callback = (response) => {
+      client.callback = async (response) => {
         if (!response || response.error || !response.access_token) {
           reject(driveError('AUTH_FAILED', response && response.error_description
             ? response.error_description
@@ -123,7 +131,26 @@
         accessToken = response.access_token;
         const lifetimeSeconds = Math.max(60, Number(response.expires_in) || 3600);
         accessTokenExpiresAt = Date.now() + Math.max(30, lifetimeSeconds - 60) * 1000;
-        resolve({ connected: true, expiresAt: accessTokenExpiresAt });
+        try {
+          const account = await getAccount();
+          if (account.emailAddress.toLowerCase() !== ACCOUNT_EMAIL.toLowerCase()) {
+            resetSession();
+            reject(driveError(
+              'ACCOUNT_MISMATCH',
+              '目前連接的是 ' + account.emailAddress + '，請改用 ' + ACCOUNT_EMAIL
+            ));
+            return;
+          }
+          connectedAccountEmail = account.emailAddress;
+          resolve({
+            connected: true,
+            expiresAt: accessTokenExpiresAt,
+            accountEmail: connectedAccountEmail
+          });
+        } catch (error) {
+          resetSession();
+          reject(error);
+        }
       };
       client.error_callback = (error) => {
         const message = error && error.type === 'popup_closed'
@@ -133,7 +160,7 @@
       };
       // An empty prompt reuses an existing grant and only asks when Google
       // actually needs first-time consent or a fresh sign-in.
-      client.requestAccessToken({ prompt: '' });
+      client.requestAccessToken({ prompt: '', login_hint: ACCOUNT_EMAIL });
     });
   }
 
@@ -164,6 +191,23 @@
       throw driveError('DRIVE_API_ERROR', message);
     }
     return response;
+  }
+
+  async function getAccount() {
+    const params = new URLSearchParams({
+      fields: 'user(displayName,emailAddress)'
+    });
+    const response = await apiFetch(API_ROOT + '/about?' + params.toString());
+    const result = await response.json();
+    const user = result && result.user ? result.user : {};
+    const emailAddress = String(user.emailAddress || '').trim();
+    if (!emailAddress) {
+      throw driveError('ACCOUNT_UNAVAILABLE', '無法確認目前的 Google Drive 帳戶');
+    }
+    return {
+      displayName: String(user.displayName || '').trim(),
+      emailAddress
+    };
   }
 
   function backupQuery() {
@@ -249,11 +293,14 @@
   }
 
   global.StockSimulatorGoogleDrive = {
+    ACCOUNT_EMAIL,
     FILE_NAME,
     SCOPE,
     clearClientId,
     connect,
     disconnect,
+    getAccount,
+    getConnectedAccountEmail: () => connectedAccountEmail,
     getClientId,
     isConfigured,
     isConnected,

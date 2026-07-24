@@ -9,6 +9,11 @@
 
       const ACCOUNT_IDS = ['SM', 'WL'];
       const ACCOUNT_LABELS = { SM: 'SM 帳戶', WL: 'WL 帳戶' };
+      const DRIVE_AUTO_SAVE_DELAY = 1500;
+      let driveAutoSaveTimer = null;
+      let driveSavePromise = null;
+      let driveSavePending = false;
+      let suspendDriveAutoSave = false;
 
       function createAccount(startingCapital = 0) {
         const capital = Math.max(0, Number(startingCapital) || 0);
@@ -1465,6 +1470,7 @@
         const saved = Storage.save(exportPayload());
         el('cps-save-status').textContent = saved ? '已自動儲存' : '自動儲存不可用';
         el('cps-save-status').classList.toggle('text-destructive', !saved);
+        if (saved) scheduleDriveAutoSave();
       }
 
       async function exportData() {
@@ -1492,6 +1498,54 @@
         status.classList.toggle('text-destructive', Boolean(isError));
       }
 
+      function cancelDriveAutoSave() {
+        if (!driveAutoSaveTimer) return;
+        window.clearTimeout(driveAutoSaveTimer);
+        driveAutoSaveTimer = null;
+      }
+
+      function scheduleDriveAutoSave() {
+        if (
+          suspendDriveAutoSave ||
+          !Drive ||
+          !Drive.isConfigured() ||
+          !Drive.isConnected() ||
+          driveAutoSaveTimer
+        ) return;
+
+        driveAutoSaveTimer = window.setTimeout(async () => {
+          driveAutoSaveTimer = null;
+          try {
+            await performDriveSave(true);
+          } catch (error) {
+            setDriveStatus(error.message || 'Google Drive 自動儲存失敗', true);
+          }
+        }, DRIVE_AUTO_SAVE_DELAY);
+      }
+
+      async function performDriveSave(automatic) {
+        if (driveSavePromise) {
+          driveSavePending = true;
+          return driveSavePromise;
+        }
+
+        if (automatic) setDriveStatus('正在自動儲存到 Google Drive…', false);
+        const payload = exportPayload();
+        driveSavePromise = Drive.save(payload);
+        try {
+          const file = await driveSavePromise;
+          const action = file.created ? '已建立雲端備份' : '已自動更新雲端備份';
+          setDriveStatus(action + '：' + file.name + '（' + Drive.ACCOUNT_EMAIL + '）', false);
+          return file;
+        } finally {
+          driveSavePromise = null;
+          if (driveSavePending) {
+            driveSavePending = false;
+            scheduleDriveAutoSave();
+          }
+        }
+      }
+
       function refreshDriveControls(updateStatus = true) {
         const available = Boolean(Drive);
         const configured = available && Drive.isConfigured();
@@ -1502,14 +1556,14 @@
         el('cps-drive-connect').disabled = !available;
         el('cps-drive-save').disabled = !configured;
         el('cps-drive-load').disabled = !configured;
-        connectLabel.textContent = connected ? 'Drive 已連接' : '連接 Drive';
+        connectLabel.textContent = connected ? 'Drive 自動儲存中' : '連接 Drive';
         el('cps-drive-client-id').value = available ? Drive.getClientId() : '';
-        if (storageMode) storageMode.textContent = connected ? '本機＋Google Drive' : '本機自動儲存';
+        if (storageMode) storageMode.textContent = connected ? '本機＋Drive 自動儲存' : '本機自動儲存';
 
         if (updateStatus) {
           if (!available) setDriveStatus('Google Drive 模組無法載入', true);
-          else if (connected) setDriveStatus('已連接 Google Drive，可直接儲存或載入', false);
-          else if (configured) setDriveStatus('設定已儲存，尚未連接 Google Drive', false);
+          else if (connected) setDriveStatus('已連接 ' + Drive.ACCOUNT_EMAIL + '，資產變更會自動儲存', false);
+          else if (configured) setDriveStatus('設定已儲存，請連接 ' + Drive.ACCOUNT_EMAIL, false);
           else setDriveStatus('尚未設定 Google Drive', false);
         }
       }
@@ -1537,8 +1591,8 @@
         setDriveBusy(true);
         setDriveStatus('正在連接 Google Drive…', false);
         try {
-          await Drive.connect();
-          setDriveStatus('已連接 Google Drive，可直接儲存或載入', false);
+          const connection = await Drive.connect();
+          setDriveStatus('已連接 ' + connection.accountEmail + '，資產變更會自動儲存', false);
           return true;
         } catch (error) {
           setDriveStatus(error.message || 'Google Drive 連接失敗', true);
@@ -1555,14 +1609,14 @@
         }
         setDriveBusy(true);
         try {
+          cancelDriveAutoSave();
           if (!Drive.isConnected()) {
-            setDriveStatus('請在 Google 視窗完成登入…', false);
+            setDriveStatus('請使用 ' + Drive.ACCOUNT_EMAIL + ' 完成登入…', false);
             await Drive.connect();
           }
           setDriveStatus('正在儲存到 Google Drive…', false);
-          const file = await Drive.save(exportPayload());
-          const action = file.created ? '已建立雲端備份' : '已更新雲端備份';
-          setDriveStatus(action + '：' + file.name, false);
+          const file = await performDriveSave(false);
+          setDriveStatus('已立即儲存：' + file.name + '（' + Drive.ACCOUNT_EMAIL + '）', false);
         } catch (error) {
           setDriveStatus(error.message || 'Google Drive 儲存失敗', true);
         } finally {
@@ -1576,9 +1630,12 @@
           return;
         }
         setDriveBusy(true);
+        suspendDriveAutoSave = true;
         try {
+          cancelDriveAutoSave();
+          if (driveSavePromise) await driveSavePromise;
           if (!Drive.isConnected()) {
-            setDriveStatus('請在 Google 視窗完成登入…', false);
+            setDriveStatus('請使用 ' + Drive.ACCOUNT_EMAIL + ' 完成登入…', false);
             await Drive.connect();
           }
           setDriveStatus('正在讀取 Google Drive 備份…', false);
@@ -1591,6 +1648,7 @@
         } catch (error) {
           setDriveStatus(error.message || 'Google Drive 載入失敗', true);
         } finally {
+          suspendDriveAutoSave = false;
           setDriveBusy(false);
         }
       }
@@ -1615,6 +1673,8 @@
         setDriveBusy(true);
         setDriveStatus('正在清除 Google Drive 連接…', false);
         try {
+          cancelDriveAutoSave();
+          if (driveSavePromise) await driveSavePromise;
           await Drive.disconnect();
           Drive.clearClientId();
           el('cps-drive-client-id').value = '';
