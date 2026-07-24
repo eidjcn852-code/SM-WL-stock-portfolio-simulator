@@ -18,11 +18,19 @@ assert.equal(calc.outstandingLoan(loans[0]), 50125);
 assert.equal(calc.totalDebt(loans), 50125);
 assert.equal(calc.grossAssets(40000, holdings), 200000);
 assert.equal(calc.netAssets(40000, holdings, loans), 149875);
+assert.equal(calc.holdingsExposure(holdings), 160000);
 assert.equal(calc.physicalAssetsValue(physicalAssets), 9000000);
 assert.equal(calc.grossAssets(40000, holdings, physicalAssets), 9200000);
 assert.equal(calc.totalExposure(holdings, physicalAssets), 9160000);
 assert.equal(calc.netAssets(40000, holdings, loans, physicalAssets), 9149875);
 assert.equal(calc.exposureRatio(9160000, 9200000).toFixed(2), '99.57');
+assert.equal(calc.holdingsExposure([
+  { shares: 1000, price: 100, exposureMultiplier: 2 },
+  { shares: 500, price: 80, exposureMultiplier: 1 }
+]), 240000);
+assert.equal(calc.totalExposure([
+  { shares: 1000, price: 100, exposureMultiplier: 2 }
+], { realEstate: 500000, vehicles: 0 }), 700000);
 assert.equal(calc.dailyInterest(loans[0]), 5);
 assert.equal(calc.tradeFee(100000, 0.001425), 143);
 
