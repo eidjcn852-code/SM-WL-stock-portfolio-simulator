@@ -34,7 +34,6 @@
           nextLoanId: 1,
           baseline: null,
           settings: {
-            startingCapitalInput: String(capital),
             commissionRate: '0.1425',
             taxRate: '0.3'
           }
@@ -323,35 +322,6 @@
         render();
       }
 
-      function resetAccount() {
-        setAutoPlaying(false);
-        const capital = Number(el('cps-starting-capital').value);
-        if (!Number.isFinite(capital) || capital < 0) {
-          setAddFeedback('初始資金不可小於 0', true);
-          return;
-        }
-        captureAccountSettings();
-        const accountId = appState.activeAccountId;
-        const account = createAccount(capital);
-        account.settings = {
-          ...state.settings,
-          startingCapitalInput: String(capital)
-        };
-        appState.accounts[accountId] = account;
-        state = account;
-        recordHistory(false);
-        updateBaseline(state, true);
-        rebuildMarketFromAccounts(false);
-        el('cps-cash-value').value = String(capital);
-        el('cps-real-estate-value').value = '0';
-        el('cps-vehicle-value').value = '0';
-        setAddFeedback(ACCOUNT_LABELS[accountId] + '已建立空白組合，目前可用現金 ' + money0.format(state.cash), false);
-        setTradeFeedback('新增股票後即可模擬交易', false);
-        setLoanFeedback('借款會同時增加現金與負債', false);
-        setRepayFeedback('目前沒有待還款貸款', false);
-        render();
-      }
-
       function setAddFeedback(message, destructive) {
         const feedback = el('cps-add-feedback');
         feedback.textContent = message;
@@ -401,8 +371,6 @@
           state.lastDailyPnl = 0;
           state.lastDailyReturn = 0;
           recordHistory(true);
-          state.settings.startingCapitalInput = String(cash);
-          el('cps-starting-capital').value = String(cash);
         } else {
           state.lastDailyPnl += after - before;
           const previousPoint = state.history[state.history.length - 2];
@@ -1507,16 +1475,12 @@
 
       function captureAccountSettings() {
         if (!state.settings) state.settings = {};
-        state.settings.startingCapitalInput = el('cps-starting-capital').value;
         state.settings.commissionRate = el('cps-commission-rate').value;
         state.settings.taxRate = el('cps-tax-rate').value;
       }
 
       function applyAccountSettings() {
         const settings = state.settings || {};
-        el('cps-starting-capital').value = settings.startingCapitalInput !== undefined
-          ? settings.startingCapitalInput
-          : String(state.startingCapital);
         el('cps-commission-rate').value = settings.commissionRate !== undefined ? settings.commissionRate : '0.1425';
         el('cps-tax-rate').value = settings.taxRate !== undefined ? settings.taxRate : '0.3';
       }
@@ -1654,7 +1618,6 @@
           );
         } else {
           const legacySettings = {
-            startingCapitalInput: payload.settings && payload.settings.startingCapitalInput,
             commissionRate: payload.settings && payload.settings.commissionRate,
             taxRate: payload.settings && payload.settings.taxRate
           };
@@ -1942,7 +1905,6 @@
       el('cps-account-sm').addEventListener('click', () => switchAccount('SM'));
       el('cps-account-wl').addEventListener('click', () => switchAccount('WL'));
       el('cps-apply-assets').addEventListener('click', applyAssetValues);
-      el('cps-reset-account').addEventListener('click', resetAccount);
       el('cps-add-stock').addEventListener('click', addStock);
       el('cps-new-symbol').addEventListener('input', updateNewExposureDefault);
       el('cps-apply-day').addEventListener('click', applyDay);
