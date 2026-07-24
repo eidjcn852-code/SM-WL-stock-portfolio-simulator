@@ -41,11 +41,13 @@
   }
 
   function totalExposure(holdings, assets) {
-    return holdingsExposure(holdings) + physicalAssetsValue(assets);
+    const values = assets || {};
+    return holdingsExposure(holdings) +
+      Math.max(0, finiteNumber(values.realEstate, 0));
   }
 
-  function exposureRatio(exposure, grossTotal) {
-    const total = finiteNumber(grossTotal, 0);
+  function exposureRatio(exposure, netTotal) {
+    const total = finiteNumber(netTotal, 0);
     if (total <= 0) return 0;
     return Math.max(0, finiteNumber(exposure, 0)) / total * 100;
   }

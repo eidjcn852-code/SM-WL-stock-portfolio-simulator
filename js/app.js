@@ -829,7 +829,7 @@
         const debt = householdDebt();
         const exposure = householdExposure();
         const cash = householdSum((account) => account.cash);
-        const exposureRate = Calc.exposureRatio(exposure, gross);
+        const exposureRate = Calc.exposureRatio(exposure, total);
         const totalPnl = total - householdStartingCapital();
         const dailyPnl = householdSum((account) => account.lastDailyPnl);
         const previousTotal = total - dailyPnl;
@@ -852,7 +852,7 @@
         el('cps-total-assets').textContent = money0.format(total);
         el('cps-asset-breakdown').textContent = 'SM + WL 總資產 ' + money0.format(gross) + ' · 負債 ' + money0.format(debt);
         el('cps-total-exposure').textContent = money0.format(exposure);
-        el('cps-exposure-ratio').textContent = '家庭曝險率 ' + exposureRate.toFixed(2) + '% · 現金 ' + money0.format(cash);
+        el('cps-exposure-ratio').textContent = '家庭曝險率 ' + exposureRate.toFixed(2) + '%（曝險 ÷ 淨資產）· 現金 ' + money0.format(cash);
         el('cps-daily-pnl').textContent = signedMoney(dailyPnl);
         el('cps-daily-pnl').classList.toggle('text-destructive', dailyPnl < 0);
         el('cps-daily-return').textContent = '家庭 ' + signedPercent(dailyReturn) + ' · 大盤 ' + signedPercent(appState.lastBenchmarkReturn);
