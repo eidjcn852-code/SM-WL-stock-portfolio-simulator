@@ -476,12 +476,6 @@
         const existingQuote = appState.market[symbol];
         const price = existingQuote ? existingQuote.price : requestedPrice;
         const gross = shares * price;
-        const fee = shares > 0 ? tradeFee(gross) : 0;
-        const cost = gross + fee;
-        if (cost > state.cash) {
-          setAddFeedback('現金不足，建立持倉需要 ' + money0.format(cost), true);
-          return;
-        }
 
         const holding = {
           id: state.nextId++,
@@ -489,7 +483,7 @@
           name,
           shares,
           price,
-          averageCost: shares > 0 ? cost / shares : 0,
+          averageCost: shares > 0 ? price : 0,
           move: existingQuote ? existingQuote.move : 0
         };
         state.holdings.push(holding);
@@ -497,15 +491,15 @@
           appState.market[symbol] = { price, move: 0, name };
         }
         if (shares > 0) {
-          state.cash -= cost;
+          state.startingCapital += gross;
           state.transactions.unshift({
             day: appState.day,
-            type: '買進',
+            type: '資產建檔',
             symbol,
             quantity: shares,
             price,
-            costs: fee,
-            cashFlow: -cost
+            costs: 0,
+            cashFlow: 0
           });
           recordHistory(true);
         }
@@ -513,7 +507,7 @@
         el('cps-new-name').value = '';
         el('cps-new-shares').value = '0';
         const sharedPriceNote = existingQuote ? '（沿用 SM/WL 共用行情 ' + money2.format(price) + '）' : '';
-        setAddFeedback('已加入 ' + symbol + sharedPriceNote + '，目前可用現金 ' + money0.format(state.cash), false);
+        setAddFeedback('已建檔 ' + symbol + sharedPriceNote + '，現金維持 ' + money0.format(state.cash), false);
         render();
         el('cps-trade-symbol').value = String(holding.id);
         renderTradePrice();
@@ -521,13 +515,31 @@
 
       function removeStock(id) {
         const holding = state.holdings.find((item) => item.id === id);
-        if (!holding || holding.shares !== 0 || pledgedSharesFor(id) > 0) return;
+        if (!holding) return;
+        if (pledgedSharesFor(id) > 0) {
+          setAddFeedback(holding.symbol + ' 仍有質押，請先完成還款再移除', true);
+          return;
+        }
+        const removedValue = holding.shares * holding.price;
         state.holdings = state.holdings.filter((item) => item.id !== id);
+        if (holding.shares > 0) {
+          state.startingCapital = Math.max(0, state.startingCapital - removedValue);
+          state.transactions.unshift({
+            day: appState.day,
+            type: '資產移除',
+            symbol: holding.symbol,
+            quantity: holding.shares,
+            price: holding.price,
+            costs: 0,
+            cashFlow: 0
+          });
+          recordHistory(true);
+        }
         const stillUsed = ACCOUNT_IDS.some((accountId) => {
           return appState.accounts[accountId].holdings.some((item) => item.symbol === holding.symbol);
         });
         if (!stillUsed) delete appState.market[holding.symbol];
-        setAddFeedback('已移除 ' + holding.symbol, false);
+        setAddFeedback('已移除 ' + holding.symbol + '，現金維持 ' + money0.format(state.cash), false);
         render();
       }
 
@@ -903,8 +915,8 @@
           const weight = total > 0 ? value / total * 100 : 0;
           const pnl = holding.shares * (holding.price - holding.averageCost);
           const pledged = pledgedSharesFor(holding.id);
-          const disabled = holding.shares !== 0 || pledged > 0 ? ' disabled' : '';
-          const removeTooltip = holding.shares !== 0 || pledged > 0 ? '需先賣出全部持股並解除質押' : '移除股票';
+          const disabled = pledged > 0 ? ' disabled' : '';
+          const removeTooltip = pledged > 0 ? '仍有股票質押，請先完成還款' : '移除既有持股（不影響現金）';
           const pledgedNote = pledged > 0 ? '<br><span class="text-small text-muted">質押 ' + number0.format(pledged) + ' 股</span>' : '';
           return '<tr>' +
             '<td><span class="cps-symbol">' + escapeHtml(holding.symbol) + '</span><br><span class="text-small text-muted">' + escapeHtml(holding.name) + ' · 均價 ' + money2.format(holding.averageCost) + '</span></td>' +
