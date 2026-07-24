@@ -20,6 +20,8 @@ assert.match(app, /accounts:\s*\{\s*SM:/);
 assert.match(app, /payload\.version === 3/);
 assert.match(app, /data-exposure-id/);
 assert.match(app, /=== '00631L' \? 2 : 1/);
+assert.match(app, /Calc\.exposureRatio\(exposure, total\)/);
+assert.match(html, /不含汽車與現金/);
 
 const addStockBody = app.slice(app.indexOf('function addStock()'), app.indexOf('function removeStock('));
 const removeStockBody = app.slice(app.indexOf('function removeStock('), app.indexOf('function clearMoves('));
