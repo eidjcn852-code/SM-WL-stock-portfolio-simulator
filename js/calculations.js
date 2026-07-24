@@ -12,6 +12,14 @@
     }, 0);
   }
 
+  function holdingsExposure(holdings) {
+    return holdings.reduce((sum, holding) => {
+      const value = finiteNumber(holding.shares, 0) * finiteNumber(holding.price, 0);
+      const multiplier = Math.max(0, finiteNumber(holding.exposureMultiplier, 1));
+      return sum + value * multiplier;
+    }, 0);
+  }
+
   function outstandingLoan(loan) {
     return Math.max(0, finiteNumber(loan.balance, 0)) +
       Math.max(0, finiteNumber(loan.accruedInterest, 0));
@@ -33,7 +41,7 @@
   }
 
   function totalExposure(holdings, assets) {
-    return holdingsValue(holdings) + physicalAssetsValue(assets);
+    return holdingsExposure(holdings) + physicalAssetsValue(assets);
   }
 
   function exposureRatio(exposure, grossTotal) {
@@ -109,6 +117,7 @@
     estimatedMonthlyPayment,
     exposureRatio,
     grossAssets,
+    holdingsExposure,
     holdingsValue,
     maintenanceRatio,
     maximumDrawdown,

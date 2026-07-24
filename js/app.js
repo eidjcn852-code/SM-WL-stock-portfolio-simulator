@@ -451,11 +451,48 @@
         });
       }
 
+      function defaultExposureMultiplier(symbol) {
+        return String(symbol).toUpperCase() === '00631L' ? 2 : 1;
+      }
+
+      function normalizeExposureMultiplier(value, symbol) {
+        const multiplier = Number(value);
+        if (!Number.isFinite(multiplier) || multiplier <= 0) return defaultExposureMultiplier(symbol);
+        return Math.min(10, multiplier);
+      }
+
+      function existingExposureMultiplier(symbol) {
+        for (const accountId of ACCOUNT_IDS) {
+          const holding = appState.accounts[accountId].holdings.find((item) => item.symbol === symbol);
+          if (holding) return normalizeExposureMultiplier(holding.exposureMultiplier, symbol);
+        }
+        return null;
+      }
+
+      function setExposureMultiplier(symbol, value) {
+        const multiplier = normalizeExposureMultiplier(value, symbol);
+        ACCOUNT_IDS.forEach((accountId) => {
+          appState.accounts[accountId].holdings
+            .filter((holding) => holding.symbol === symbol)
+            .forEach((holding) => { holding.exposureMultiplier = multiplier; });
+        });
+        return multiplier;
+      }
+
+      function updateNewExposureDefault() {
+        const symbol = el('cps-new-symbol').value.trim().toUpperCase();
+        const sharedMultiplier = existingExposureMultiplier(symbol);
+        el('cps-new-exposure-multiplier').value = String(
+          sharedMultiplier === null ? defaultExposureMultiplier(symbol) : sharedMultiplier
+        );
+      }
+
       function addStock() {
         const symbol = el('cps-new-symbol').value.trim().toUpperCase();
         const name = el('cps-new-name').value.trim() || symbol;
         const requestedPrice = Number(el('cps-new-price').value);
         const shares = Math.floor(Number(el('cps-new-shares').value) || 0);
+        const requestedExposureMultiplier = Number(el('cps-new-exposure-multiplier').value);
         if (!symbol) {
           setAddFeedback('請輸入股票代號', true);
           return;
@@ -468,6 +505,10 @@
           setAddFeedback('初始股數不可小於 0', true);
           return;
         }
+        if (!Number.isFinite(requestedExposureMultiplier) || requestedExposureMultiplier <= 0 || requestedExposureMultiplier > 10) {
+          setAddFeedback('曝險倍數必須介於 0.1 到 10 倍', true);
+          return;
+        }
         if (state.holdings.some((holding) => holding.symbol === symbol)) {
           setAddFeedback(symbol + ' 已在投資組合中', true);
           return;
@@ -476,6 +517,10 @@
         const existingQuote = appState.market[symbol];
         const price = existingQuote ? existingQuote.price : requestedPrice;
         const gross = shares * price;
+        const sharedExposureMultiplier = existingExposureMultiplier(symbol);
+        const exposureMultiplier = sharedExposureMultiplier === null
+          ? normalizeExposureMultiplier(requestedExposureMultiplier, symbol)
+          : sharedExposureMultiplier;
 
         const holding = {
           id: state.nextId++,
@@ -484,7 +529,8 @@
           shares,
           price,
           averageCost: shares > 0 ? price : 0,
-          move: existingQuote ? existingQuote.move : 0
+          move: existingQuote ? existingQuote.move : 0,
+          exposureMultiplier
         };
         state.holdings.push(holding);
         if (!existingQuote) {
@@ -506,8 +552,12 @@
         el('cps-new-symbol').value = '';
         el('cps-new-name').value = '';
         el('cps-new-shares').value = '0';
+        el('cps-new-exposure-multiplier').value = '1';
         const sharedPriceNote = existingQuote ? '（沿用 SM/WL 共用行情 ' + money2.format(price) + '）' : '';
-        setAddFeedback('已建檔 ' + symbol + sharedPriceNote + '，現金維持 ' + money0.format(state.cash), false);
+        setAddFeedback(
+          '已建檔 ' + symbol + sharedPriceNote + '，曝險 ' + exposureMultiplier.toFixed(1) + ' 倍，現金維持 ' + money0.format(state.cash),
+          false
+        );
         render();
         el('cps-trade-symbol').value = String(holding.id);
         renderTradePrice();
@@ -904,14 +954,16 @@
         const body = el('cps-holdings-body');
         const total = grossAssets();
         if (!state.holdings.length) {
-          body.innerHTML = '<tr><td colspan="8" class="text-center text-muted">請先新增股票</td></tr>';
+          body.innerHTML = '<tr><td colspan="9" class="text-center text-muted">請先新增股票</td></tr>';
           el('cps-holdings-count').textContent = '0 檔股票';
           el('cps-allocation').innerHTML = '';
           el('cps-allocation').setAttribute('aria-label', '目前只有現金');
           return;
         }
         body.innerHTML = state.holdings.map((holding) => {
+          holding.exposureMultiplier = normalizeExposureMultiplier(holding.exposureMultiplier, holding.symbol);
           const value = holding.shares * holding.price;
+          const exposure = value * holding.exposureMultiplier;
           const weight = total > 0 ? value / total * 100 : 0;
           const pnl = holding.shares * (holding.price - holding.averageCost);
           const pledged = pledgedSharesFor(holding.id);
@@ -924,6 +976,7 @@
             '<td class="text-end text-nowrap">' + money2.format(holding.price) + '</td>' +
             '<td class="text-end text-nowrap">' + money0.format(value) + '<br><span class="text-small">' + signedMoney(pnl) + '</span></td>' +
             '<td class="text-end">' + weight.toFixed(1) + '%</td>' +
+            '<td class="text-end cps-exposure-cell"><label class="sr-only" for="cps-exposure-' + holding.id + '">' + escapeHtml(holding.symbol) + ' 曝險倍數</label><input class="form-control cps-exposure-input" id="cps-exposure-' + holding.id + '" data-exposure-id="' + holding.id + '" type="number" min="0.1" max="10" step="0.1" value="' + holding.exposureMultiplier + '" inputmode="decimal"><span class="text-small text-muted text-nowrap cps-exposure-value">曝險 ' + money0.format(exposure) + '</span></td>' +
             '<td class="text-end"><label class="sr-only" for="cps-move-' + holding.id + '">' + escapeHtml(holding.symbol) + ' 今日漲跌百分比</label><input class="form-control cps-move-input" id="cps-move-' + holding.id + '" data-move-id="' + holding.id + '" type="number" min="-100" max="100" step="0.1" value="' + holding.move + '" inputmode="decimal"></td>' +
             '<td class="text-end text-nowrap" data-contribution-id="' + holding.id + '">' + signedMoney(value * holding.move / 100) + '</td>' +
             '<td><button class="btn btn-ghost" type="button" data-remove-id="' + holding.id + '" data-tooltip="' + removeTooltip + '" aria-label="移除 ' + escapeHtml(holding.symbol) + '"' + disabled + '><i data-lucide="x" aria-hidden="true"></i></button></td>' +
@@ -948,6 +1001,29 @@
             const holding = state.holdings.find((item) => item.id === id);
             if (holding) setMarketMove(holding.symbol, event.target.value);
             renderScenarioPreview();
+          });
+        });
+        root.querySelectorAll('[data-exposure-id]').forEach((input) => {
+          input.addEventListener('input', (event) => {
+            const id = Number(event.target.dataset.exposureId);
+            const holding = state.holdings.find((item) => item.id === id);
+            const requested = Number(event.target.value);
+            if (!holding || !Number.isFinite(requested) || requested <= 0 || requested > 10) return;
+            const multiplier = setExposureMultiplier(holding.symbol, requested);
+            const exposureLabel = event.target.parentElement.querySelector('.cps-exposure-value');
+            if (exposureLabel) {
+              exposureLabel.textContent = '曝險 ' + money0.format(holding.shares * holding.price * multiplier);
+            }
+            renderSummary();
+            renderAccountContext();
+            persistState();
+          });
+          input.addEventListener('change', (event) => {
+            const id = Number(event.target.dataset.exposureId);
+            const holding = state.holdings.find((item) => item.id === id);
+            if (!holding) return;
+            setExposureMultiplier(holding.symbol, event.target.value);
+            render();
           });
         });
         root.querySelectorAll('[data-remove-id]').forEach((button) => {
@@ -1297,7 +1373,10 @@
           ...baseline,
           realEstate: Math.max(0, Number(baseline.realEstate) || 0),
           vehicles: Math.max(0, Number(baseline.vehicles) || 0),
-          holdings: Array.isArray(baseline.holdings) ? baseline.holdings.map((holding) => ({ ...holding })) : [],
+          holdings: Array.isArray(baseline.holdings) ? baseline.holdings.map((holding) => ({
+            ...holding,
+            exposureMultiplier: normalizeExposureMultiplier(holding.exposureMultiplier, holding.symbol)
+          })) : [],
           loans: Array.isArray(baseline.loans) ? baseline.loans.map((loan) => ({ ...loan })) : [],
           transactions: Array.isArray(baseline.transactions) ? baseline.transactions.map((transaction) => ({ ...transaction })) : []
         };
@@ -1311,7 +1390,10 @@
           cash: Math.max(0, Number(saved.cash) || 0),
           realEstate: Math.max(0, Number(saved.realEstate) || 0),
           vehicles: Math.max(0, Number(saved.vehicles) || 0),
-          holdings: saved.holdings.map((holding) => ({ ...holding })),
+          holdings: saved.holdings.map((holding) => ({
+            ...holding,
+            exposureMultiplier: normalizeExposureMultiplier(holding.exposureMultiplier, holding.symbol)
+          })),
           loans: saved.loans.map((loan) => ({ ...loan })),
           history: saved.history.map((point) => ({ ...point })),
           transactions: saved.transactions.map((transaction) => ({ ...transaction })),
@@ -1586,6 +1668,7 @@
       el('cps-apply-assets').addEventListener('click', applyAssetValues);
       el('cps-reset-account').addEventListener('click', resetAccount);
       el('cps-add-stock').addEventListener('click', addStock);
+      el('cps-new-symbol').addEventListener('input', updateNewExposureDefault);
       el('cps-apply-day').addEventListener('click', applyDay);
       el('cps-auto').addEventListener('click', () => setAutoPlaying(!appState.timer));
       el('cps-reset-simulation').addEventListener('click', resetSimulation);
