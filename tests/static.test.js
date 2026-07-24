@@ -18,4 +18,14 @@ assert.match(app, /version: 3/);
 assert.match(app, /accounts:\s*\{\s*SM:/);
 assert.match(app, /payload\.version === 3/);
 
+const addStockBody = app.slice(app.indexOf('function addStock()'), app.indexOf('function removeStock('));
+const removeStockBody = app.slice(app.indexOf('function removeStock('), app.indexOf('function clearMoves('));
+assert.doesNotMatch(addStockBody, /state\.cash\s*[-+]=/, 'existing holding setup must not change cash');
+assert.match(addStockBody, /type: '資產建檔'/);
+assert.match(addStockBody, /state\.startingCapital \+= gross/);
+assert.doesNotMatch(removeStockBody, /state\.cash\s*[-+]=/, 'removing an existing holding must not change cash');
+assert.match(removeStockBody, /type: '資產移除'/);
+assert.match(removeStockBody, /state\.startingCapital = Math\.max\(0, state\.startingCapital - removedValue\)/);
+assert.match(html, /持股建檔不會動用帳戶現金/);
+
 console.log('static: all checks passed');
