@@ -12,6 +12,8 @@ assert.deepEqual(duplicateIds, [], 'HTML contains duplicate IDs');
 assert.deepEqual(missingIds, [], 'app.js references missing HTML IDs');
 assert.match(html, /accounts\.google\.com\/gsi\/client/);
 assert.match(html, /js\/google-drive\.js/);
+assert.match(html, /js\/google-drive\.js\?v=20260724-drive-autosave/);
+assert.match(html, /js\/app\.js\?v=20260724-drive-autosave/);
 assert.match(html, /id="cps-account-sm"/);
 assert.match(html, /id="cps-account-wl"/);
 assert.match(html, /id="cps-new-exposure-multiplier"/);
