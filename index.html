@@ -6,13 +6,13 @@
   <meta name="description" content="可管理股票、現金、房地產、汽車、借貸、總曝險與質押維持率的個人資產模擬器。">
   <meta name="color-scheme" content="light dark">
   <title>股票資產模擬器</title>
-  <link rel="stylesheet" href="styles.css?v=20260724-collapsible-trade-price">
+  <link rel="stylesheet" href="styles.css?v=20260724-remove-blank-portfolio">
   <script defer src="https://cdn.jsdelivr.net/npm/lucide@0.468.0/dist/umd/lucide.min.js"></script>
   <script defer src="https://accounts.google.com/gsi/client"></script>
   <script defer src="js/calculations.js"></script>
   <script defer src="js/storage.js"></script>
   <script defer src="js/google-drive.js?v=20260724-drive-autosave"></script>
-  <script defer src="js/app.js?v=20260724-collapsible-trade-price"></script>
+  <script defer src="js/app.js?v=20260724-remove-blank-portfolio"></script>
 </head>
 <body>
   <main class="app-shell">
@@ -189,19 +189,10 @@
 
       </div>
     <aside class="cps-session-rail">
-<section class="card cps-panel cps-session-panel" aria-label="目前帳戶與共用每日行情設定">
+<section class="card cps-panel cps-session-panel" aria-label="共用每日行情設定">
     <div class="cps-section-head">
-      <span>帳戶與共用行情</span>
+      <span>共用行情</span>
       <i data-lucide="sliders-horizontal" aria-hidden="true"></i>
-    </div>
-    <div class="cps-side-grid">
-      <label class="form-label cps-field" for="cps-starting-capital">
-        <span>初始現金</span>
-        <input class="form-control" id="cps-starting-capital" type="number" min="1" step="10000" value="1000000" inputmode="numeric">
-      </label>
-      <div class="cps-actions">
-        <button class="btn" id="cps-reset-account" type="button"><i data-lucide="rotate-ccw" aria-hidden="true"></i>建立空白組合</button>
-      </div>
     </div>
     <div class="cps-side-grid">
       <label class="form-label cps-field" for="cps-benchmark-move">
