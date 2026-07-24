@@ -15,7 +15,7 @@
 - 管理現金、房地產、汽車與完整資產配置。
 - 建立信貸、房貸或股票質押，追蹤借款本金、負債與質押維持率。
 - 模擬買賣與交易紀錄，持股試算不會自動改動現價或資產。
-- 瀏覽器自動儲存、Google Drive 雲端備份、本機 JSON 備份。
+- 瀏覽器會自動保存目前資料；Google Drive 雲端備份與本機 JSON 備份由使用者手動執行。
 - Google Drive 僅在首次授權或登入失效時要求確認；有效權杖會直接沿用，不會每次儲存或載入都強制顯示同意畫面。
 
 ## 雙帳戶資料
@@ -47,8 +47,8 @@ Google Drive 功能使用 Google Identity Services 與 Drive API。程式只要�
 ### 日常使用
 
 - 雲端帳戶固定為 `eidjcn852@gmail.com`；程式會預選並核對帳戶，避免資料寫入其他 Google Drive。
-- 連接後，資產資料每次變更會在短暫延遲後自動建立或更新 `stock-portfolio-simulator-cloud.json`。
-- **儲存雲端**：需要立即同步時，可手動更新同一份雲端檔案。
+- 連接 Drive 不會自動上傳資料，也不會因為修改資產而在背景更新雲端檔案。
+- **儲存雲端**：按下後才會建立或更新 `stock-portfolio-simulator-cloud.json`。
 - **載入雲端**：從同一份檔案恢復模擬器資料。
 - Google 存取權杖只保留在目前頁面記憶體，不寫入 `localStorage` 或備份檔。
 - OAuth Client ID 是公開識別碼，會儲存在目前瀏覽器；它不是密碼或 Client Secret。
