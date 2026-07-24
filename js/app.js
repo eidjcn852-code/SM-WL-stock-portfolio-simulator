@@ -43,10 +43,7 @@
       const appState = {
         activeAccountId: 'SM',
         day: 0,
-        benchmark: 100,
-        lastBenchmarkReturn: 0,
         market: {},
-        timer: null,
         accounts: {
           SM: createAccount(1000000),
           WL: createAccount(0)
@@ -248,8 +245,7 @@
         const point = {
           day: appState.day,
           total,
-          portfolioReturn: account.startingCapital > 0 ? (total / account.startingCapital - 1) * 100 : 0,
-          benchmarkReturn: appState.benchmark - 100
+          portfolioReturn: account.startingCapital > 0 ? (total / account.startingCapital - 1) * 100 : 0
         };
         const last = account.history[account.history.length - 1];
         if (replaceCurrent && last && last.day === appState.day) account.history[account.history.length - 1] = point;
@@ -276,24 +272,7 @@
         };
       }
 
-      function setAutoPlaying(playing) {
-        const button = el('cps-auto');
-        if (playing) {
-          if (appState.timer) return;
-          appState.timer = window.setInterval(applyDay, 700);
-        } else if (appState.timer) {
-          window.clearInterval(appState.timer);
-          appState.timer = null;
-        }
-        button.setAttribute('aria-pressed', playing ? 'true' : 'false');
-        button.innerHTML = playing
-          ? '<i data-lucide="pause" aria-hidden="true"></i><span>暫停</span>'
-          : '<i data-lucide="play" aria-hidden="true"></i><span>自動播放</span>';
-        if (window.lucide) window.lucide.createIcons({ attrs: { width: 16, height: 16 } });
-      }
-
       function resetSimulation() {
-        setAutoPlaying(false);
         captureAccountSettings();
         ACCOUNT_IDS.forEach((accountId) => {
           const account = appState.accounts[accountId];
@@ -320,14 +299,11 @@
           });
         });
         appState.day = 0;
-        appState.benchmark = 100;
-        appState.lastBenchmarkReturn = 0;
         rebuildMarketFromAccounts(true);
         ACCOUNT_IDS.forEach((accountId) => recordHistoryFor(appState.accounts[accountId], false));
-        el('cps-benchmark-move').value = '0';
         applyAccountSettings();
-        setAddFeedback('SM 與 WL 已回到第 0 天，初始持倉均已保留', false);
-        setTradeFeedback('模擬紀錄已重設', false);
+        setAddFeedback('SM 與 WL 已恢復初始資產狀態，初始持倉均已保留', false);
+        setTradeFeedback('交易與試算紀錄已重設', false);
         setLoanFeedback('兩個帳戶的貸款已回到模擬開始前狀態', false);
         setRepayFeedback('可選擇貸款進行部分或全額還款', false);
         render();
@@ -677,34 +653,8 @@
 
       function clearMoves() {
         Object.keys(appState.market).forEach((symbol) => setMarketMove(symbol, 0));
-        el('cps-benchmark-move').value = '0';
         renderHoldings();
         renderScenarioPreview();
-      }
-
-      function applyDay() {
-        const benchmarkMove = Math.max(-100, Math.min(100, Number(el('cps-benchmark-move').value) || 0));
-        captureAccountSettings();
-        const before = {};
-        ACCOUNT_IDS.forEach((accountId) => {
-          before[accountId] = totalAssetsFor(appState.accounts[accountId]);
-        });
-        Object.values(appState.market).forEach((quote) => {
-          const move = Math.max(-100, Math.min(100, Number(quote.move) || 0));
-          quote.price = Math.max(0.01, quote.price * (1 + move / 100));
-        });
-        appState.benchmark = Math.max(0.01, appState.benchmark * (1 + benchmarkMove / 100));
-        appState.day += 1;
-        appState.lastBenchmarkReturn = benchmarkMove;
-        ACCOUNT_IDS.forEach((accountId) => {
-          const account = appState.accounts[accountId];
-          syncAccountPrices(account);
-          const after = totalAssetsFor(account);
-          account.lastDailyPnl = after - before[accountId];
-          account.lastDailyReturn = before[accountId] > 0 ? (after / before[accountId] - 1) * 100 : 0;
-          recordHistoryFor(account, false);
-        });
-        render();
       }
 
       function selectedHolding() {
@@ -929,7 +879,7 @@
         el('cps-exposure-ratio').textContent = '家庭曝險率 ' + exposureRate.toFixed(2) + '%（曝險 ÷ 淨資產）· 現金 ' + money0.format(cash);
         el('cps-daily-pnl').textContent = signedMoney(dailyPnl);
         el('cps-daily-pnl').classList.toggle('text-destructive', dailyPnl < 0);
-        el('cps-daily-return').textContent = '家庭 ' + signedPercent(dailyReturn) + ' · 大盤 ' + signedPercent(appState.lastBenchmarkReturn);
+        el('cps-daily-return').textContent = '家庭 ' + signedPercent(dailyReturn);
         el('cps-total-pnl').textContent = signedMoney(totalPnl);
         el('cps-total-pnl').classList.toggle('text-destructive', totalPnl < 0);
         el('cps-risk-summary').textContent = '最大回撤 ' + signedPercent(maximumDrawdown()) + ' · 維持率 ' + (minimumRatio === null ? '—' : minimumRatio.toFixed(1) + '%');
@@ -953,7 +903,6 @@
               minimumRatio.toFixed(1) + '%，警示線 ' + warningRatio.toFixed(1) + '%'
           );
         }
-        el('cps-day-badge').textContent = '第 ' + appState.day + ' 天';
       }
 
       function renderAssetRegister() {
@@ -1000,7 +949,6 @@
         const label = ACCOUNT_LABELS[appState.activeAccountId];
         el('cps-active-account-name').textContent = label;
         el('cps-account-assets-title').textContent = label + '資產設定';
-        el('cps-chart-account-label').textContent = label + '淨資產報酬率';
         el('cps-account-net').textContent = money0.format(totalAssets());
         el('cps-account-gross').textContent = money0.format(grossAssets());
         el('cps-account-debt').textContent = money0.format(totalDebt());
@@ -1008,13 +956,6 @@
       }
 
       function renderScenarioPreview() {
-        const total = totalAssets();
-        const marketMove = state.holdings.reduce((sum, holding) => {
-          return sum + holding.shares * holding.price * (Number(holding.move) || 0) / 100;
-        }, 0);
-        const expected = marketMove;
-        const expectedReturn = total > 0 ? expected / total * 100 : 0;
-        el('cps-scenario-preview').textContent = '預估今日損益 ' + signedMoney(expected) + ' · 組合約 ' + signedPercent(expectedReturn);
         state.holdings.forEach((holding) => {
           const contribution = holding.shares * holding.price * (Number(holding.move) || 0) / 100;
           const cell = root.querySelector('[data-contribution-id="' + holding.id + '"]');
@@ -1050,7 +991,7 @@
             '<td class="text-end text-nowrap">' + money0.format(value) + '<br><span class="text-small">' + signedMoney(pnl) + '</span></td>' +
             '<td class="text-end">' + weight.toFixed(1) + '%</td>' +
             '<td class="text-end cps-exposure-cell"><label class="sr-only" for="cps-exposure-' + holding.id + '">' + escapeHtml(holding.symbol) + ' 曝險倍數</label><input class="form-control cps-exposure-input" id="cps-exposure-' + holding.id + '" data-exposure-id="' + holding.id + '" type="number" min="0.1" max="10" step="0.1" value="' + holding.exposureMultiplier + '" inputmode="decimal"><span class="text-small text-muted text-nowrap cps-exposure-value">曝險 ' + money0.format(exposure) + '</span></td>' +
-            '<td class="text-end cps-edit-cell"><label class="sr-only" for="cps-move-' + holding.id + '">' + escapeHtml(holding.symbol) + ' 今日漲跌百分比</label><input class="form-control cps-move-input" id="cps-move-' + holding.id + '" data-move-id="' + holding.id + '" type="number" min="-100" max="100" step="0.1" value="' + holding.move + '" inputmode="decimal"></td>' +
+            '<td class="text-end cps-edit-cell"><label class="sr-only" for="cps-move-' + holding.id + '">' + escapeHtml(holding.symbol) + ' 試算漲跌百分比</label><input class="form-control cps-move-input" id="cps-move-' + holding.id + '" data-move-id="' + holding.id + '" type="number" min="-100" max="100" step="0.1" value="' + holding.move + '" inputmode="decimal"></td>' +
             '<td class="text-end text-nowrap" data-contribution-id="' + holding.id + '">' + signedMoney(value * holding.move / 100) + '</td>' +
             '<td><button class="btn btn-ghost" type="button" data-remove-id="' + holding.id + '" data-tooltip="' + removeTooltip + '" aria-label="移除 ' + escapeHtml(holding.symbol) + '"' + disabled + '><i data-lucide="x" aria-hidden="true"></i></button></td>' +
           '</tr>';
@@ -1360,104 +1301,6 @@
         }).join('');
       }
 
-      function chartGeometry() {
-        const svg = el('cps-chart');
-        const width = Math.max(300, Math.round(svg.getBoundingClientRect().width || 720));
-        const height = svg.getBoundingClientRect().height || 290;
-        svg.setAttribute('viewBox', '0 0 ' + width + ' ' + height);
-        return { width, height, left: 50, right: 18, top: 18, bottom: 36 };
-      }
-
-      function renderChart() {
-        const geometry = chartGeometry();
-        const { width, height, left, right, top, bottom } = geometry;
-        const plotWidth = Math.max(1, width - left - right);
-        const plotHeight = Math.max(1, height - top - bottom);
-        const values = state.history.flatMap((point) => [point.portfolioReturn, point.benchmarkReturn]);
-        let minValue = Math.min(0, ...values);
-        let maxValue = Math.max(0, ...values);
-        const spread = Math.max(4, maxValue - minValue);
-        minValue -= spread * 0.12;
-        maxValue += spread * 0.12;
-        const xAt = (index) => left + (state.history.length <= 1 ? 0 : index / (state.history.length - 1)) * plotWidth;
-        const yAt = (value) => top + (maxValue - value) / (maxValue - minValue) * plotHeight;
-        const pathFor = (key) => state.history.map((point, index) => {
-          return (index === 0 ? 'M' : 'L') + xAt(index).toFixed(2) + ',' + yAt(point[key]).toFixed(2);
-        }).join(' ');
-        el('cps-portfolio-line').setAttribute('d', pathFor('portfolioReturn'));
-        el('cps-benchmark-line').setAttribute('d', pathFor('benchmarkReturn'));
-
-        const lastIndex = state.history.length - 1;
-        const latest = state.history[lastIndex];
-        const latestX = xAt(lastIndex);
-        el('cps-portfolio-dot').setAttribute('cx', latestX);
-        el('cps-portfolio-dot').setAttribute('cy', yAt(latest.portfolioReturn));
-        el('cps-benchmark-dot').setAttribute('cx', latestX);
-        el('cps-benchmark-dot').setAttribute('cy', yAt(latest.benchmarkReturn));
-
-        const grid = [];
-        for (let index = 0; index < 5; index += 1) {
-          const ratio = index / 4;
-          const y = top + ratio * plotHeight;
-          const value = maxValue - ratio * (maxValue - minValue);
-          grid.push('<line class="cps-grid-line" x1="' + left + '" x2="' + (width - right) + '" y1="' + y + '" y2="' + y + '"></line>');
-          grid.push('<text class="cps-axis-text" x="' + (left - 8) + '" y="' + (y + 4) + '" text-anchor="end">' + signedPercent(value) + '</text>');
-        }
-        grid.push('<line class="cps-axis-line" x1="' + left + '" x2="' + (width - right) + '" y1="' + (height - bottom) + '" y2="' + (height - bottom) + '"></line>');
-        grid.push('<text class="cps-axis-text" x="' + left + '" y="' + (height - 10) + '">第 ' + state.history[0].day + ' 天</text>');
-        if (lastIndex > 1) {
-          const middleIndex = Math.floor(lastIndex / 2);
-          grid.push('<text class="cps-axis-text" x="' + xAt(middleIndex) + '" y="' + (height - 10) + '" text-anchor="middle">第 ' + state.history[middleIndex].day + ' 天</text>');
-        }
-        grid.push('<text class="cps-axis-text" x="' + (width - right) + '" y="' + (height - 10) + '" text-anchor="end">第 ' + latest.day + ' 天</text>');
-        el('cps-chart-grid').innerHTML = grid.join('');
-
-        const hit = el('cps-chart-hit');
-        hit.setAttribute('x', left);
-        hit.setAttribute('y', top);
-        hit.setAttribute('width', plotWidth);
-        hit.setAttribute('height', plotHeight);
-        el('cps-chart').dataset.left = left;
-        el('cps-chart').dataset.plotWidth = plotWidth;
-        el('cps-chart').dataset.top = top;
-        el('cps-chart').dataset.bottomY = height - bottom;
-        el('cps-selected-point').textContent = '第 ' + latest.day + ' 天 · 組合 ' + signedPercent(latest.portfolioReturn) + ' · 大盤 ' + signedPercent(latest.benchmarkReturn);
-      }
-
-      function showChartPoint(event) {
-        const svg = el('cps-chart');
-        const rect = svg.getBoundingClientRect();
-        const left = Number(svg.dataset.left);
-        const plotWidth = Number(svg.dataset.plotWidth);
-        const localX = (event.clientX - rect.left) / rect.width * svg.viewBox.baseVal.width;
-        const ratio = Math.max(0, Math.min(1, (localX - left) / plotWidth));
-        const index = Math.round(ratio * (state.history.length - 1));
-        const point = state.history[index];
-        const x = left + (state.history.length <= 1 ? 0 : index / (state.history.length - 1)) * plotWidth;
-        const hoverLine = el('cps-hover-line');
-        hoverLine.setAttribute('x1', x);
-        hoverLine.setAttribute('x2', x);
-        hoverLine.setAttribute('y1', svg.dataset.top);
-        hoverLine.setAttribute('y2', svg.dataset.bottomY);
-        hoverLine.setAttribute('visibility', 'visible');
-        const tooltip = el('cps-tooltip');
-        tooltip.innerHTML = '<strong>第 ' + point.day + ' 天</strong><br>淨資產 ' + money0.format(point.total) + '<br>組合 ' + signedPercent(point.portfolioReturn) + ' · 大盤 ' + signedPercent(point.benchmarkReturn);
-        tooltip.style.display = 'block';
-        const xCss = x / svg.viewBox.baseVal.width * rect.width;
-        const tooltipWidth = tooltip.getBoundingClientRect().width;
-        tooltip.style.left = Math.max(4, Math.min(el('cps-chart-wrap').clientWidth - tooltipWidth - 4, xCss + 10)) + 'px';
-        tooltip.style.top = '8px';
-        el('cps-selected-point').textContent = '第 ' + point.day + ' 天 · 組合 ' + signedPercent(point.portfolioReturn) + ' · 大盤 ' + signedPercent(point.benchmarkReturn);
-      }
-
-      function hideChartPoint() {
-        el('cps-hover-line').setAttribute('visibility', 'hidden');
-        el('cps-tooltip').style.display = 'none';
-        const latest = state.history[state.history.length - 1];
-        el('cps-selected-point').textContent = '第 ' + latest.day + ' 天 · 組合 ' + signedPercent(latest.portfolioReturn) + ' · 大盤 ' + signedPercent(latest.benchmarkReturn);
-      }
-
-
       function captureAccountSettings() {
         if (!state.settings) state.settings = {};
         state.settings.commissionRate = el('cps-commission-rate').value;
@@ -1473,7 +1316,6 @@
       function switchAccount(accountId) {
         if (!ACCOUNT_IDS.includes(accountId) || accountId === appState.activeAccountId) return;
         captureAccountSettings();
-        setAutoPlaying(false);
         appState.activeAccountId = accountId;
         state = appState.accounts[accountId];
         applyAccountSettings();
@@ -1487,9 +1329,7 @@
 
       function settingsSnapshot() {
         captureAccountSettings();
-        return {
-          benchmarkMove: el('cps-benchmark-move').value
-        };
+        return {};
       }
 
       function serializeBaseline(baseline) {
@@ -1523,8 +1363,6 @@
           state: {
             activeAccountId: appState.activeAccountId,
             day: appState.day,
-            benchmark: appState.benchmark,
-            lastBenchmarkReturn: appState.lastBenchmarkReturn,
             market: Object.fromEntries(
               Object.entries(appState.market).map(([symbol, quote]) => [symbol, { ...quote }])
             ),
@@ -1577,21 +1415,15 @@
         return account;
       }
 
-      function applySavedSettings(settings) {
-        if (settings && settings.benchmarkMove !== undefined) {
-          el('cps-benchmark-move').value = settings.benchmarkMove;
-        }
+      function applySavedSettings() {
         applyAccountSettings();
       }
 
       function restorePayload(payload, announce) {
         const saved = payload.state;
-        setAutoPlaying(false);
         if (payload.version === 3 && saved.accounts) {
           appState.activeAccountId = ACCOUNT_IDS.includes(saved.activeAccountId) ? saved.activeAccountId : 'SM';
           appState.day = Math.max(0, Math.floor(Number(saved.day) || 0));
-          appState.benchmark = Math.max(0.01, Number(saved.benchmark) || 100);
-          appState.lastBenchmarkReturn = Number(saved.lastBenchmarkReturn) || 0;
           appState.accounts.SM = normalizeAccount(saved.accounts.SM);
           appState.accounts.WL = normalizeAccount(saved.accounts.WL);
           appState.market = Object.fromEntries(
@@ -1608,8 +1440,6 @@
           };
           appState.activeAccountId = 'SM';
           appState.day = Math.max(0, Math.floor(Number(saved.day) || 0));
-          appState.benchmark = Math.max(0.01, Number(saved.benchmark) || 100);
-          appState.lastBenchmarkReturn = Number(saved.lastBenchmarkReturn) || 0;
           appState.accounts.SM = normalizeAccount(saved, 0, legacySettings);
           appState.accounts.WL = createAccount(0);
           appState.market = {};
@@ -1621,7 +1451,7 @@
           if (!account.history.length) recordHistoryFor(account, false);
           if (!account.baseline) updateBaseline(account, true);
         });
-        applySavedSettings(payload.settings);
+        applySavedSettings();
         if (announce) {
           const stockCount = householdSum((account) => account.holdings.length);
           const loanCount = householdSum((account) => account.loans.length);
@@ -1805,7 +1635,6 @@
           setDriveStatus('正在讀取 Google Drive 備份…', false);
           const result = await Drive.load();
           const payload = Storage.validate(result.payload);
-          setAutoPlaying(false);
           restorePayload(payload, true);
           render();
           setDriveStatus('已從 Google Drive 載入：' + result.file.name, false);
@@ -1853,7 +1682,6 @@
         const file = event.target.files && event.target.files[0];
         if (!file) return;
         try {
-          setAutoPlaying(false);
           const payload = await Storage.readFile(file);
           restorePayload(payload, true);
           render();
@@ -1875,7 +1703,6 @@
         renderLoanControls();
         renderLoans();
         renderTransactions();
-        renderChart();
         persistState();
       }
 
@@ -1892,10 +1719,7 @@
       el('cps-apply-assets').addEventListener('click', applyAssetValues);
       el('cps-add-stock').addEventListener('click', addStock);
       el('cps-new-symbol').addEventListener('input', updateNewExposureDefault);
-      el('cps-apply-day').addEventListener('click', applyDay);
-      el('cps-auto').addEventListener('click', () => setAutoPlaying(!appState.timer));
       el('cps-reset-simulation').addEventListener('click', resetSimulation);
-      el('cps-benchmark-move').addEventListener('input', renderScenarioPreview);
       el('cps-trade-symbol').addEventListener('change', () => {
         el('cps-trade-execution-price').dataset.custom = 'false';
         renderTradePrice();
@@ -1911,15 +1735,6 @@
       el('cps-collateral-stock').addEventListener('change', updatePledgePreview);
       el('cps-pledged-shares').addEventListener('input', updatePledgePreview);
       el('cps-loan-amount').addEventListener('input', updatePledgePreview);
-      el('cps-chart-hit').addEventListener('pointermove', showChartPoint);
-      el('cps-chart-hit').addEventListener('pointerleave', hideChartPoint);
-
-      let resizeFrame = null;
-      const resizeObserver = new ResizeObserver(() => {
-        if (resizeFrame) cancelAnimationFrame(resizeFrame);
-        resizeFrame = requestAnimationFrame(renderChart);
-      });
-      resizeObserver.observe(el('cps-chart'));
 
       const savedPayload = Storage.load();
       if (savedPayload) restorePayload(savedPayload, false);
