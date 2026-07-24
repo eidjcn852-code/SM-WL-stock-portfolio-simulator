@@ -572,6 +572,9 @@ svg {
       gap: 12px;
       align-items: end;
     }
+    #complete-brokerage-simulator .cps-control-grid > .cps-field-full {
+      grid-column: 1 / -1;
+    }
     #complete-brokerage-simulator .cps-side-grid {
       display: grid;
       grid-template-columns: minmax(0, 1fr);
