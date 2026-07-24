@@ -14,6 +14,7 @@
       let driveSavePromise = null;
       let driveSavePending = false;
       let suspendDriveAutoSave = false;
+      let holdingDragState = null;
 
       function createAccount(startingCapital = 0) {
         const capital = Math.max(0, Number(startingCapital) || 0);
@@ -456,6 +457,20 @@
         });
       }
 
+      function setMarketPrice(symbol, value) {
+        const price = Number(value);
+        if (!Number.isFinite(price) || price <= 0) return null;
+        const normalizedPrice = Math.max(0.01, price);
+        const quote = appState.market[symbol];
+        if (quote) quote.price = normalizedPrice;
+        ACCOUNT_IDS.forEach((accountId) => {
+          appState.accounts[accountId].holdings
+            .filter((holding) => holding.symbol === symbol)
+            .forEach((holding) => { holding.price = normalizedPrice; });
+        });
+        return normalizedPrice;
+      }
+
       function defaultExposureMultiplier(symbol) {
         return String(symbol).toUpperCase() === '00631L' ? 2 : 1;
       }
@@ -596,6 +611,89 @@
         if (!stillUsed) delete appState.market[holding.symbol];
         setAddFeedback('已移除 ' + holding.symbol + '，現金維持 ' + money0.format(state.cash), false);
         render();
+      }
+
+      function updateHoldingShares(id, value) {
+        const holding = state.holdings.find((item) => item.id === id);
+        const shares = Math.floor(Number(value));
+        if (!holding || !Number.isFinite(shares) || shares < 0) {
+          setAddFeedback('持股數量必須是 0 以上的整數', true);
+          return false;
+        }
+        const pledged = pledgedSharesFor(id);
+        if (shares < pledged) {
+          setAddFeedback(holding.symbol + ' 已質押 ' + number0.format(pledged) + ' 股，持股不可低於質押股數', true);
+          return false;
+        }
+        if (shares === holding.shares) return true;
+
+        const previousShares = holding.shares;
+        const difference = shares - previousShares;
+        state.startingCapital = Math.max(0, state.startingCapital + difference * holding.price);
+        holding.shares = shares;
+        if (shares === 0) holding.averageCost = 0;
+        else if (previousShares === 0 || holding.averageCost <= 0) holding.averageCost = holding.price;
+        state.transactions.unshift({
+          day: appState.day,
+          type: difference > 0 ? '資產增額' : '資產減額',
+          symbol: holding.symbol,
+          quantity: Math.abs(difference),
+          price: holding.price,
+          costs: 0,
+          cashFlow: 0
+        });
+        recordHistory(true);
+        setAddFeedback(
+          '已將 ' + holding.symbol + ' 持股修改為 ' + number0.format(shares) + ' 股，現金維持 ' + money0.format(state.cash),
+          false
+        );
+        render();
+        return true;
+      }
+
+      function updateHoldingPrice(id, value) {
+        const holding = state.holdings.find((item) => item.id === id);
+        if (!holding) return false;
+        const price = setMarketPrice(holding.symbol, value);
+        if (price === null) {
+          setAddFeedback('現價必須大於 0', true);
+          return false;
+        }
+        ACCOUNT_IDS.forEach((accountId) => recordHistoryFor(appState.accounts[accountId], true));
+        setAddFeedback('已更新 ' + holding.symbol + ' 共用現價為 ' + money2.format(price), false);
+        render();
+        return true;
+      }
+
+      function clearHoldingDropIndicators(clearDragging = false) {
+        root.querySelectorAll('[data-holding-row-id]').forEach((row) => {
+          row.classList.remove('is-drop-before', 'is-drop-after');
+          if (clearDragging) row.classList.remove('is-dragging');
+        });
+        if (clearDragging) {
+          holdingDragState = null;
+          document.body.classList.remove('is-reordering-holding');
+        }
+      }
+
+      function reorderHolding(draggedId, targetId, placeAfter) {
+        if (draggedId === targetId) return false;
+        const fromIndex = state.holdings.findIndex((holding) => holding.id === draggedId);
+        if (fromIndex < 0 || !state.holdings.some((holding) => holding.id === targetId)) return false;
+        const [holding] = state.holdings.splice(fromIndex, 1);
+        const targetIndex = state.holdings.findIndex((item) => item.id === targetId);
+        state.holdings.splice(targetIndex + (placeAfter ? 1 : 0), 0, holding);
+        setAddFeedback('已調整 ' + holding.symbol + ' 的顯示順序', false);
+        render();
+        return true;
+      }
+
+      function moveHoldingByOffset(id, offset) {
+        const index = state.holdings.findIndex((holding) => holding.id === id);
+        const targetIndex = index + offset;
+        if (index < 0 || targetIndex < 0 || targetIndex >= state.holdings.length) return false;
+        const targetId = state.holdings[targetIndex].id;
+        return reorderHolding(id, targetId, offset > 0);
       }
 
       function clearMoves() {
@@ -975,14 +1073,14 @@
           const disabled = pledged > 0 ? ' disabled' : '';
           const removeTooltip = pledged > 0 ? '仍有股票質押，請先完成還款' : '移除既有持股（不影響現金）';
           const pledgedNote = pledged > 0 ? '<br><span class="text-small text-muted">質押 ' + number0.format(pledged) + ' 股</span>' : '';
-          return '<tr>' +
-            '<td><span class="cps-symbol">' + escapeHtml(holding.symbol) + '</span><br><span class="text-small text-muted">' + escapeHtml(holding.name) + ' · 均價 ' + money2.format(holding.averageCost) + '</span></td>' +
-            '<td class="text-end text-nowrap">' + number0.format(holding.shares) + pledgedNote + '</td>' +
-            '<td class="text-end text-nowrap">' + money2.format(holding.price) + '</td>' +
+          return '<tr class="cps-holding-row" data-holding-row-id="' + holding.id + '">' +
+            '<td><div class="cps-holding-identity"><button class="btn btn-ghost cps-drag-handle" type="button" data-drag-id="' + holding.id + '" data-tooltip="拖曳調整順序；鍵盤可用上下方向鍵" aria-label="調整 ' + escapeHtml(holding.symbol) + ' 的順序"><i data-lucide="grip-vertical" aria-hidden="true"></i></button><div><span class="cps-symbol">' + escapeHtml(holding.symbol) + '</span><br><span class="text-small text-muted">' + escapeHtml(holding.name) + ' · 均價 ' + money2.format(holding.averageCost) + '</span></div></div></td>' +
+            '<td class="text-end cps-edit-cell"><label class="sr-only" for="cps-shares-' + holding.id + '">' + escapeHtml(holding.symbol) + ' 持股數量</label><input class="form-control cps-holding-input" id="cps-shares-' + holding.id + '" data-shares-id="' + holding.id + '" type="number" min="' + pledged + '" step="1" value="' + holding.shares + '" inputmode="numeric">' + pledgedNote + '</td>' +
+            '<td class="text-end cps-edit-cell"><label class="sr-only" for="cps-price-' + holding.id + '">' + escapeHtml(holding.symbol) + ' 目前價格</label><input class="form-control cps-price-input" id="cps-price-' + holding.id + '" data-price-id="' + holding.id + '" type="number" min="0.01" step="0.01" value="' + holding.price + '" inputmode="decimal"></td>' +
             '<td class="text-end text-nowrap">' + money0.format(value) + '<br><span class="text-small">' + signedMoney(pnl) + '</span></td>' +
             '<td class="text-end">' + weight.toFixed(1) + '%</td>' +
             '<td class="text-end cps-exposure-cell"><label class="sr-only" for="cps-exposure-' + holding.id + '">' + escapeHtml(holding.symbol) + ' 曝險倍數</label><input class="form-control cps-exposure-input" id="cps-exposure-' + holding.id + '" data-exposure-id="' + holding.id + '" type="number" min="0.1" max="10" step="0.1" value="' + holding.exposureMultiplier + '" inputmode="decimal"><span class="text-small text-muted text-nowrap cps-exposure-value">曝險 ' + money0.format(exposure) + '</span></td>' +
-            '<td class="text-end"><label class="sr-only" for="cps-move-' + holding.id + '">' + escapeHtml(holding.symbol) + ' 今日漲跌百分比</label><input class="form-control cps-move-input" id="cps-move-' + holding.id + '" data-move-id="' + holding.id + '" type="number" min="-100" max="100" step="0.1" value="' + holding.move + '" inputmode="decimal"></td>' +
+            '<td class="text-end cps-edit-cell"><label class="sr-only" for="cps-move-' + holding.id + '">' + escapeHtml(holding.symbol) + ' 今日漲跌百分比</label><input class="form-control cps-move-input" id="cps-move-' + holding.id + '" data-move-id="' + holding.id + '" type="number" min="-100" max="100" step="0.1" value="' + holding.move + '" inputmode="decimal"></td>' +
             '<td class="text-end text-nowrap" data-contribution-id="' + holding.id + '">' + signedMoney(value * holding.move / 100) + '</td>' +
             '<td><button class="btn btn-ghost" type="button" data-remove-id="' + holding.id + '" data-tooltip="' + removeTooltip + '" aria-label="移除 ' + escapeHtml(holding.symbol) + '"' + disabled + '><i data-lucide="x" aria-hidden="true"></i></button></td>' +
           '</tr>';
@@ -1000,6 +1098,34 @@
         }).join('，');
         el('cps-allocation').setAttribute('aria-label', '權重分布：' + (allocationLabel || '目前只有現金'));
 
+        root.querySelectorAll('[data-shares-id]').forEach((input) => {
+          const commitShares = (event) => {
+            const id = Number(event.target.dataset.sharesId);
+            const holding = state.holdings.find((item) => item.id === id);
+            const previousValue = holding ? holding.shares : 0;
+            if (!updateHoldingShares(id, event.target.value)) event.target.value = String(previousValue);
+          };
+          input.addEventListener('change', commitShares);
+          input.addEventListener('keydown', (event) => {
+            if (event.key !== 'Enter') return;
+            event.preventDefault();
+            commitShares(event);
+          });
+        });
+        root.querySelectorAll('[data-price-id]').forEach((input) => {
+          const commitPrice = (event) => {
+            const id = Number(event.target.dataset.priceId);
+            const holding = state.holdings.find((item) => item.id === id);
+            const previousValue = holding ? holding.price : 0;
+            if (!updateHoldingPrice(id, event.target.value)) event.target.value = String(previousValue);
+          };
+          input.addEventListener('change', commitPrice);
+          input.addEventListener('keydown', (event) => {
+            if (event.key !== 'Enter') return;
+            event.preventDefault();
+            commitPrice(event);
+          });
+        });
         root.querySelectorAll('[data-move-id]').forEach((input) => {
           input.addEventListener('input', (event) => {
             const id = Number(event.target.dataset.moveId);
@@ -1033,6 +1159,69 @@
         });
         root.querySelectorAll('[data-remove-id]').forEach((button) => {
           button.addEventListener('click', () => removeStock(Number(button.dataset.removeId)));
+        });
+        root.querySelectorAll('[data-drag-id]').forEach((handle) => {
+          handle.addEventListener('pointerdown', (event) => {
+            if (event.button !== 0) return;
+            const id = Number(handle.dataset.dragId);
+            holdingDragState = {
+              id,
+              pointerId: event.pointerId,
+              startX: event.clientX,
+              startY: event.clientY,
+              moved: false,
+              targetId: null,
+              placeAfter: false
+            };
+            handle.setPointerCapture(event.pointerId);
+            handle.closest('[data-holding-row-id]').classList.add('is-dragging');
+            document.body.classList.add('is-reordering-holding');
+          });
+          handle.addEventListener('pointermove', (event) => {
+            const drag = holdingDragState;
+            if (!drag || drag.pointerId !== event.pointerId) return;
+            if (!drag.moved && Math.hypot(event.clientX - drag.startX, event.clientY - drag.startY) < 6) return;
+            drag.moved = true;
+            event.preventDefault();
+            clearHoldingDropIndicators();
+            const hovered = document.elementFromPoint(event.clientX, event.clientY);
+            const row = hovered ? hovered.closest('[data-holding-row-id]') : null;
+            if (!row) {
+              drag.targetId = null;
+              return;
+            }
+            const bounds = row.getBoundingClientRect();
+            drag.targetId = Number(row.dataset.holdingRowId);
+            drag.placeAfter = event.clientY >= bounds.top + bounds.height / 2;
+            row.classList.add(drag.placeAfter ? 'is-drop-after' : 'is-drop-before');
+          });
+          const finishPointerDrag = (event, canceled) => {
+            const drag = holdingDragState;
+            if (!drag || drag.pointerId !== event.pointerId) return;
+            if (handle.hasPointerCapture(event.pointerId)) handle.releasePointerCapture(event.pointerId);
+            const targetId = drag.targetId;
+            const placeAfter = drag.placeAfter;
+            const shouldReorder = !canceled && drag.moved && targetId !== null;
+            clearHoldingDropIndicators(true);
+            if (shouldReorder) reorderHolding(drag.id, targetId, placeAfter);
+          };
+          handle.addEventListener('pointerup', (event) => finishPointerDrag(event, false));
+          handle.addEventListener('pointercancel', (event) => finishPointerDrag(event, true));
+          handle.addEventListener('lostpointercapture', (event) => {
+            if (holdingDragState && holdingDragState.pointerId === event.pointerId) clearHoldingDropIndicators(true);
+          });
+          handle.addEventListener('keydown', (event) => {
+            if (event.key !== 'ArrowUp' && event.key !== 'ArrowDown') return;
+            event.preventDefault();
+            const id = Number(handle.dataset.dragId);
+            const offset = event.key === 'ArrowUp' ? -1 : 1;
+            if (moveHoldingByOffset(id, offset)) {
+              window.requestAnimationFrame(() => {
+                const nextHandle = root.querySelector('[data-drag-id="' + id + '"]');
+                if (nextHandle) nextHandle.focus();
+              });
+            }
+          });
         });
         if (window.lucide) window.lucide.createIcons({ attrs: { width: 16, height: 16 } });
       }
