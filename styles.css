@@ -701,12 +701,55 @@ svg {
       padding-top: 12px;
     }
     #complete-brokerage-simulator .cps-threshold-input { min-width: 82px; max-width: 110px; }
-    #complete-brokerage-simulator .cps-move-input { min-width: 92px; }
-    #complete-brokerage-simulator .cps-exposure-cell { min-width: 120px; }
+    #complete-brokerage-simulator .cps-holding-identity {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      min-width: 210px;
+    }
+    #complete-brokerage-simulator .cps-drag-handle {
+      flex: 0 0 30px;
+      width: 30px;
+      height: 38px;
+      padding: 0;
+      cursor: grab;
+      touch-action: none;
+    }
+    #complete-brokerage-simulator .cps-drag-handle:active { cursor: grabbing; }
+    body.is-reordering-holding {
+      cursor: grabbing;
+      user-select: none;
+    }
+    #complete-brokerage-simulator .cps-holding-row.is-dragging { opacity: 0.45; }
+    #complete-brokerage-simulator .cps-holding-row.is-drop-before > td {
+      box-shadow: inset 0 2px 0 var(--ring);
+    }
+    #complete-brokerage-simulator .cps-holding-row.is-drop-after > td {
+      box-shadow: inset 0 -2px 0 var(--ring);
+    }
+    #complete-brokerage-simulator .cps-edit-cell,
+    #complete-brokerage-simulator .cps-exposure-cell {
+      min-width: 118px;
+      vertical-align: top;
+    }
+    #complete-brokerage-simulator .cps-holding-input,
+    #complete-brokerage-simulator .cps-price-input,
+    #complete-brokerage-simulator .cps-move-input,
     #complete-brokerage-simulator .cps-exposure-input {
-      min-width: 82px;
-      max-width: 96px;
+      width: 112px;
+      min-width: 112px;
+      max-width: 112px;
       margin-left: auto;
+      text-align: right;
+    }
+    #complete-brokerage-simulator .cps-exposure-cell { min-width: 148px; }
+    #complete-brokerage-simulator .cps-exposure-input {
+      display: block;
+    }
+    #complete-brokerage-simulator .cps-exposure-value {
+      display: block;
+      margin-top: 4px;
+      min-height: 1rem;
     }
     #complete-brokerage-simulator .cps-symbol { font-weight: 500; }
     #complete-brokerage-simulator summary { cursor: pointer; }
