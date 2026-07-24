@@ -21,8 +21,7 @@
   }
 
   function outstandingLoan(loan) {
-    return Math.max(0, finiteNumber(loan.balance, 0)) +
-      Math.max(0, finiteNumber(loan.accruedInterest, 0));
+    return Math.max(0, finiteNumber(loan.balance, 0));
   }
 
   function totalDebt(loans) {
@@ -56,16 +55,6 @@
     return grossAssets(cash, holdings, assets) - totalDebt(loans);
   }
 
-  function dailyInterest(loan) {
-    const balance = Math.max(0, finiteNumber(loan.balance, 0));
-    const annualRate = Math.max(0, finiteNumber(loan.annualRate, 0));
-    return balance * annualRate / 100 / 365;
-  }
-
-  function dailyInterestTotal(loans) {
-    return loans.reduce((sum, loan) => sum + dailyInterest(loan), 0);
-  }
-
   function maintenanceRatio(loan, holding) {
     if (!holding) return 0;
     const debt = outstandingLoan(loan);
@@ -73,16 +62,6 @@
     const collateralValue = Math.max(0, finiteNumber(holding.price, 0)) *
       Math.max(0, finiteNumber(loan.pledgedShares, 0));
     return collateralValue / debt * 100;
-  }
-
-  function estimatedMonthlyPayment(loan) {
-    const balance = Math.max(0, finiteNumber(loan.balance, 0));
-    const termMonths = Math.max(0, Math.floor(finiteNumber(loan.termMonths, 0)));
-    if (balance <= 0 || termMonths <= 0) return 0;
-    const monthlyRate = Math.max(0, finiteNumber(loan.annualRate, 0)) / 100 / 12;
-    if (monthlyRate === 0) return balance / termMonths;
-    const factor = Math.pow(1 + monthlyRate, termMonths);
-    return balance * monthlyRate * factor / (factor - 1);
   }
 
   function tradeFee(gross, rate, minimumFee) {
@@ -114,9 +93,6 @@
 
   const api = {
     concentration,
-    dailyInterest,
-    dailyInterestTotal,
-    estimatedMonthlyPayment,
     exposureRatio,
     grossAssets,
     holdingsExposure,

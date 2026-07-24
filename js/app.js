@@ -168,10 +168,6 @@
         }, 0);
       }
 
-      function dailyInterestEstimate() {
-        return Calc.dailyInterestTotal(state.loans);
-      }
-
       function maintenanceRatioFor(account, loan) {
         if (loan.type !== 'pledge' || !isLoanActive(loan)) return null;
         const holding = account.holdings.find((item) => item.id === loan.collateralHoldingId);
@@ -193,8 +189,23 @@
         return type === 'mortgage' ? '房屋貸款' : type === 'pledge' ? '股票質押' : '信用貸款';
       }
 
-      function estimatedMonthlyPayment(loan) {
-        return Calc.estimatedMonthlyPayment(loan);
+      function normalizeLoan(loan) {
+        const source = loan || {};
+        const type = ['personal', 'mortgage', 'pledge'].includes(source.type) ? source.type : 'personal';
+        const id = Number(source.id) || 0;
+        const balance = Math.max(0, Number(source.balance) || 0);
+        const collateralHoldingId = Number(source.collateralHoldingId);
+        return {
+          id,
+          type,
+          name: String(source.name || loanTypeLabel(type) + ' #' + id),
+          originalPrincipal: Math.max(balance, Number(source.originalPrincipal) || balance),
+          balance,
+          createdDay: Math.max(0, Math.floor(Number(source.createdDay) || 0)),
+          collateralHoldingId: Number.isFinite(collateralHoldingId) ? collateralHoldingId : null,
+          pledgedShares: Math.max(0, Math.floor(Number(source.pledgedShares) || 0)),
+          warningRatio: Math.max(1, Number(source.warningRatio) || 130)
+        };
       }
 
       function commissionRate() {
@@ -688,9 +699,6 @@
         ACCOUNT_IDS.forEach((accountId) => {
           const account = appState.accounts[accountId];
           syncAccountPrices(account);
-          account.loans.forEach((loan) => {
-            if (loan.balance > 0) loan.accruedInterest += Calc.dailyInterest(loan);
-          });
           const after = totalAssetsFor(account);
           account.lastDailyPnl = after - before[accountId];
           account.lastDailyReturn = before[accountId] > 0 ? (after / before[accountId] - 1) * 100 : 0;
@@ -804,18 +812,8 @@
       function createLoan() {
         const type = el('cps-loan-type').value;
         const amount = Number(el('cps-loan-amount').value);
-        const annualRate = Number(el('cps-loan-rate').value);
-        const termMonths = Math.floor(Number(el('cps-loan-term').value));
         if (!Number.isFinite(amount) || amount <= 0) {
           setLoanFeedback('借款金額必須大於 0', true);
-          return;
-        }
-        if (!Number.isFinite(annualRate) || annualRate < 0 || annualRate > 100) {
-          setLoanFeedback('年利率需介於 0% 到 100%', true);
-          return;
-        }
-        if (!Number.isFinite(termMonths) || termMonths <= 0) {
-          setLoanFeedback('貸款期數必須大於 0', true);
           return;
         }
 
@@ -854,9 +852,6 @@
           name,
           originalPrincipal: amount,
           balance: amount,
-          accruedInterest: 0,
-          annualRate,
-          termMonths,
           createdDay: appState.day,
           collateralHoldingId,
           pledgedShares,
@@ -881,23 +876,16 @@
           setRepayFeedback('還款金額必須大於 0', true);
           return;
         }
-        const payment = Math.min(requested, outstandingLoan(loan));
+        const payment = Math.min(requested, loan.balance);
         if (payment > state.cash) {
           setRepayFeedback('現金不足，目前可用 ' + money0.format(state.cash), true);
           return;
         }
-        const interestPaid = Math.min(payment, loan.accruedInterest);
-        loan.accruedInterest -= interestPaid;
-        const principalPaid = Math.min(payment - interestPaid, loan.balance);
-        loan.balance -= principalPaid;
-        if (loan.accruedInterest < 0.005) loan.accruedInterest = 0;
+        loan.balance -= payment;
         if (loan.balance < 0.005) loan.balance = 0;
         state.cash -= payment;
         recordHistory(true);
-        setRepayFeedback(
-          '已還款 ' + money0.format(payment) + '（利息 ' + money0.format(interestPaid) + '、本金 ' + money0.format(principalPaid) + '）',
-          false
-        );
+        setRepayFeedback('已償還本金 ' + money0.format(payment), false);
         render();
       }
 
@@ -1024,10 +1012,9 @@
         const marketMove = state.holdings.reduce((sum, holding) => {
           return sum + holding.shares * holding.price * (Number(holding.move) || 0) / 100;
         }, 0);
-        const interest = dailyInterestEstimate();
-        const expected = marketMove - interest;
+        const expected = marketMove;
         const expectedReturn = total > 0 ? expected / total * 100 : 0;
-        el('cps-scenario-preview').textContent = '預估今日損益 ' + signedMoney(expected) + ' · 利息 ' + money0.format(interest) + ' · 組合約 ' + signedPercent(expectedReturn);
+        el('cps-scenario-preview').textContent = '預估今日損益 ' + signedMoney(expected) + ' · 組合約 ' + signedPercent(expectedReturn);
         state.holdings.forEach((holding) => {
           const contribution = holding.shares * holding.price * (Number(holding.move) || 0) / 100;
           const cell = root.querySelector('[data-contribution-id="' + holding.id + '"]');
@@ -1288,7 +1275,7 @@
         const body = el('cps-loans-body');
         el('cps-loan-count').textContent = state.loans.length + ' 筆 · 負債 ' + money0.format(totalDebt());
         if (!state.loans.length) {
-          body.innerHTML = '<tr><td colspan="7" class="text-center text-muted">尚無貸款</td></tr>';
+          body.innerHTML = '<tr><td colspan="5" class="text-center text-muted">尚無貸款</td></tr>';
           el('cps-pledge-alert').textContent = '目前無股票質押';
           el('cps-pledge-alert').classList.remove('text-destructive');
           return;
@@ -1320,8 +1307,6 @@
           return '<tr>' +
             '<td><span class="cps-symbol">' + escapeHtml(loan.name) + '</span><br><span class="text-small text-muted">' + loanTypeLabel(loan.type) + ' · 第 ' + loan.createdDay + ' 天</span></td>' +
             '<td class="text-end text-nowrap">' + money0.format(loan.balance) + '<br><span class="text-small text-muted">原始 ' + money0.format(loan.originalPrincipal) + '</span></td>' +
-            '<td class="text-end text-nowrap">' + money2.format(loan.accruedInterest) + '</td>' +
-            '<td class="text-end text-nowrap">' + loan.annualRate.toFixed(2) + '% · ' + loan.termMonths + ' 期<br><span class="text-small text-muted">月付約 ' + money0.format(estimatedMonthlyPayment(loan)) + '</span></td>' +
             '<td>' + collateralText + threshold + '</td>' +
             '<td>' + status + '</td>' +
             '<td><button class="btn btn-ghost" type="button" data-remove-loan-id="' + loan.id + '" data-tooltip="' + (active ? '清償後可移除' : '移除貸款') + '" aria-label="移除 ' + escapeHtml(loan.name) + '"' + (active ? ' disabled' : '') + '><i data-lucide="x" aria-hidden="true"></i></button></td>' +
@@ -1562,7 +1547,7 @@
             ...holding,
             exposureMultiplier: normalizeExposureMultiplier(holding.exposureMultiplier, holding.symbol)
           })) : [],
-          loans: Array.isArray(baseline.loans) ? baseline.loans.map((loan) => ({ ...loan })) : [],
+          loans: Array.isArray(baseline.loans) ? baseline.loans.map(normalizeLoan) : [],
           transactions: Array.isArray(baseline.transactions) ? baseline.transactions.map((transaction) => ({ ...transaction })) : []
         };
       }
@@ -1579,7 +1564,7 @@
             ...holding,
             exposureMultiplier: normalizeExposureMultiplier(holding.exposureMultiplier, holding.symbol)
           })),
-          loans: saved.loans.map((loan) => ({ ...loan })),
+          loans: Array.isArray(saved.loans) ? saved.loans.map(normalizeLoan) : [],
           history: saved.history.map((point) => ({ ...point })),
           transactions: saved.transactions.map((transaction) => ({ ...transaction })),
           settings: {
@@ -1920,17 +1905,7 @@
       });
       el('cps-buy').addEventListener('click', buy);
       el('cps-sell').addEventListener('click', sell);
-      el('cps-loan-type').addEventListener('change', () => {
-        const defaults = {
-          personal: { rate: 3, term: 60 },
-          mortgage: { rate: 2.2, term: 360 },
-          pledge: { rate: 3.5, term: 12 }
-        };
-        const values = defaults[el('cps-loan-type').value];
-        el('cps-loan-rate').value = values.rate;
-        el('cps-loan-term').value = values.term;
-        renderPledgeFields();
-      });
+      el('cps-loan-type').addEventListener('change', renderPledgeFields);
       el('cps-create-loan').addEventListener('click', createLoan);
       el('cps-repay').addEventListener('click', repayLoan);
       el('cps-collateral-stock').addEventListener('change', updatePledgePreview);
