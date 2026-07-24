@@ -131,7 +131,9 @@
           : '無法開啟 Google 登入視窗';
         reject(driveError('POPUP_ERROR', message));
       };
-      client.requestAccessToken({ prompt: 'consent' });
+      // An empty prompt reuses an existing grant and only asks when Google
+      // actually needs first-time consent or a fresh sign-in.
+      client.requestAccessToken({ prompt: '' });
     });
   }
 
