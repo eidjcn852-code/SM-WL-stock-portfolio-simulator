@@ -6,13 +6,13 @@
   <meta name="description" content="可管理股票、現金、房地產、汽車、借貸、總曝險與質押維持率的個人資產模擬器。">
   <meta name="color-scheme" content="light dark">
   <title>股票資產模擬器</title>
-  <link rel="stylesheet" href="styles.css?v=20260724-holdings-editor">
+  <link rel="stylesheet" href="styles.css?v=20260724-collapsible-trade-price">
   <script defer src="https://cdn.jsdelivr.net/npm/lucide@0.468.0/dist/umd/lucide.min.js"></script>
   <script defer src="https://accounts.google.com/gsi/client"></script>
   <script defer src="js/calculations.js"></script>
   <script defer src="js/storage.js"></script>
   <script defer src="js/google-drive.js?v=20260724-drive-autosave"></script>
-  <script defer src="js/app.js?v=20260724-holdings-editor"></script>
+  <script defer src="js/app.js?v=20260724-collapsible-trade-price"></script>
 </head>
 <body>
   <main class="app-shell">
@@ -215,11 +215,14 @@
       </aside>
   </div>
 
-    <div class="cps-section-head cps-major-head">
-    <span>投資組合操作</span>
-    <span class="text-small text-muted">既有持股、模擬下單與每日漲跌</span>
-  </div>
-  <div class="cps-management-grid">
+  <details class="cps-workbench cps-major-head" id="cps-portfolio-workbench">
+    <summary class="cps-workbench-summary">
+      <span class="cps-workbench-title"><i data-lucide="briefcase-business" aria-hidden="true"></i>投資組合操作</span>
+      <span class="text-small text-muted">新增既有持股與模擬下單</span>
+      <i class="cps-workbench-chevron" data-lucide="chevron-down" aria-hidden="true"></i>
+    </summary>
+    <div class="cps-workbench-content">
+      <div class="cps-management-grid">
     <div>
 <section class="card cps-panel cps-compact-panel" aria-label="新增既有持股">
     <div class="cps-section-head">
@@ -262,12 +265,16 @@
 <section class="card cps-panel cps-compact-panel" aria-label="模擬交易">
     <div class="cps-section-head">
       <span>模擬下單</span>
-      <span class="text-small text-muted" id="cps-trade-price">成交價 NT$0</span>
+      <span class="text-small text-muted" id="cps-trade-price">現價 NT$0</span>
     </div>
     <div class="cps-control-grid">
       <label class="form-label cps-field" for="cps-trade-symbol">
         <span>股票</span>
         <select class="form-select" id="cps-trade-symbol"><option value="">尚無股票</option></select>
+      </label>
+      <label class="form-label cps-field" for="cps-trade-execution-price">
+        <span>成交價格</span>
+        <input class="form-control" id="cps-trade-execution-price" type="number" min="0.01" step="0.01" value="" inputmode="decimal" disabled>
       </label>
       <label class="form-label cps-field" for="cps-trade-quantity">
         <span>股數</span>
@@ -297,6 +304,8 @@
   </section>
     </div>
   </div>
+    </div>
+  </details>
 
 <section class="cps-data-section" aria-label="持股與自訂漲跌">
     <div class="cps-section-head">
@@ -325,10 +334,13 @@
       </table>
     </div>
   </section>
-  <div class="cps-section-head cps-major-head">
-    <span>借貸與風險</span>
-    <span class="text-small text-muted">信貸、房貸、質押與維持率</span>
-  </div>
+  <details class="cps-workbench cps-major-head" id="cps-loan-workbench">
+    <summary class="cps-workbench-summary">
+      <span class="cps-workbench-title"><i data-lucide="landmark" aria-hidden="true"></i>借貸與風險</span>
+      <span class="text-small text-muted">建立貸款、質押與手動還款</span>
+      <i class="cps-workbench-chevron" data-lucide="chevron-down" aria-hidden="true"></i>
+    </summary>
+    <div class="cps-workbench-content">
 <section class="card cps-panel" aria-label="借貸與質押設定">
     <div class="cps-section-head">
       <span>借貸與質押</span>
@@ -408,6 +420,8 @@
       </div>
     </div>
   </section>
+    </div>
+  </details>
 
   <section class="cps-data-section" aria-label="貸款與質押維持率">
     <div class="cps-section-head">

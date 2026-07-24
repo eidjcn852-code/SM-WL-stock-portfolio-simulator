@@ -599,6 +599,40 @@ svg {
       border-top: 1px solid var(--border);
       padding-top: 16px;
     }
+    #complete-brokerage-simulator .cps-workbench {
+      min-width: 0;
+    }
+    #complete-brokerage-simulator .cps-workbench-summary {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) auto 20px;
+      align-items: center;
+      gap: 12px;
+      min-height: 42px;
+      list-style: none;
+    }
+    #complete-brokerage-simulator .cps-workbench-summary::-webkit-details-marker {
+      display: none;
+    }
+    #complete-brokerage-simulator .cps-workbench-title {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      min-width: 0;
+      font-weight: 500;
+    }
+    #complete-brokerage-simulator .cps-workbench-title svg,
+    #complete-brokerage-simulator .cps-workbench-chevron {
+      flex: 0 0 auto;
+    }
+    #complete-brokerage-simulator .cps-workbench-chevron {
+      transition: transform 160ms ease;
+    }
+    #complete-brokerage-simulator .cps-workbench[open] .cps-workbench-chevron {
+      transform: rotate(180deg);
+    }
+    #complete-brokerage-simulator .cps-workbench-content {
+      padding-top: 12px;
+    }
     #complete-brokerage-simulator [hidden] { display: none !important; }
     #complete-brokerage-simulator .cps-chart-wrap {
       position: relative;
@@ -770,6 +804,12 @@ svg {
     @media (max-width: 590px) {
       #complete-brokerage-simulator .cps-control-grid { grid-template-columns: minmax(0, 1fr); }
       #complete-brokerage-simulator .cps-management-grid { grid-template-columns: minmax(0, 1fr); }
+      #complete-brokerage-simulator .cps-workbench-summary {
+        grid-template-columns: minmax(0, 1fr) 20px;
+      }
+      #complete-brokerage-simulator .cps-workbench-summary > .text-small {
+        display: none;
+      }
       #complete-brokerage-simulator .cps-chart-wrap svg { height: 250px; }
       #complete-brokerage-simulator .cps-actions .btn { flex: 1 1 auto; }
       #complete-brokerage-simulator .cps-commandbar { align-items: stretch; }
