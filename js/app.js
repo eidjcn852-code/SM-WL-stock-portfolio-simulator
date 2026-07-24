@@ -741,9 +741,15 @@
         return Number.isFinite(quantity) && quantity > 0 ? quantity : 0;
       }
 
+      function tradeExecutionPrice() {
+        const price = Number(el('cps-trade-execution-price').value);
+        return Number.isFinite(price) && price > 0 ? price : 0;
+      }
+
       function buy() {
         const holding = selectedHolding();
         const quantity = tradeQuantity();
+        const price = tradeExecutionPrice();
         if (!holding) {
           setTradeFeedback('請先新增並選擇股票', true);
           return;
@@ -752,7 +758,11 @@
           setTradeFeedback('請輸入大於 0 的股數', true);
           return;
         }
-        const gross = quantity * holding.price;
+        if (!price) {
+          setTradeFeedback('請輸入大於 0 的成交價格', true);
+          return;
+        }
+        const gross = quantity * price;
         const fee = tradeFee(gross);
         const cost = gross + fee;
         if (cost > state.cash) {
@@ -768,18 +778,19 @@
           type: '買進',
           symbol: holding.symbol,
           quantity,
-          price: holding.price,
+          price,
           costs: fee,
           cashFlow: -cost
         });
         recordHistory(true);
-        setTradeFeedback('已買進 ' + holding.symbol + ' ' + number0.format(quantity) + ' 股', false);
+        setTradeFeedback('已買進 ' + holding.symbol + ' ' + number0.format(quantity) + ' 股，成交價 ' + money2.format(price), false);
         render();
       }
 
       function sell() {
         const holding = selectedHolding();
         const quantity = tradeQuantity();
+        const price = tradeExecutionPrice();
         if (!holding) {
           setTradeFeedback('請先新增並選擇股票', true);
           return;
@@ -788,17 +799,21 @@
           setTradeFeedback('請輸入大於 0 的股數', true);
           return;
         }
+        if (!price) {
+          setTradeFeedback('請輸入大於 0 的成交價格', true);
+          return;
+        }
         const pledged = pledgedSharesFor(holding.id);
         const available = Math.max(0, holding.shares - pledged);
         if (quantity > available) {
           setTradeFeedback('可賣股數不足，目前可賣 ' + number0.format(available) + ' 股，另有 ' + number0.format(pledged) + ' 股質押中', true);
           return;
         }
-        const gross = quantity * holding.price;
+        const gross = quantity * price;
         const fee = tradeFee(gross);
         const tax = Math.round(gross * taxRate());
         const proceeds = gross - fee - tax;
-        const realized = (holding.price - holding.averageCost) * quantity - fee - tax;
+        const realized = (price - holding.averageCost) * quantity - fee - tax;
         state.cash += proceeds;
         holding.shares -= quantity;
         state.realizedPnl += realized;
@@ -808,12 +823,12 @@
           type: '賣出',
           symbol: holding.symbol,
           quantity,
-          price: holding.price,
+          price,
           costs: fee + tax,
           cashFlow: proceeds
         });
         recordHistory(true);
-        setTradeFeedback('已賣出 ' + holding.symbol + '，實現損益 ' + signedMoney(realized), false);
+        setTradeFeedback('已賣出 ' + holding.symbol + '，成交價 ' + money2.format(price) + '，實現損益 ' + signedMoney(realized), false);
         render();
       }
 
@@ -1244,9 +1259,21 @@
       function renderTradePrice() {
         const holding = selectedHolding();
         const pledged = holding ? pledgedSharesFor(holding.id) : 0;
+        const executionPrice = el('cps-trade-execution-price');
+        const holdingId = holding ? String(holding.id) : '';
+        if (executionPrice.dataset.holdingId !== holdingId) {
+          executionPrice.dataset.custom = 'false';
+        }
+        executionPrice.dataset.holdingId = holdingId;
+        executionPrice.disabled = !holding;
+        if (!holding) {
+          executionPrice.value = '';
+        } else if (executionPrice.dataset.custom !== 'true') {
+          executionPrice.value = holding.price.toFixed(2);
+        }
         el('cps-trade-price').textContent = holding
-          ? '成交價 ' + money2.format(holding.price) + ' · 持有 ' + number0.format(holding.shares) + ' 股 · 可賣 ' + number0.format(Math.max(0, holding.shares - pledged)) + ' 股'
-          : '成交價 NT$0';
+          ? '現價 ' + money2.format(holding.price) + ' · 持有 ' + number0.format(holding.shares) + ' 股 · 可賣 ' + number0.format(Math.max(0, holding.shares - pledged)) + ' 股'
+          : '現價 NT$0';
       }
 
       function renderPledgeFields() {
@@ -1922,7 +1949,13 @@
       el('cps-auto').addEventListener('click', () => setAutoPlaying(!appState.timer));
       el('cps-reset-simulation').addEventListener('click', resetSimulation);
       el('cps-benchmark-move').addEventListener('input', renderScenarioPreview);
-      el('cps-trade-symbol').addEventListener('change', renderTradePrice);
+      el('cps-trade-symbol').addEventListener('change', () => {
+        el('cps-trade-execution-price').dataset.custom = 'false';
+        renderTradePrice();
+      });
+      el('cps-trade-execution-price').addEventListener('input', (event) => {
+        event.target.dataset.custom = 'true';
+      });
       el('cps-buy').addEventListener('click', buy);
       el('cps-sell').addEventListener('click', sell);
       el('cps-loan-type').addEventListener('change', () => {
