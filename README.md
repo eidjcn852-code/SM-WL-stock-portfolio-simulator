@@ -68,6 +68,7 @@ https://eidjcn852-code.github.io/SM-WL-stock-portfolio-simulator/
 ```text
 stock-portfolio-simulator/
 ├─ index.html
+├─ favicon.svg
 ├─ styles.css
 ├─ js/
 │  ├─ calculations.js
